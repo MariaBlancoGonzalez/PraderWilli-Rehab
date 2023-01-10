@@ -1,12 +1,14 @@
 import cv2
 import mediapipe as mp
 import pygame
-from pygame.sprite import Group
-from mediapipe.python.solutions import pose as mp_pose
-import points as pt
 import sys
 import random
 import configparser
+
+from pygame.sprite import Group
+from mediapipe.python.solutions import pose as mp_pose
+
+import points as pt
 import circle as cl
 
 # Configuration file
@@ -35,12 +37,16 @@ SCREEN_WIDTH = config.getint('screen', 'width')
 SCREEN_HEIGHT = config.getint('screen', 'height')
 MARGIN_SIZE = config.getint('screen', 'margin')
 
+# [music]
+PRESS_BALL = str(config.get('music','arro'))
+
 BLACK = (0,0,0)
 
 def game():
   # Create the screen object
   # The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
   screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+  press_ball = pygame.mixer.Sound(PRESS_BALL)
 
   right_circle = cl.Circle(screen, HANDS)
   left_circle = cl.Circle(screen, HANDS)
@@ -57,6 +63,7 @@ def game():
   bolas_r, bolas_l = bolas_restantes/2, bolas_restantes/2
   # For webcam input:
   cap = cv2.VideoCapture(0)
+  
   with mp_pose.Pose(
       model_complexity=1,
       smooth_landmarks=True,
@@ -65,7 +72,7 @@ def game():
 
     while cap.isOpened():
       # Make sure game doesn't run at more than 60 frames per second.
-      clock.tick(60)
+      clock.tick(60)      
 
       # Check for any Pygame events.
       for event in pygame.event.get():
@@ -75,13 +82,14 @@ def game():
           sys.exit()
 
       success, image = cap.read()
+      resized = cv2.resize(image, (SCREEN_WIDTH, SCREEN_HEIGHT)) 
       if not success:
         print("Ignoring empty camera frame.")
         # If loading a video, use 'break' instead of 'continue'.
         continue
       
       # Para "pegar" las ventanas
-      image = cv2.cvtColor(cv2.flip(image, 2), cv2.COLOR_BGR2RGB)
+      image = cv2.cvtColor(cv2.flip(resized, 2), cv2.COLOR_BGR2RGB)
       results = pose.process(image)
 
       if not results.pose_landmarks:
@@ -135,13 +143,15 @@ def game():
       # Check the list of colliding sprites, and add one to the score for each one.
       for _ in hit_list_right:
         bolas_restantes -= 1
+        press_ball.play()
 
       for _ in hit_list_left:
         bolas_restantes -= 1
+        press_ball.play()
 
       if bolas_restantes <= 0:
         game_over_text = BIG_FONT.render(
-            "Fin", True, BLACK)
+            "Bien hecho", True, BLACK)
         screen.blit(game_over_text, game_over_text.get_rect(
             center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)))
         pygame.display.flip()
@@ -151,11 +161,17 @@ def game():
 
       score_txt = SMALL_FONTS.render(
         "Bolas Restantes: {0}".format(bolas_restantes), True, BLACK)
-      screen.blit(score_txt, (15, 15))
+      screen.blit(score_txt, (350, 15))
 
       mistakes_txt = SMALL_FONTS.render(
         "Errores: {0}".format(errores), True, BLACK)
-      screen.blit(mistakes_txt, (480, 15))
+      screen.blit(mistakes_txt, (350, 50))
+
+      time =  pygame.time.get_ticks()/1000
+
+      time_txt = SMALL_FONTS.render(
+        "Tiempo: {0}".format(int(time)), True, BLACK)
+      screen.blit(time_txt, (15, 15))
 
       # Draw point on the screen
       hands.draw(screen)
@@ -167,31 +183,69 @@ def game():
 
 def setup():
   """ This is for show all points before start, it is not done"""
-  '''checker = False
-      for id, lm in enumerate(results.pose_landmarks.landmark):
-        if lm.visibility < 0.99:
-          # Instruction msg
-          checker = True
-          break'''
+  screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+  # Initialise clock.
+  clock = pygame.time.Clock()
+  mp_pose = mp.solutions.pose
+  cap = cv2.VideoCapture(0) 
+  counter = 3
+  with mp_pose.Pose(
+      model_complexity=1,
+      smooth_landmarks=True,
+      min_detection_confidence=0.5,
+      min_tracking_confidence=0.5) as pose:
 
-  '''if checker:
-        instructions = ALL_FONTS.render(
-            "Situase donde se vea todo", True, (0, 0, 0))
-        screen.blit(instructions, instructions.get_rect(
-            center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)))
+    while cap.isOpened():
+      # Make sure game doesn't run at more than 60 frames per second.
+      clock.tick(60)
+
+      # Check for any Pygame events.
+      for event in pygame.event.get():
+        if event.type == pygame.QUIT or event.type == pygame.KEYDOWN:
+          sys.exit()
+
+      success, image = cap.read()
+      resized = cv2.resize(image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+      if not success:
+        print("Ignoring empty camera frame.")
+        # If loading a video, use 'break' instead of 'continue'.
+        continue
+      
+      # Para "pegar" las ventanas
+      image = cv2.cvtColor(cv2.flip(image, 2), cv2.COLOR_BGR2RGB)
+      results = pose.process(image)
+
+      if not results.pose_landmarks:
+        continue
+
+      id_1, id_2 = False, False
+      for id, lm in enumerate(results.pose_landmarks.landmark):
+        if (id == 12 and lm.visibility > 0.989):
+          id_1 = True
+        if (id == 11 and lm.visibility > 0.989):
+          id_2 = True
+
+      correct = id_1 and id_2
+      pygame.surfarray.blit_array(screen, image.swapaxes(0, 1))
+      if correct and counter>0 and counter<=3:
+        score_txt = SMALL_FONTS.render('{0}'.format(counter), True, BLACK)
+        screen.blit(score_txt, (SCREEN_WIDTH/2, SCREEN_HEIGHT/2))
+        counter -= 1
+        # TODO
+        pygame.time.delay(500)
         pygame.display.flip()
       else:
-        instructions = ALL_FONTS.render(
-            "XXXX", True, (0, 0, 0))
-        screen.blit(instructions, instructions.get_rect(
-            center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)))
-        pygame.display.flip()'''
+        cap.release()
+
+      pygame.display.flip()
+
 
 def main():
     # Initialize pygame
     pygame.init()
     pygame.font.init()
     pygame.display.set_caption('De hombros hacia arriba')
+    #setup()
     game()
 
 if __name__ == '__main__':
