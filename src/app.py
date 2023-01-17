@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import cv2
 import mediapipe as mp
 import pygame
@@ -9,7 +11,7 @@ from pygame.sprite import Group
 from mediapipe.python.solutions import pose as mp_pose
 
 import points as pt
-import circle as cl
+import source as sr
 
 # Configuration file
 configfile_name = "config.ini" 
@@ -21,7 +23,7 @@ FONT = config.get('paths','font')
 pygame.font.init()
 
 HANDS = config.get('paths', 'hands')
-BALLS = config.get('paths', 'balls')
+STAR = config.get('paths', 'estrella')
 
 # [sizes]
 SMALL_LETTER = config.getint('sizes', 'small_letter')
@@ -38,206 +40,225 @@ SCREEN_HEIGHT = config.getint('screen', 'height')
 MARGIN_SIZE = config.getint('screen', 'margin')
 
 # [music]
-PRESS_BALL = str(config.get('music','arro'))
+PRESS_STAR = str(config.get('music','arro'))
+FINAL_CLAPS = str(config.get('music','claps'))
 
 BLACK = (0,0,0)
 
+def get_mid(coord_a, coord_b, coord_c):
+	return ((coord_a+coord_b+coord_c)/3)
+
+def get_points(results):
+	# For each hand
+	left_x = get_mid(float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_WRIST].x),
+				float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_PINKY].x),
+				float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_INDEX].x))
+
+	left_y = get_mid(float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_WRIST].y),
+				float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_PINKY].y),
+				float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_INDEX].y))
+	
+	right_x = get_mid(float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_WRIST].x),
+				float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_PINKY].x),
+				float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_INDEX].x))
+
+	right_y = get_mid(float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_WRIST].y),
+				float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_PINKY].y),
+				float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_INDEX].y))
+
+	# Coordinates
+	return (left_x, left_y), (right_x, right_y)
+
+def time_control(restart):
+	if restart:
+		return 0
+
 def game():
-  # Create the screen object
-  # The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
-  screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-  press_ball = pygame.mixer.Sound(PRESS_BALL)
+	# Create the screen object
+	# The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
+	screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+	press_star = pygame.mixer.Sound(PRESS_STAR)
+	claps = pygame.mixer.Sound(FINAL_CLAPS)
 
-  right_circle = cl.Circle(screen, HANDS)
-  left_circle = cl.Circle(screen, HANDS)
-  hands = Group([right_circle, left_circle])
+	right_source = sr.Source(screen, HANDS)
+	left_source = sr.Source(screen, HANDS)
+	hands = Group([right_source, left_source])
 
-  points_left = Group()
-  points_right = Group()
+	points_left = Group()
+	points_right = Group()
+	
+	# Initialise clock.
+	clock_frames = pygame.time.Clock()
+	start_ticks=pygame.time.get_ticks() #starter tick
+	mp_pose = mp.solutions.pose
 
-  # Initialise clock.
-  clock = pygame.time.Clock()
-  mp_pose = mp.solutions.pose
+	bolas_restantes, aciertos = 10, 0
+	bolas_r, bolas_l = bolas_restantes/2, bolas_restantes/2
 
-  bolas_restantes, errores = 10, 0
-  bolas_r, bolas_l = bolas_restantes/2, bolas_restantes/2
-  # For webcam input:
-  cap = cv2.VideoCapture(0)
-  
-  with mp_pose.Pose(
-      model_complexity=1,
-      smooth_landmarks=True,
-      min_detection_confidence=0.5,
-      min_tracking_confidence=0.5) as pose:
+	start, end = True, True
+	# For webcam input:
+	cap = cv2.VideoCapture(0)
+	with mp_pose.Pose(
+		model_complexity=1,
+		smooth_landmarks=True,
+		min_detection_confidence=0.7,
+		min_tracking_confidence=0.7) as pose:
 
-    while cap.isOpened():
-      # Make sure game doesn't run at more than 60 frames per second.
-      clock.tick(60)      
+		while cap.isOpened():
+			# Make sure game doesn't run at more than 60 frames per second.
+			clock_frames.tick(60)
 
-      # Check for any Pygame events.
-      for event in pygame.event.get():
-        # Exit game if user hits the quit button.
-        ## print(event)
-        if event.type == pygame.QUIT or event.type == pygame.KEYDOWN:
-          sys.exit()
+			# Check for any Pygame events.
+			for event in pygame.event.get():
+				# Exit game if user hits the quit button.
+				## print(event)
+				if event.type == pygame.QUIT or event.type == pygame.KEYDOWN:
+					sys.exit()
 
-      success, image = cap.read()
-      resized = cv2.resize(image, (SCREEN_WIDTH, SCREEN_HEIGHT)) 
-      if not success:
-        print("Ignoring empty camera frame.")
-        # If loading a video, use 'break' instead of 'continue'.
-        continue
-      
-      # Para "pegar" las ventanas
-      image = cv2.cvtColor(cv2.flip(resized, 2), cv2.COLOR_BGR2RGB)
-      results = pose.process(image)
+			success, image = cap.read()
+			resized = cv2.resize(image, (SCREEN_WIDTH, SCREEN_HEIGHT)) 
+			if not success:
+				print("Ignoring empty camera frame.")
+				# If loading a video, use 'break' instead of 'continue'.
+				continue
+		
+			# Para "pegar" las ventanas
+			image = cv2.cvtColor(cv2.flip(resized, 2), cv2.COLOR_BGR2RGB)
+			results = pose.process(image)
 
-      if not results.pose_landmarks:
-        continue
+			if not results.pose_landmarks:
+				continue
 
-      id_1, id_2 = False, False
-      for id, lm in enumerate(results.pose_landmarks.landmark):
-        if (id == 12 and lm.visibility > 0.989):
-          id_1 = True
-        if (id == 11 and lm.visibility > 0.989):
-          id_2 = True
+			#visibility = [i.visibility for i in results.pose_landmarks.landmark]
+			# 
+			#checker = all(i >= 0.989 for i in visibility)
+			id_1, id_2 = False, False
+			for id, lm in enumerate(results.pose_landmarks.landmark):
+				if (id == 12 and lm.visibility > 0.989):
+					id_1 = True
+				if (id == 11 and lm.visibility > 0.989):
+					id_2 = True
+			
+			if start:
+				pygame.surfarray.blit_array(screen, image.swapaxes(0, 1))
+				seconds=(pygame.time.get_ticks()-start_ticks)/1000 #calculate how many seconds
+				if id_1 and id_2:
+				# if checker:
+					score_txt = BIG_FONT.render('{0}'.format(int(seconds)), True, BLACK)
+					screen.blit(score_txt, (SCREEN_WIDTH/2, SCREEN_HEIGHT/2))
+					pygame.display.flip()
+				else:
+					start_ticks = pygame.time.get_ticks()
 
-      if id_1 and id_2:
-        # Creates balls random with some bounds
-        # For left hand right bc is inverted
-        # In pixel
-        if len(points_left) == 0 and bolas_l != 0:
-          left_x_bound = int(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_SHOULDER].x * SCREEN_WIDTH)
-          left_y_bound = int(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_SHOULDER].y * SCREEN_HEIGHT)
+				if seconds>=3.2 and id_1 == True and id_2 == True: 
+					start = False
+				
+			else:
+				if id_1 and id_2:
+				#if checker:
+					# For left hand right bc is inverted
 
-          left_x = random.randint(MARGIN_SIZE, left_x_bound)
-          left_y = random.randint(MARGIN_SIZE, left_y_bound)
-        
-          points_left.add(pt.Point(screen, BALLS, left_x, left_y))
-          bolas_l -= 1
-        
-        if len(points_right) == 0 and bolas_r != 0:
-          right_x_bound = int(results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER].x * SCREEN_WIDTH)
-          right_y_bound = int(results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER].y * SCREEN_HEIGHT)
+					# Creation of stars
+					if len(points_left) == 0 and bolas_l != 0:
+						left_x_bound = int(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_SHOULDER].x * SCREEN_WIDTH)
+						left_y_bound = int(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_SHOULDER].y * SCREEN_HEIGHT)
 
-          right_x = random.randint(right_x_bound, SCREEN_WIDTH-MARGIN_SIZE)
-          right_y = random.randint(MARGIN_SIZE, right_y_bound)
-          # In pixels
-          points_right.add(pt.Point(screen, BALLS, right_x, right_y))
-          bolas_r -= 1
+						left_x = random.randint(MARGIN_SIZE, left_x_bound)
+						left_y = random.randint(MARGIN_SIZE, left_y_bound)
+							
+						left_point = pt.Point(screen, STAR, left_x, left_y)
+						left_point.time = pygame.time.get_ticks()
+						points_left.add(left_point)
 
-      left_circle.rect.centerx = float(
-        results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_WRIST].x) * SCREEN_WIDTH
-      left_circle.rect.centery = float(
-        results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_WRIST].y) * SCREEN_HEIGHT
-      right_circle.rect.centerx = float(
-        results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_WRIST].x) * SCREEN_WIDTH
-      right_circle.rect.centery = float(
-        results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_WRIST].y) * SCREEN_HEIGHT
+						bolas_l -= 1
+						
+					if len(points_right) == 0 and bolas_r != 0:
+						right_x_bound = int(results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER].x * SCREEN_WIDTH)
+						right_y_bound = int(results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER].y * SCREEN_HEIGHT)
 
-      pygame.surfarray.blit_array(screen, image.swapaxes(0, 1))
+						right_x = random.randint(right_x_bound, SCREEN_WIDTH-MARGIN_SIZE)
+						right_y = random.randint(MARGIN_SIZE, right_y_bound)
+							
+						right_point = pt.Point(screen, STAR, right_x, right_y)
+						right_point.time = pygame.time.get_ticks()
+						points_right.add(right_point)
+						bolas_r -= 1
 
-      hit_list_left = pygame.sprite.groupcollide(hands, points_left, False, True)
-      hit_list_right = pygame.sprite.groupcollide(hands, points_right, False, True)
+				# Get the point in the hand
+				left_hand, right_hand = get_points(results)
 
-      # Check the list of colliding sprites, and add one to the score for each one.
-      for _ in hit_list_right:
-        bolas_restantes -= 1
-        press_ball.play()
+				# For each hand
+				left_source.rect.centerx =  left_hand[0] * SCREEN_WIDTH
+				left_source.rect.centery = left_hand[1] * SCREEN_HEIGHT
+				right_source.rect.centerx = right_hand[0] * SCREEN_WIDTH
+				right_source.rect.centery = right_hand[1] * SCREEN_HEIGHT
 
-      for _ in hit_list_left:
-        bolas_restantes -= 1
-        press_ball.play()
+				pygame.surfarray.blit_array(screen, image.swapaxes(0, 1))
 
-      if bolas_restantes <= 0:
-        game_over_text = BIG_FONT.render(
-            "Bien hecho", True, BLACK)
-        screen.blit(game_over_text, game_over_text.get_rect(
-            center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)))
-        pygame.display.flip()
+				hit_list_left = pygame.sprite.groupcollide(hands, points_left, False, True)
+				hit_list_right = pygame.sprite.groupcollide(hands, points_right, False, True)
 
-        # No further processing is required.
-        continue
+				# Check the list of colliding sprites, and add one to the score for each one.
+				for _ in hit_list_right:
+					bolas_restantes -= 1
+					aciertos += 1
+					press_star.play()
 
-      score_txt = SMALL_FONTS.render(
-        "Bolas Restantes: {0}".format(bolas_restantes), True, BLACK)
-      screen.blit(score_txt, (350, 15))
+				for _ in hit_list_left:
+					bolas_restantes -= 1
+					aciertos += 1
+					press_star.play()
 
-      mistakes_txt = SMALL_FONTS.render(
-        "Errores: {0}".format(errores), True, BLACK)
-      screen.blit(mistakes_txt, (350, 50))
+				if len(points_left) > 0:
+					points_left.update()
 
-      time =  pygame.time.get_ticks()/1000
+					if len(points_left) == 0:
+						bolas_restantes -= 1
 
-      time_txt = SMALL_FONTS.render(
-        "Tiempo: {0}".format(int(time)), True, BLACK)
-      screen.blit(time_txt, (15, 15))
+				if len(points_right) > 0:
+					points_right.update()
+					if len(points_right) == 0:
+						bolas_restantes -= 1	
 
-      # Draw point on the screen
-      hands.draw(screen)
-      points_left.draw(screen)
-      points_right.draw(screen)
-      pygame.display.flip()
+				if bolas_restantes <= 0:
+					game_over_text = BIG_FONT.render(
+						"Bien hecho", True, BLACK)
+					screen.blit(game_over_text, game_over_text.get_rect(
+						center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)))
 
-  cap.release()
+					'''mistakes_txt = SMALL_FONTS.render(
+						"Errores: {0}".format(bolas_r+bolas_l-aciertos), True, BLACK)
+					screen.blit(mistakes_txt, (15, 50))'''
 
-def setup():
-  """ This is for show all points before start, it is not done"""
-  screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-  # Initialise clock.
-  clock = pygame.time.Clock()
-  mp_pose = mp.solutions.pose
-  cap = cv2.VideoCapture(0) 
-  counter = 3
-  with mp_pose.Pose(
-      model_complexity=1,
-      smooth_landmarks=True,
-      min_detection_confidence=0.5,
-      min_tracking_confidence=0.5) as pose:
+					mistakes_txt = SMALL_FONTS.render(
+						"Aciertos: {0}".format(aciertos), True, BLACK)
+					screen.blit(mistakes_txt, (15, 15))
 
-    while cap.isOpened():
-      # Make sure game doesn't run at more than 60 frames per second.
-      clock.tick(60)
+					if end:
+						claps.play()
+						end = False
+					pygame.display.flip()
 
-      # Check for any Pygame events.
-      for event in pygame.event.get():
-        if event.type == pygame.QUIT or event.type == pygame.KEYDOWN:
-          sys.exit()
+					# No further processing is required.
+					continue
 
-      success, image = cap.read()
-      resized = cv2.resize(image, (SCREEN_WIDTH, SCREEN_HEIGHT))
-      if not success:
-        print("Ignoring empty camera frame.")
-        # If loading a video, use 'break' instead of 'continue'.
-        continue
-      
-      # Para "pegar" las ventanas
-      image = cv2.cvtColor(cv2.flip(image, 2), cv2.COLOR_BGR2RGB)
-      results = pose.process(image)
+				score_txt = SMALL_FONTS.render(
+					"Bolas Restantes: {0}".format(bolas_restantes), True, BLACK)
+				screen.blit(score_txt, (350, 15))
 
-      if not results.pose_landmarks:
-        continue
+				time =  (pygame.time.get_ticks()/1000)
+				
+				time_txt = SMALL_FONTS.render(
+					"Tiempo: {0}".format(int(time)), True, BLACK)
+				screen.blit(time_txt, (15, 15))
 
-      id_1, id_2 = False, False
-      for id, lm in enumerate(results.pose_landmarks.landmark):
-        if (id == 12 and lm.visibility > 0.989):
-          id_1 = True
-        if (id == 11 and lm.visibility > 0.989):
-          id_2 = True
+				# Draw point on the screen
+				hands.draw(screen)
+				points_left.draw(screen)
+				points_right.draw(screen)
+				pygame.display.flip()
 
-      correct = id_1 and id_2
-      pygame.surfarray.blit_array(screen, image.swapaxes(0, 1))
-      if correct and counter>0 and counter<=3:
-        score_txt = SMALL_FONTS.render('{0}'.format(counter), True, BLACK)
-        screen.blit(score_txt, (SCREEN_WIDTH/2, SCREEN_HEIGHT/2))
-        counter -= 1
-        # TODO
-        pygame.time.delay(500)
-        pygame.display.flip()
-      else:
-        cap.release()
-
-      pygame.display.flip()
+	cap.release()
 
 
 def main():
