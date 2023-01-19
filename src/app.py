@@ -121,7 +121,7 @@ def game():
 				print("Ignoring empty camera frame.")
 				# If loading a video, use 'break' instead of 'continue'.
 				continue
-		
+
 			# Para "pegar" las ventanas
 			image = cv2.cvtColor(cv2.flip(resized, 2), cv2.COLOR_BGR2RGB)
 			results = pose.process(image)
@@ -129,8 +129,9 @@ def game():
 			if not results.pose_landmarks:
 				continue
 
+			# FIXME
 			#visibility = [i.visibility for i in results.pose_landmarks.landmark]
-			# 
+
 			#checker = all(i >= 0.989 for i in visibility)
 			id_1, id_2 = False, False
 			for id, lm in enumerate(results.pose_landmarks.landmark):
@@ -149,12 +150,14 @@ def game():
 					pygame.display.flip()
 				else:
 					start_ticks = pygame.time.get_ticks()
+					pygame.display.flip()
 
 				if seconds>=3.2 and id_1 == True and id_2 == True: 
 					start = False
 				
 			else:
 				if id_1 and id_2:
+				# FIXME
 				#if checker:
 					# For left hand right bc is inverted
 
@@ -165,7 +168,13 @@ def game():
 
 						left_x = random.randint(MARGIN_SIZE, left_x_bound)
 						left_y = random.randint(MARGIN_SIZE, left_y_bound)
-							
+						
+						if left_x > SCREEN_WIDTH:
+							left_x = SCREEN_WIDTH - MARGIN_SIZE
+
+						if left_y > SCREEN_HEIGHT:
+							left_y = SCREEN_HEIGHT - MARGIN_SIZE
+
 						left_point = pt.Point(screen, STAR, left_x, left_y)
 						left_point.time = pygame.time.get_ticks()
 						points_left.add(left_point)
@@ -249,7 +258,7 @@ def game():
 				time =  (pygame.time.get_ticks()/1000)
 				
 				time_txt = SMALL_FONTS.render(
-					"Tiempo: {0}".format(int(time)), True, BLACK)
+					"Tiempo: {0}".format(int(time-3.2)), True, BLACK)
 				screen.blit(time_txt, (15, 15))
 
 				# Draw point on the screen
