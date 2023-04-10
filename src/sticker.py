@@ -3,7 +3,7 @@ from pygame.sprite import Sprite
 
 class Sticker(pygame.sprite.Sprite):
     """A class to represent a single landmark."""
-    def __init__(self, screen, image, width, height, x=45, y=45, trampa = False):
+    def __init__(self, screen, image, width, height, x=45, y=45, trap = False):
         super(Sticker, self).__init__()
         self.screen = screen
 
@@ -15,10 +15,13 @@ class Sticker(pygame.sprite.Sprite):
 
         # Insider clock
         self.time = None
-        self.trampa = trampa
+        self.trap = trap
         self.rect.centerx = width
         self.rect.centery = height
 
+    def get_trap(self):
+        return self.trap
+    
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 

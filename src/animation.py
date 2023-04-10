@@ -21,7 +21,6 @@ class Animation(pygame.sprite.Sprite):
         self.fps = fps
         self.fotograma = 0
 
-
     def cargar_animacion(self, carpeta):
         animacion =[]
         files = sorted([file for file in os.listdir(carpeta)])

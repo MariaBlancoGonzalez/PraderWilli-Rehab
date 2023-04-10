@@ -6,7 +6,7 @@ class Source(pygame.sprite.Sprite):
     def __init__(self, screen, image):
         super(Source, self).__init__()
         self.screen = screen
-
+        
         self.image = pygame.image.load(image)
 
         self.image = pygame.transform.scale(
