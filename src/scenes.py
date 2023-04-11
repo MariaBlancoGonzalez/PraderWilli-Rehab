@@ -583,7 +583,7 @@ class DiagonalsScene(Scene):
         self.right_foot = Source(self.game.display, settings.LINEA_HORIZONTAL)
         self.left_foot = Source(self.game.display, settings.LINEA_HORIZONTAL)
         self.feet_group = Group([self.right_foot, self.left_foot])
-
+     
         self.right_point = None
         self.left_point = None
         self.points_left = Group()
@@ -618,10 +618,21 @@ class DiagonalsScene(Scene):
         self.calibration = False if game.static_points == None else True
         self.box_feet = [] if game.static_points == None else self.create_box_feet()
 
-        self.calibration_object = CalibrationScene(self.game)
+        if game.static_points != None:
+            left_hand_bound = create_diagonal_points_left(game.static_points)
+            right_hand_bound = create_diagonal_points_right(game.static_points)
+            self.shoulder_left, self.shoulder_right = get_shoulder_pos(game.static_points)
+
+            self.bound_left_hand = (left_hand_bound[0], left_hand_bound[1])
+            self.bound_right_hand = (right_hand_bound[0], right_hand_bound[1])
+
+        else:  
+            self.bound_left_hand, self.bound_left_hand = (0, 0), (0, 0)
 
         self.time_left = pygame.time.get_ticks()
         self.time_right = pygame.time.get_ticks()
+
+        self.calibration_object = CalibrationScene(self.game)
 
         self.timer = 0
         self.current_results = None
@@ -663,7 +674,6 @@ class DiagonalsScene(Scene):
             self.texto_pies.draw(self.game.display)
         elif self.time_instr >= 3 and self.calibration and not self.visibility_checker:
             self.texto_partes.draw(self.game.display)
-        
         if self.calibration:
             pygame.draw.rect(self.game.display, settings.GRANATE, self.box_feet,  5, 0)
         
@@ -706,6 +716,12 @@ class DiagonalsScene(Scene):
                 self.feet_left = (self.game.static_points.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_ANKLE].x,
                               self.game.static_points.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_ANKLE].y)
                 self.box_feet = self.create_box_feet()
+
+                left_hand_bound = create_diagonal_points_left(results)
+                right_hand_bound = create_diagonal_points_right(results)
+                self.shoulder_left, self.shoulder_right = get_shoulder_pos(results)
+                self.bound_left_hand = (left_hand_bound[0], left_hand_bound[1])
+                self.bound_right_hand = (right_hand_bound[0],right_hand_bound[1])
         # Pantalla de 3,2,1...
         if self.time_instr < 3 and self.calibration and not self.end:
             
@@ -735,11 +751,9 @@ class DiagonalsScene(Scene):
             bola_permitida_izq = True if (pygame.time.get_ticks()-self.time_left)/1000 >= settings.VELOCIDAD_ENTRE_BOLAS else False
             # Crear acierto y fallo
             if len(self.points_left) == 0 and not left_tramp and bola_permitida_izq:
-                left_x_bound = int(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_SHOULDER].x * settings.WIDTH)
-                left_y_bound = int(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_SHOULDER].y * settings.HEIGHT)
-
-                left_x = random.randint(settings.MARGIN, left_x_bound)
-                left_y = random.randint(settings.MARGIN, left_y_bound)
+                
+                left_x = random.uniform(self.bound_left_hand[0], self.shoulder_right[0])
+                left_y = random.uniform(self.shoulder_right[1], settings.MARGIN)
 
                 if left_x > settings.WIDTH:
                     left_x = settings.WIDTH - settings.MARGIN
@@ -756,13 +770,9 @@ class DiagonalsScene(Scene):
                 self.points_left.add(self.left_point)
 
             if len(self.points_right) == 0 and bola_permitida_drch:
-                right_x_bound = int(
-                    results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER].x * settings.WIDTH)
-                right_y_bound = int(
-                    results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER].y * settings.HEIGHT)
 
-                right_x = random.randint(right_x_bound, settings.WIDTH-settings.MARGIN)
-                right_y = random.randint(settings.MARGIN, right_y_bound)
+                right_x = random.uniform(self.shoulder_left[0], self.bound_right_hand[0])
+                right_y = random.uniform(self.shoulder_left[1], settings.MARGIN)
 
                 if right_x > settings.WIDTH:
                     right_x = settings.WIDTH - settings.MARGIN
