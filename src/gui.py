@@ -12,61 +12,79 @@ class ImageButton:
         self.rect.x = position[0]
         self.rect.y = position[1]
 
-        self.clicked = False
+        self._clicked = False
  
     def on_click(self, event):
         action = False
         pos = pygame.mouse.get_pos()
         if self.rect.collidepoint(pos):
-            if pygame.mouse.get_pressed()[0] and not self.clicked:
+            if pygame.mouse.get_pressed()[0] and not self.get_clicked_state():
                 action = True
-                self.clicked = True
+                self._clicked = True
             if not pygame.mouse.get_pressed()[0]:
-                self.clicked = False
+                self._clicked = False
 
         return action
 
+    def get_clicked_state(self):
+        return self._clicked
+
+    def set_clicked_true(self):
+        self._clicked = True
+
+    def set_clicked_false(self):
+        self._clicked = False
+
     def update(self):
-        if self.clicked:
-            return True
-        return False
+        if self.get_clicked_state():
+            self._clicked = False
+            
+    def update(self):
+        if self.get_clicked_state():
+            self._clicked = False
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)
 
 class Button:
-    def __init__(self, position, text):
+    def __init__(self, position, text, color=None):
         self.bottom_rect = pygame.Rect((position[0]+6, position[1]+6), (200, 50))
         self.top_rect = pygame.Rect((position[0], position[1]), (200, 50))
-        
+        self.color = GRANATE if color == None else color
         self.text = FONTS['medium'].render(text, True, WHITE)
         self.text_rect = self.text.get_rect()
         self.text_rect.center = self.top_rect.center
 
-        self.clicked = False
+        self._clicked = False
  
     def on_click(self, event):
-        action = False
         pos = pygame.mouse.get_pos()
         if self.top_rect.collidepoint(pos):
-            if pygame.mouse.get_pressed()[0] and not self.clicked:
-                action = True
-                self.clicked = True
+            if pygame.mouse.get_pressed()[0] and not self.get_clicked_state():
+                self.set_clicked_true()
                 return True
             if not pygame.mouse.get_pressed()[0]:
                 return False
-        return action
+        return False
+    
+    def get_clicked_state(self):
+        return self._clicked
+    
+    def set_clicked_true(self):
+        self._clicked = True
+
+    def set_clicked_false(self):
+        self._clicked = False
     
     def update(self):
-        if self.clicked:
-            self.clicked = False
+        if self.get_clicked_state():
+            self._clicked = False
 
     def draw(self, display):
-        top_rect_color = GRANATE
 
         # Si no pulsamos dibujamos todo en su posición original
         pygame.draw.rect(display, GRIS, self.bottom_rect)
-        pygame.draw.rect(display, top_rect_color, self.top_rect)
+        pygame.draw.rect(display, self.color, self.top_rect)
 
         display.blit(self.text, self.text_rect) 
 
