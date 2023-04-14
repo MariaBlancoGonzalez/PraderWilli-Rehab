@@ -8,81 +8,97 @@ class ImageButton:
         self.image = image
         self.scale = scale
         self.image = pygame.transform.scale(self.image, self.scale)
-        self.rect = self.image.get_rect()
-        self.rect.x = position[0]
-        self.rect.y = position[1]
+        self.top_rect = self.image.get_rect()
+        self.top_rect.x = position[0]
+        self.top_rect.y = position[1]
 
-        self._clicked = False
+        self.__clicked = False
  
     def on_click(self, event):
         action = False
         pos = pygame.mouse.get_pos()
-        if self.rect.collidepoint(pos):
+        if self.top_rect.collidepoint(pos):
             if pygame.mouse.get_pressed()[0] and not self.get_clicked_state():
                 action = True
-                self._clicked = True
+                self.__clicked = True
             if not pygame.mouse.get_pressed()[0]:
-                self._clicked = False
+                self.__clicked = False
 
         return action
 
     def get_clicked_state(self):
-        return self._clicked
+        return self.__clicked
 
     def set_clicked_true(self):
-        self._clicked = True
+        self.__clicked = True
 
     def set_clicked_false(self):
-        self._clicked = False
+        self.__clicked = False
 
     def update(self):
         if self.get_clicked_state():
-            self._clicked = False
+            self.__clicked = False
             
     def update(self):
         if self.get_clicked_state():
-            self._clicked = False
+            self.__clicked = False
 
     def draw(self, screen):
-        screen.blit(self.image, self.rect)
+        screen.blit(self.image, self.top_rect)
 
 class Button:
-    def __init__(self, position, text, color=None):
-        self.bottom_rect = pygame.Rect((position[0]+6, position[1]+6), (200, 50))
-        self.top_rect = pygame.Rect((position[0], position[1]), (200, 50))
-        self.color = GRANATE if color == None else color
+    def __init__(self, position, text, color=GRANATE, width=200):
+        self.bottom_rect = pygame.Rect((position[0]+6, position[1]+6), (width, 50))
+        self.top_rect = pygame.Rect((position[0], position[1]), (width, 50))
+        self.color = color
         self.text = FONTS['medium'].render(text, True, WHITE)
         self.text_rect = self.text.get_rect()
         self.text_rect.center = self.top_rect.center
 
-        self._clicked = False
- 
+        self.__pressed = False
+        self.__clicked = False
+
+        self.fillColors = {
+            'normal': self.color,
+            'hover': '#666666',
+            'pressed': '#333333',
+        }
+
     def on_click(self, event):
         pos = pygame.mouse.get_pos()
-        if self.top_rect.collidepoint(pos):
-            if pygame.mouse.get_pressed()[0] and not self.get_clicked_state():
-                self.set_clicked_true()
-                return True
-            if not pygame.mouse.get_pressed()[0]:
-                return False
-        return False
-    
-    def get_clicked_state(self):
-        return self._clicked
-    
-    def set_clicked_true(self):
-        self._clicked = True
+        for ev in event:
+            if not self.top_rect.collidepoint(pos) and self.color != self.fillColors['normal']:
+                self.color = self.fillColors['normal']
+                self.set_clicked(False)
+                self.set_pressed(False)
 
-    def set_clicked_false(self):
-        self._clicked = False
+            if self.top_rect.collidepoint(pos) and not self.get_clicked():
+                self.color = self.fillColors['hover']
+
+            if ev.type == pygame.MOUSEBUTTONDOWN and self.top_rect.collidepoint(pos):
+                self.color = self.fillColors['pressed']
+                self.set_clicked(True)
+
+            elif ev.type == pygame.MOUSEBUTTONUP and self.get_clicked() and self.top_rect.collidepoint(pos):
+                return True                   
+        return False
+
+    def set_pressed(self, bool):
+        self.__pressed = bool
+
+    def get_pressed(self):
+        return self.__pressed
+    
+    def get_clicked(self):
+        return self.__clicked
+    
+    def set_clicked(self, bool):
+        self.__clicked = bool
     
     def update(self):
-        if self.get_clicked_state():
-            self._clicked = False
+        pass
 
     def draw(self, display):
-
-        # Si no pulsamos dibujamos todo en su posición original
         pygame.draw.rect(display, GRIS, self.bottom_rect)
         pygame.draw.rect(display, self.color, self.top_rect)
 
@@ -129,7 +145,7 @@ class DropDown():
     def __init__(self, color_menu, color_option, x, y, w, h, font, main, option):
         self.color_menu = color_menu
         self.color_option = color_option
-        self.rect = pygame.Rect(x, y, w, h)
+        self.top_rect = pygame.Rect(x, y, w, h)
         self.font = font
         self.main = main
         self.option = option
@@ -137,25 +153,25 @@ class DropDown():
         self.menu_active = False
         
     def draw(self, surf):
-        pygame.draw.rect(surf, self.color_menu[self.menu_active], self.rect, 0)
+        pygame.draw.rect(surf, self.color_menu[self.menu_active], self.top_rect, 0)
         msg = self.font.render(self.main, 1, (0, 0, 0))
-        surf.blit(msg, msg.get_rect(center = self.rect.center))
+        surf.blit(msg, msg.get_rect(center=self.top_rect.center))
 
         if self.draw_menu:
             for i, text in enumerate(self.option):
-                rect = self.rect.copy()
-                rect.y += (i+1) * self.rect.height
+                rect = self.top_rect.copy()
+                rect.y += (i+1) * self.top_rect.height
                 pygame.draw.rect(surf, self.color_option[1 if i == self.main else 0], rect, 0)
                 msg = self.font.render(text, True, (0, 0, 0))
                 surf.blit(msg, msg.get_rect(center = rect.center))
 
     def update(self, event_list):
         mpos = pygame.mouse.get_pos()
-        self.menu_active = self.rect.collidepoint(mpos)
+        self.menu_active = self.top_rect.collidepoint(mpos)
 
         for i in range(len(self.option)):
-            rect = self.rect.copy()
-            rect.y += (i+1) * self.rect.height
+            rect = self.top_rect.copy()
+            rect.y += (i+1) * self.top_rect.height
             if rect.collidepoint(mpos) and self.draw_menu:
                 self.main = self.option[i]
                
@@ -239,10 +255,14 @@ class InputNumberBox:
                 # Change the current color of the input box.
                 self.color = WHITE if self.active else BLACK
             if event.type == pygame.KEYDOWN:
-                if self.active:                        
+                if self.active:              
                     if event.key == pygame.K_BACKSPACE:
                         self.text = self.text[:-1]
+                    # For numbers
                     elif 48 <= event.key <= 59:
+                        self.text += event.unicode
+                    # For commas 46 = '.' and 44 = ','
+                    elif event.key == 46 or event.key==44:
                         self.text += event.unicode
                     # Re-render the text.
                     self.txt_surface = FONTS['medium'].render(

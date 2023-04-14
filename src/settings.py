@@ -2,6 +2,13 @@ import pygame
 # Texts
 CAPTION= 'Prader Willi'
 
+# Cursor
+CURSOR_CLICK = './assets/icons/cursor_click.png'
+
+# Tutorial
+HISTORIAL = './assets/images/historial.png'
+OPCIONES = './assets/images/opciones.png'
+
 # Images and icons
 ROCKET = './assets/icons/cohete.png'
 HAND_POINTER = './assets/icons/hand-pointer.png'
@@ -11,13 +18,10 @@ VERDE = './assets/icons/verde.png'
 BODY = './assets/images/body.png'
 PUNTERO_ROJO = './assets/icons/red_circle.png'
 BOMBA = './assets/icons/bomb.png'
-ATRAS = './assets/icons/atras.png'
 MASCOTA_NORMAL = './assets/images/normal.png'
 FLECHA_DERECHA = './assets/icons/drch.png'
 FLECHA_IZQUIERDA = './assets/icons/izq.png'
-ANADIR = './assets/icons/anadir.png'
 PDF = './assets/icons/pdf.png'
-LINEA_HORIZONTAL = './assets/icons/linea_horizontal.png'
 MODIFY = './assets/icons/modificar.png'
 
 # Miniaturas

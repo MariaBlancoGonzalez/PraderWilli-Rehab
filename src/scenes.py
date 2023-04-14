@@ -48,45 +48,56 @@ class RecordScene(Scene):
         super().__init__(game)
         self._name_scene = 'RecordScene'
         self.current_user = game.current_user
-        self.historial = settings.FONTS['header'].render(
-            "Historial", True, settings.BLACK)
+
+        # Text
+        self.historial = settings.FONTS['header'].render("Historial", True, settings.BLACK)
+        self.fontUnderline = settings.FONTS['arial_small']
+        self.fontUnderline.set_underline(True)
+        self.no_data = self.fontUnderline.render(f"No hay datos disponibles", True, settings.BLACK)
+
+        # Images
+        self.imagePDF = pygame.image.load(settings.PDF)
         
+        # Buttons
+        self.button_back = Button((100, 20),  "Volver", settings.AMARILLO)
         self.userDropDown = DropDown(
-            [settings.GRISCLARO, settings.WHITE],
-            [settings.WHITE, settings.GRISCLARO],
+            [settings.GRISCLARO, settings.WHITE],[settings.WHITE, settings.GRISCLARO],
             100, 100, 200, 35,
             settings.FONTS['arial_small'],
             f'{game.current_user}', game.user_list)
-        
+
         self.exerDropDown = DropDown(
-            [settings.GRISCLARO, settings.WHITE],
-            [settings.WHITE, settings.GRISCLARO],
-            530, 100, 200, 35, 
+            [settings.GRISCLARO, settings.WHITE],[settings.WHITE, settings.GRISCLARO],
+            530, 100, 200, 35,
             settings.FONTS['arial_small'],
             f'{game.exer_list[0]}', game.exer_list)
         
+        self.pdfDownload = ImageButton(self.imagePDF, (1170, 100), 'pdf', (45,45))
+        self.button_group = [self.button_back, self.pdfDownload, self.exerDropDown, self.userDropDown]
+
+        # Sources
+        self.right_source = Source(self.game.display, settings.PUNTERO_ROJO)
+        self.left_source = Source(self.game.display, settings.PUNTERO_ROJO)
+
+        # Initiate dropdown
         self.current_exer = self.exerDropDown.main
-        self.tiempo=[]
+        self.id_exer = get_id(self.exerDropDown.main)
+        self.id_user = get_id(self.game.current_user)
+        
+        # Get data
+        self.tiempo = []
         self.izq_errores = []
         self.izq_aciertos = []
         self.drcha_errores = []
         self.drcha_aciertos = []
-
-        self.id_exer = get_id(self.exerDropDown.main)
-        self.id_user = get_id(self.game.current_user)
         self.get_data()
 
-        self.color = (238, 205, 134, 150)
-
-        self.fontUnderline = settings.FONTS['arial_small']
-        self.fontUnderline.set_underline(True)
-
+        # Variables to compute
         self.best_score, self.best_day = 0,0
         self.media_total_fallos, self.media_total_aciertos = 0,0
         self.media_errores_d, self.media_errores_i = 0,0
-
-        self.no_data = self.fontUnderline.render(
-            f"No hay datos disponibles", True, settings.BLACK)
+        
+        # This shouldnt be done here TODO
         if self.data != []:
             self.tiempo, self.izq_errores, self.izq_aciertos, self.drcha_errores, self.drcha_aciertos = distribute_data(self.data)
 
@@ -117,12 +128,14 @@ class RecordScene(Scene):
             self.surf_drcha = pygame.image.fromstring(
                 self.raw_data_drcha, self.size_drcha, "RGB")
 
-        # button pdf
-        self.imagePDF = pygame.image.load(settings.PDF)
-        self.pdfDownload = ImageButton(self.imagePDF, (1170, 100), 'pdf', (45,45))
-        # button back
-        self.image = pygame.image.load(settings.ATRAS)
-        self.home_btn = ImageButton(self.image, (15, 735), 'atras')
+        
+        # Tracking time
+        self.time_hand = 0
+        self.pressed_back = pygame.time.get_ticks()
+
+        # Progress bar
+        self.bar_rect = pygame.Rect(40, (game.display.get_size()[1])-50, 700, 30)
+        self.width = 0
 
     def get_data(self):
         broker = Broker()
@@ -134,7 +147,7 @@ class RecordScene(Scene):
         self.userDropDown.update(events)
         self.game.current_user = self.userDropDown.main
         self.exerDropDown.update(events)
-        if self.home_btn.on_click(events):
+        if self.button_back.get_pressed() or self.button_back.on_click(events):
             self.game.change_scene(MenuScene(self.game))
         if self.pdfDownload.on_click(events):
             user = self.current_user.split('-')[1]
@@ -178,47 +191,52 @@ class RecordScene(Scene):
             else:
                 self.best_score, self.best_day = 0, 0
 
-    def draw(self):
-        self.game.display.fill(settings.GRANATE)
+        pos = pygame.mouse.get_pos()
+        if any(button.top_rect.collidepoint(pos) for button in self.button_group):
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+        else:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
-        pygame.draw.rect(self.game.display, self.color,
-                         pygame.Rect(40, 160, 1200, 560))
-        
-        self.home_btn.draw(self.game.display)
-        self.pdfDownload.draw(self.game.display)
+    def reset_time(self):
+        self.time_hand = 0
+        self.width = 0
+
+    def draw(self):
+        # Backgroun colors
+        self.game.display.fill(settings.GRANATE)
+        pygame.draw.rect(self.game.display, settings.AMARILLO,pygame.Rect(40, 160, 1200, 560))
+
+        # Text
         self.game.display.blit(self.historial, (settings.WIDTH//3+30, 10))
-        
+
+        # Buttons
+        self.button_back.draw(self.game.display)
+        self.pdfDownload.draw(self.game.display)
         self.userDropDown.draw(self.game.display)
         self.exerDropDown.draw(self.game.display)
 
         if self.data != [] and self.game.current_user == self.current_user:
-            self.mejor = settings.FONTS['arial_small'].render(
-                f"-Mejor marca: {self.best_score}", True, settings.BLACK)
-            self.dia = settings.FONTS['arial_small'].render(
-                f"-Fecha: {self.best_day}", True, settings.BLACK)
+            self.mejor = settings.FONTS['arial_small'].render(f"-Mejor marca: {self.best_score}", True, settings.BLACK)
+            self.dia = settings.FONTS['arial_small'].render(f"-Fecha: {self.best_day}", True, settings.BLACK)
 
-            self.media_fallos = settings.FONTS['arial_small'].render(
-                f"-Aciertos medios: {round(self.media_total_fallos,2)}", True, settings.BLACK)
-            self.media_aciertos = settings.FONTS['arial_small'].render(
-                f"-Errores medios: {round(self.media_total_aciertos,2)}", True, settings.BLACK)
+            self.media_fallos = settings.FONTS['arial_small'].render(f"-Aciertos medios: {round(self.media_total_fallos,2)}", True, settings.BLACK)
+            self.media_aciertos = settings.FONTS['arial_small'].render(f"-Errores medios: {round(self.media_total_aciertos,2)}", True, settings.BLACK)
 
-            self.media_aciertos_dr = settings.FONTS['arial_small'].render(
-                f"-Aciertos medios derecha: {round(self.media_aciertos_d,2)}", True, settings.BLACK)
-            self.media_aciertos_iz = settings.FONTS['arial_small'].render(
-                f"-Aciertos medios izquierda: {round(self.media_aciertos_i,2)}", True, settings.BLACK)
+            self.media_aciertos_dr = settings.FONTS['arial_small'].render(f"-Aciertos medios derecha: {round(self.media_aciertos_d,2)}", True, settings.BLACK)
+            self.media_aciertos_iz = settings.FONTS['arial_small'].render(f"-Aciertos medios izquierda: {round(self.media_aciertos_i,2)}", True, settings.BLACK)
 
-            self.media_err_dr = settings.FONTS['arial_small'].render(
-                f"-Errores medios derecha: {round(self.media_errores_d,2)}", True, settings.BLACK)
-            self.media_err_iz = settings.FONTS['arial_small'].render(
-                f"-Errores medios izquierda: {round(self.media_errores_i,2)}", True, settings.BLACK)
+            self.media_err_dr = settings.FONTS['arial_small'].render(f"-Errores medios derecha: {round(self.media_errores_d,2)}", True, settings.BLACK)
+            self.media_err_iz = settings.FONTS['arial_small'].render(f"-Errores medios izquierda: {round(self.media_errores_i,2)}", True, settings.BLACK)
 
-            self.rect_stats = pygame.Surface(
-                (370, 525))  # the size of your rect
+            # Statistics rectangle
+            self.rect_stats = pygame.Surface((370, 525))  # the size of your rect
             self.rect_stats.set_alpha(128)                # alpha level
+
             # this fills the entire surface
             self.rect_stats.fill((255, 255, 255))
 
-            self.game.display.blit(self.rect_stats, (840,170))    # (0,0) are the top-left coordinates
+            # Statistics
+            self.game.display.blit(self.rect_stats, (840,170)) 
             self.game.display.blit(self.surf_izq, (40,160))
             self.game.display.blit(self.surf_drcha, (40,430))
             self.game.display.blit(self.mejor, (870, 230))
@@ -232,7 +250,55 @@ class RecordScene(Scene):
             self.game.display.blit(self.media_err_iz, (870, 580))
             
         else:
+            # If there is no data
             self.game.display.blit(self.no_data, (100, 200))
+
+        # Sources
+        self.right_source.draw(self.game.display)
+        self.left_source.draw(self.game.display)
+
+        # Draw progress bar
+        pygame.draw.rect(self.game.display, settings.WHITE,(41, (self.game.display.get_size()[1])-50, self.width, 30))
+        pygame.draw.rect(self.game.display, settings.BLACK, self.bar_rect, 2)
+
+    def check_collide(self, left, right):
+        if self.button_back.top_rect.collidepoint(left.rect.centerx, left.rect.centery) or self.button_back.top_rect.collidepoint(right.rect.centerx, right.rect.centery):
+            return "Volver"
+
+        return ""
+
+    def count(self, start_ticks):
+        seconds=(pygame.time.get_ticks()-start_ticks)/1000 #calculate how many seconds
+        if seconds >= settings.TIME_BUTTONS:
+            return seconds
+        return seconds
+    
+    def tracking(self, results):
+        action = ""
+        coefficient = settings.WIDTH_LOAD_BAR / settings.TIME_BUTTONS
+        left_hand, right_hand = get_points(results)
+        self.left_source.rect.centerx = left_hand[0] * settings.WIDTH
+        self.left_source.rect.centery = left_hand[1] * settings.HEIGHT
+        self.right_source.rect.centerx = right_hand[0] * settings.WIDTH
+        self.right_source.rect.centery = right_hand[1] * settings.HEIGHT
+
+        # Colisiones
+        action = self.check_collide(self.left_source, self.right_source)
+        # ------------------------------------------
+        if action == "Volver":
+            self.time_hand = self.count(self.pressed_back)
+        else:
+           self.pressed_back = pygame.time.get_ticks()
+        # ------------------------------------------
+
+        self.width = self.time_hand * coefficient
+
+        if action == "":
+            self.reset_time()
+        
+        if self.time_hand > settings.TIME_BUTTONS:
+            if action == "Volver":
+                self.button_back.set_pressed(True)
 
 class MenuScene(Scene):
     def __init__(self, game):
@@ -240,33 +306,42 @@ class MenuScene(Scene):
         self._name_scene = 'MenuScene'
         self.screen = game.display
 
+        # Buttons
         self.button_activities = Button((100, self.screen.get_size()[1]/3),  "Activities")
-        self.button_options = Button((900, self.screen.get_size()[1]/3),  "Opciones")
-        self.button_historial = Button((500, self.screen.get_size()[1]/3),  "Historial")
-        self.button_exit = Button((900, self.screen.get_size()[1]-100),  "Salir")
-        self.button_tutorial = Button((100, 70), "Tutorial")
-
-        self.bienvenido = settings.FONTS['header'].render("BIENVENIDO", True, settings.BLACK)
-        self.message = settings.FONTS['medium'].render("Elige una de las posibles acciones", True, settings.BLACK)
-        self.text_user = settings.FONTS['medium'].render("Usuario", True, settings.BLACK)
+        self.button_options = Button((1000, self.screen.get_size()[1]/3),  "Opciones")
+        self.button_historial = Button((400, self.screen.get_size()[1]/3),  "Historial")
+        self.button_tutorial = Button((700, self.screen.get_size()[1]/3), "Tutorial")
+        self.button_exit = Button((1000, 80),  "Salir")
         
-        self.bar_rect = pygame.Rect(100, (self.screen.get_size()[1])-90, 700, 30)
         self.userDropDown = DropDown(
             [settings.GRISCLARO, settings.WHITE],
             [settings.WHITE, settings.GRISCLARO],
-            1000, 80, 200, 35, 
+            100, 80, 200, 35, 
             settings.FONTS['arial_small'],
             f'{game.current_user}', game.user_list)
+        
+        self.button_group = [self.button_activities, self.button_exit, self.button_historial, self.button_options, self.button_tutorial, self.userDropDown]
 
+        # Text
+        self.bienvenido = settings.FONTS['header'].render("BIENVENIDO", True, settings.BLACK)
+        self.message = settings.FONTS['medium'].render("Elige una de las posibles acciones", True, settings.BLACK)
+        self.text_user = settings.FONTS['medium'].render("Usuario", True, settings.BLACK)
+
+        # Sources
         self.right_source = Source(self.screen, settings.PUNTERO_ROJO)
         self.left_source = Source(self.screen, settings.PUNTERO_ROJO)
-        self.width = 0
+
+        # Tracking time
         self.time_hand = 0
         self.pressed_activities = pygame.time.get_ticks()
         self.pressed_options = pygame.time.get_ticks()
         self.pressed_tutorial = pygame.time.get_ticks()
         self.pressed_history = pygame.time.get_ticks()
         self.pressed_exit = pygame.time.get_ticks()
+
+        # Bar progress
+        self.bar_rect = pygame.Rect(100, (self.screen.get_size()[1])-90, 700, 30)
+        self.width = 0
 
     def draw(self):
         # Buttons
@@ -283,7 +358,7 @@ class MenuScene(Scene):
         self.screen.blit(self.message, self.message.get_rect(
             center=(settings.WIDTH // 2, settings.HEIGHT // 5)))
         self.screen.blit(self.text_user, self.text_user.get_rect(
-							center=(1050, 60)))
+							center=(150, 60)))
 
         self.userDropDown.draw(self.screen)
         # Draw progress bar
@@ -293,29 +368,26 @@ class MenuScene(Scene):
 
     def events(self, event):
         self.userDropDown.update(event)
+        
         self.game.current_user = self.userDropDown.main
-        if self.button_activities.on_click(event) or self.button_activities.clicked == True:
+        if self.button_activities.get_pressed() or self.button_activities.on_click(event):
             self.game.change_scene(ActivitiesScene(self.game))
-            self.button_activities.clicked = False
-        if self.button_options.on_click(event) or self.button_options.clicked == True:
+        if self.button_options.get_pressed() or self.button_options.on_click(event):
             self.game.change_scene(OptionsScene(self.game))
-            self.button_options.clicked=False
-        if self.button_historial.on_click(event) or self.button_historial.clicked == True:
+        if self.button_historial.get_pressed() or self.button_historial.on_click(event):
             self.game.change_scene(RecordScene(self.game))
-            self.button_historial.clicked = False
-        if self.button_tutorial.on_click(event) or self.button_tutorial.clicked == True:
+        if self.button_tutorial.get_pressed() or self.button_tutorial.on_click(event):
             self.game.change_scene(TutorialScene(self.game))
-            self.button_tutorial.clicked = False
-        if self.button_exit.on_click(event) or self.button_exit.clicked == True:
+        if self.button_exit.get_pressed() or self.button_exit.on_click(event):
             pygame.quit()
             sys.exit()
 
     def update(self, dt):
-        self.button_options.update()
-        self.button_activities.update()
-        self.button_tutorial.update()
-        self.button_exit.update()
-        self.button_historial.update()
+        pos = pygame.mouse.get_pos()
+        if any(button.top_rect.collidepoint(pos) for button in self.button_group):
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+        else:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
     def count(self, start_ticks):
         seconds=(pygame.time.get_ticks()-start_ticks)/1000 #calculate how many seconds
@@ -389,28 +461,26 @@ class MenuScene(Scene):
 
         if self.time_hand > settings.TIME_BUTTONS:
             if action == "Activities":
-                self.button_activities.clicked = True
+                self.button_activities.set_pressed(True)
             elif action == "Options":
-                self.button_options.clicked = True
+                self.button_options.set_pressed(True)
             elif action == "Tutorial":
-                self.button_tutorial.clicked = True
+                self.button_tutorial.set_pressed(True)
             elif action == "Exit":
-                self.button_exit.clicked = True
+                self.button_exit.set_pressed(True)
             elif action == "Record":
-                self.button_historial.clicked = True
+                self.button_historial.set_pressed(True)
 
 class CalibrationScene(Scene):
     def __init__(self, options):
         super().__init__(options)
         self._name_scene ='Calibration'
         self.screen = options.display
+
+        # Images
         self.body = Sticker(self.screen, settings.BODY, settings.WIDTH/2, settings.HEIGHT/2, 1000, 760)
 
-		# Count, extrabig, mess, medium
-        self.instructions = settings.FONTS['medium'].render("Haz visibles los siguientes puntos en la pantalla", True, settings.BLACK)
-        self.mostrar_instrucciones = True
-
-		# Puntos de la cabeza
+        # Puntos de la cabeza
         self.verde_cabeza = Sticker(self.screen, settings.VERDE, 640, 80, 60,60)
         self.rojo_cabeza = Sticker(self.screen, settings.ROJO, 640, 80, 60, 60)
 
@@ -428,20 +498,23 @@ class CalibrationScene(Scene):
         self.verde_izq_pie = Sticker(self.screen, settings.VERDE, 680, 700, 60,60)
         self.rojo_izq_pie  =  Sticker(self.screen, settings.ROJO, 680, 700, 60,60)
 
-        # Tiempos
+		# Text
+        self.instructions = settings.FONTS['medium'].render("Haz visibles los siguientes puntos en la pantalla", True, settings.BLACK)
+        self.mostrar_instrucciones = True
+        self.texto = BackgroundText('Haz visibles los puntos en la pantalla', (100, 300), settings.WHITE, settings.GRIS, 30)
+		
+
+        # Tracking time
         self.timer = pygame.time.get_ticks()
+        self.ticks = pygame.time.get_ticks()
         self.seconds = 0
+        self.time_instr = 0
+
+        # About calibration
         self.points = []
         self.checker = [False, False, False, False, False]
-
         self.current_results = None
         self.calibrated = False
-
-        self.texto = BackgroundText(
-            'Haz visibles los puntos en la pantalla', (100, 300), settings.WHITE, settings.GRIS, 30)
-        
-        self.time_instr =0
-        self.ticks = pygame.time.get_ticks()
     
     def events(self, ev):
         pass
@@ -576,14 +649,17 @@ class DiagonalsScene(Scene):
         self.claps = pygame.mixer.Sound(settings.CLAPS)
         self.explosion = pygame.mixer.Sound(settings.EXPLOSION_SOUND)
 
+        # Sources
         self.right_source = Source(game.display, settings.ROCKET)
         self.left_source = Source(game.display, settings.ROCKET)
         self.hands = Group([self.right_source, self.left_source])
 
+        # No se dibujan, simplemente sirven como un Sprite checker para que los pies no se salgan
         self.right_foot = Source(self.game.display, settings.LINEA_HORIZONTAL)
         self.left_foot = Source(self.game.display, settings.LINEA_HORIZONTAL)
         self.feet_group = Group([self.right_foot, self.left_foot])
      
+        # Points and animations
         self.right_point = None
         self.left_point = None
         self.points_left = Group()
@@ -603,16 +679,17 @@ class DiagonalsScene(Scene):
 
         self.puntuacion = 0
 
-        self.texto = BackgroundText(
-            'Atrapa las estrellas con las manos', (120, 300), settings.WHITE, settings.GRIS, 30)
-        self.texto_partes = BackgroundText(
-            'Muestra todas las partes del cuerpo', (120, 300), settings.WHITE, settings.GRIS, 30)
-        self.texto_pies = BackgroundText(
-            'Coloca los pies en la casilla', (150, 300), settings.WHITE, settings.GRIS, 30)
+        # Text
+        self.texto = BackgroundText('Atrapa las estrellas con las manos', (120, 300), settings.WHITE, settings.GRIS, 30)
+        self.texto_partes = BackgroundText('Muestra todas las partes del cuerpo', (120, 300), settings.WHITE, settings.GRIS, 30)
+        self.texto_pies = BackgroundText('Coloca los pies en la casilla', (150, 300), settings.WHITE, settings.GRIS, 30)
+
+        # Tracking time to show instruc.
         self.mostrar_instrucciones = True
         self.time_instr = 0
         self.ticks = 0
 
+        # If calibration is done before start
         self.feet_right = None if game.static_points == None else (self.game.static_points.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_ANKLE].x, self.game.static_points.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_ANKLE].y)
         self.feet_left = None if game.static_points == None else (self.game.static_points.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_ANKLE].x, self.game.static_points.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_ANKLE].y)
         self.calibration = False if game.static_points == None else True
@@ -629,17 +706,23 @@ class DiagonalsScene(Scene):
         else:  
             self.bound_left_hand, self.bound_left_hand = (0, 0), (0, 0)
 
+        # Tracking time during game
         self.time_left = pygame.time.get_ticks()
         self.time_right = pygame.time.get_ticks()
 
+        # In case calibration is not done
         self.calibration_object = CalibrationScene(self.game)
 
+        # Some checkers and timer
         self.timer = 0
         self.current_results = None
         self.visibility_checker = True
         self.feet_checker = True
         self.current_time = self.tiempo_juego
+
+        # Game complete
         self.end = False
+
     def reset_sticker_timer(self):
         self.time_right = pygame.time.get_ticks()
         self.time_left = pygame.time.get_ticks()
@@ -891,92 +974,201 @@ class DiagonalsScene(Scene):
                          self.errores_derecha, self.aciertos_derecha)
         broker.close()
 
-'''        elif all(item is True for item in self.checker) and points_available == True:
-            d_right, d_left = self.calculate_distances(final_results)
-            d_point, l_point = self.calculate_final_point(final_results, d_right, d_left)
-            print(d_point[0]*WIDTH, d_point[1]*HEIGHT)
-            d = Sticker(self.screen, VERDE, d_point[0]*WIDTH, d_point[1]*HEIGHT, 60, 60)
-            d.draw(self.screen)
-            l = Sticker(self.screen, VERDE, l_point[0]*WIDTH, l_point[1]*HEIGHT, 60, 60)
-            l.draw(self.screen)
-            pygame.display.flip()'''
-
 class TutorialScene(Scene):
     def __init__(self, game):
         super().__init__(game)
         self._name_scene = 'TutorialScene'
-        self.tutorial = settings.FONTS['header'].render(
-            "Tutorial", True, settings.BLACK)
 
+        # Text
+        self.tutorial = settings.FONTS['header'].render("Tutorial", True, settings.BLACK)
+        
+        # Images
         self.flecha_drch = pygame.image.load(settings.FLECHA_DERECHA)
         self.flecha_izq = pygame.image.load(settings.FLECHA_IZQUIERDA)
-        self.flecha_drch_button = ImageButton(self.flecha_drch, (450, 400), 'drch', (50,50))
-        self.flecha_izq_button = ImageButton(self.flecha_izq, (450, 100), 'izq', (50,50))
-        
         self.pet = pygame.image.load(settings.MASCOTA_NORMAL)
-        self.pet = pygame.transform.scale(self.pet, (500,500))
-        self.image = pygame.image.load(settings.ATRAS)
-        self.home_btn = ImageButton(self.image, (15, 735), 'atras')
+        self.pet = pygame.transform.scale(self.pet, (500, 500))
+        historial = pygame.image.load(settings.HISTORIAL)
+        historial = pygame.transform.scale(historial, (1000,500))
+        opciones = pygame.image.load(settings.OPCIONES)
+        opciones = pygame.transform.scale(opciones, (1000, 500))
+        # Tutorial images
+        self.images_group = [historial, opciones]
+        
+        # Needed variables
+        self.current_image = 0
+
+        # Buttons
+        self.button_back = Button((170, 30), "Volver", settings.AMARILLO)
+        self.button_arrow_left = Button((45, settings.HEIGHT//2), "<", settings.GRANATE, 50)
+        self.button_arrow_right = Button((1178, settings.HEIGHT//2), ">", settings.GRANATE, 50)
+        self.button_group = [self.button_back, self.button_arrow_left, self.button_arrow_right]
+        # Sources
+        self.right_source = Source(self.game.display, settings.PUNTERO_ROJO)
+        self.left_source = Source(self.game.display, settings.PUNTERO_ROJO) 
+
+        # Tracking time
+        self.time_hand = 0
+        self.pressed_back = pygame.time.get_ticks()
+        self.pressed_right = pygame.time.get_ticks()
+        self.pressed_left = pygame.time.get_ticks()
+
+        # Progress bar
+        self.bar_rect = pygame.Rect(40, (game.display.get_size()[1])-50, 700, 30)
+        self.width = 0
+    
+    def check_collide(self, left, right):
+        if self.button_back.top_rect.collidepoint(left.rect.centerx, left.rect.centery) or self.button_back.top_rect.collidepoint(right.rect.centerx, right.rect.centery):
+            return "Volver"
+        elif self.button_arrow_left.top_rect.collidepoint(left.rect.centerx, left.rect.centery) or self.button_arrow_left.top_rect.collidepoint(right.rect.centerx, right.rect.centery):
+            return "<"
+        elif self.button_arrow_right.top_rect.collidepoint(left.rect.centerx, left.rect.centery) or self.button_arrow_right.top_rect.collidepoint(right.rect.centerx, right.rect.centery):
+            return ">"
+
+        return ""
     
     def draw(self):
+        # Backgrounds
         self.game.display.fill(settings.GRANATE)
-
-        pygame.draw.rect(self.game.display, settings.AMARILLO,
-                         pygame.Rect(350, 100, 900, 650))
+        pygame.draw.rect(self.game.display, settings.AMARILLO,pygame.Rect(40, 160, 1200, 560))
         
-        self.home_btn.draw(self.game.display)
-        self.flecha_drch_button.draw(self.game.display)
-        self.flecha_izq_button.draw(self.game.display)
-        self.game.display.blit(self.pet, (30, 300))
+        # Text
         self.game.display.blit(self.tutorial, (settings.WIDTH//3+30, 10))
 
-    def events(self, events):
-        if self.home_btn.on_click(events):
-            self.game.change_scene(MenuScene(self.game))
+        # Buttons
+        self.button_back.draw(self.game.display)
+        self.button_arrow_left.draw(self.game.display)
+        self.button_arrow_right.draw(self.game.display)
 
+        # For show current image
+        self.game.display.blit(self.images_group[self.current_image], (150,200))
+
+        # Sources
+        self.right_source.draw(self.game.display)
+        self.left_source.draw(self.game.display)
+
+        # Draw progress bar
+        pygame.draw.rect(self.game.display, settings.WHITE,(41, (self.game.display.get_size()[1])-50, self.width, 30))
+        pygame.draw.rect(self.game.display, settings.BLACK, self.bar_rect, 2)
+
+    def events(self, events):
+        if self.button_back.get_pressed() or self.button_back.on_click(events):
+            self.game.change_scene(MenuScene(self.game))
+        if self.button_arrow_left.get_pressed() or self.button_arrow_left.on_click(events):
+            if self.current_image>0:
+                self.current_image -= 1
+            self.reset_time()
+            self.button_arrow_left.set_pressed(False)
+        if self.button_arrow_right.get_pressed() or self.button_arrow_right.on_click(events):
+            if self.current_image != len(self.images_group)-1:
+                self.current_image += 1
+            self.reset_time()
+            self.button_arrow_right.set_pressed(False)
+
+    def reset_time(self):
+        self.time_hand = 0
+        self.width = 0
+
+    def count(self, start_ticks):
+        seconds = (pygame.time.get_ticks()-start_ticks) / \
+            1000  # calculate how many seconds
+        if seconds >= settings.TIME_BUTTONS:
+            return seconds
+        return seconds
+
+    def tracking(self, results):
+        action = ""
+        coefficient = settings.WIDTH_LOAD_BAR / settings.TIME_BUTTONS
+        left_hand, right_hand = get_points(results)
+        self.left_source.rect.centerx = left_hand[0] * settings.WIDTH
+        self.left_source.rect.centery = left_hand[1] * settings.HEIGHT
+        self.right_source.rect.centerx = right_hand[0] * settings.WIDTH
+        self.right_source.rect.centery = right_hand[1] * settings.HEIGHT
+
+        # Colisiones
+        action = self.check_collide(self.left_source, self.right_source)
+        # ------------------------------------------
+        if action == "Volver":
+            self.time_hand = self.count(self.pressed_back)
+        else:
+            self.pressed_back = pygame.time.get_ticks()
+        # ------------------------------------------
+        if action == ">":
+            self.time_hand = self.count(self.pressed_right)
+        else:
+            self.pressed_right = pygame.time.get_ticks()
+        # ------------------------------------------
+        if action == "<":
+            self.time_hand = self.count(self.pressed_left)
+        else:
+            self.pressed_left = pygame.time.get_ticks()
+
+        self.width = self.time_hand * coefficient
+        
+        if action == "":
+            self.reset_time()
+        if self.time_hand >= settings.TIME_BUTTONS:
+            if action == "Volver":
+                self.button_back.set_pressed(True)
+            elif action == "<":
+                self.button_arrow_left.set_pressed(True)
+            elif action == ">":
+                self.button_arrow_right.set_pressed(True)
+                
     def update(self, dt):
-        pass
+        pos = pygame.mouse.get_pos()
+        if any(button.top_rect.collidepoint(pos) for button in self.button_group):
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+        else:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
 class ActivitiesScene(Scene):
     def __init__(self, game):
         super().__init__(game)
         self._name_scene = 'ActivitiesScene'
-        self.activities = settings.FONTS['header'].render("Actividades", True, settings.BLACK)
-
-        self.right_source = Source(self.game.display, settings.PUNTERO_ROJO)
-        self.left_source = Source(self.game.display, settings.PUNTERO_ROJO)
         
-        self.image = pygame.image.load(settings.ATRAS)
-        self.home_btn = ImageButton(self.image, (15, 735), 'atras')
-        self.button_calibrate = Button((900, self.game.display.get_size()[1]-110), "Calibrar")
-
-        img_diagonales = pygame.image.load(settings.MINIATURA_DIAGONALES)
-        img_modify = pygame.image.load(settings.MODIFY)
-
-        self.diagonales = ImageButton(img_diagonales, (150, 150), 'diagonales', (200, 200))
-        self.txt_diagonales = settings.FONTS['small'].render("Diagonales superiores", True, settings.BLACK)
-        self.button_modify = ImageButton(img_modify, (230,390), 'modificar', (30,30))
-
-        ''' Modify components '''
-        self.modify_components = False
+        # Text
+        self.activities = settings.FONTS['header'].render("Actividades", True, settings.BLACK)
         self.txt_modificadores = settings.FONTS['medium'].render("Modificadores.", True, settings.BLACK)
         self.txt_time = settings.FONTS['small'].render("Tiempo de juego (segundos)", True, settings.BLACK)
-        self.input_time = InputNumberBox(100, 520, 200, 35, text='')
+        self.txt_diagonales = settings.FONTS['small'].render("Diagonales superiores", True, settings.BLACK)
         self.txt_time_appear = settings.FONTS['small'].render("Tiempo en el que los elementos aparecen", True, settings.BLACK)
-        self.input_time_appear = InputNumberBox(100, 590, 200, 35, text='')
         self.txt_change_mano = settings.FONTS['small'].render("Elegir miniatura de manos", True, settings.BLACK)
         self.txt_change_acierto = settings.FONTS['small'].render("Elegir miniatura aciertos", True, settings.BLACK)
         self.txt_change_error = settings.FONTS['small'].render("Elegir miniatura error", True, settings.BLACK)
 
+        # Images
+        img_diagonales = pygame.image.load(settings.MINIATURA_DIAGONALES)
+        img_modify = pygame.image.load(settings.MODIFY)
+
+        # Buttons
+        self.diagonales = ImageButton(img_diagonales, (150, 150), 'diagonales', (200, 200))
+        self.button_modify = ImageButton(img_modify, (230,390), 'modificar', (30,30))
+        self.button_calibrate = Button((970, 30), "Calibrar", settings.AMARILLO)
+        self.button_back = Button((170, 30), "Volver", settings.AMARILLO)
         self.button_apply = Button((900, self.game.display.get_size()[1]-180), 'Aplicar')
+        self.button_group = [self.button_back, self.button_calibrate, self.button_modify, self.diagonales, self.button_apply]
 
-        self.bar_rect = pygame.Rect(100, (self.game.display.get_size()[1])-90, 700, 30)
+        # Sources
+        self.right_source = Source(self.game.display, settings.PUNTERO_ROJO)
+        self.left_source = Source(self.game.display, settings.PUNTERO_ROJO)
+        
+        # About modifiers
+        self.modify_components = False
+        
+        # Input text
+        self.input_time = InputNumberBox(100, 520, 200, 35, text='')
+        self.input_time_appear = InputNumberBox(100, 590, 200, 35, text='')
 
-        self.width = 0
+        # Tracking time
         self.time_hand = 0
         self.pressed_diagonales = pygame.time.get_ticks()
         self.pressed_calibrate = pygame.time.get_ticks()
         self.pressed_apply = pygame.time.get_ticks()
+        self.pressed_back = pygame.time.get_ticks()
+
+        # Progress bar
+        self.bar_rect = pygame.Rect(100, (self.game.display.get_size()[1])-90, 700, 30)
+        self.width = 0
 
     def draw(self):
         self.game.display.fill(settings.GRANATE)
@@ -984,7 +1176,7 @@ class ActivitiesScene(Scene):
         pygame.draw.rect(self.game.display, settings.AMARILLO,
                  pygame.Rect(50, 100, 1180, 650))
         self.button_calibrate.draw(self.game.display)
-        self.home_btn.draw(self.game.display)
+        self.button_back.draw(self.game.display)
         self.button_modify.draw(self.game.display)
         self.game.display.blit(self.activities, (settings.WIDTH//3, 10))
 
@@ -1002,22 +1194,21 @@ class ActivitiesScene(Scene):
             self.input_time_appear.draw(self.game.display)
             self.button_apply.draw(self.game.display)
         # Draw progress bar
-        pygame.draw.rect(self.game.display, settings.WHITE,
-                         (101, (self.game.display.get_size()[1])-90, self.width, 30))
+        pygame.draw.rect(self.game.display, settings.WHITE,(101, (self.game.display.get_size()[1])-90, self.width, 30))
         pygame.draw.rect(self.game.display, settings.BLACK, self.bar_rect, 2)
 
     def events(self, events):
-        if self.diagonales.on_click(events) or self.diagonales.clicked == True:
+
+        if self.diagonales.on_click(events) or self.diagonales.get_clicked_state():
             self.game.change_scene(DiagonalsScene(self.game))
-            self.diagonales.clicked = False
-        if self.home_btn.on_click(events):
+            self.diagonales.clicked = True
+        if self.button_back.get_pressed() or self.button_back.on_click(events):
             self.game.change_scene(MenuScene(self.game))
         if self.button_modify.on_click(events):
             self.modify_components = True
-        if self.button_calibrate.on_click(events) or self.button_calibrate.clicked == True:
+        if self.button_calibrate.get_pressed() or self.button_calibrate.on_click(events):
             self.game.change_scene(CalibrationScene(self.game))
-            self.button_calibrate.clicked = False
-        if self.button_apply.on_click(events) or self.button_apply.clicked:
+        if self.button_apply.get_pressed() or self.button_apply.on_click(events):
             # TODO aplicar cambios de modify (si no hay nada no)
             settings.TIEMPO_JUEGO = int(self.input_time.get_text()) if self.input_time.get_text() != "" else settings.TIEMPO_JUEGO
             settings.VELOCIDAD_ENTRE_BOLAS = int(self.input_time_appear.get_text()) if self.input_time_appear.get_text() != "" else settings.VELOCIDAD_ENTRE_BOLAS
@@ -1030,10 +1221,12 @@ class ActivitiesScene(Scene):
             self.input_time_appear.handle_event(events)
         
     def check_collide(self, left, right):
-        if self.diagonales.rect.collidepoint(left.rect.centerx, left.rect.centery) or self.diagonales.rect.collidepoint(right.rect.centerx, right.rect.centery):
+        if self.diagonales.top_rect.collidepoint(left.rect.centerx, left.rect.centery) or self.diagonales.top_rect.collidepoint(right.rect.centerx, right.rect.centery):
             return "Diagonales"
         elif self.button_calibrate.top_rect.collidepoint(left.rect.centerx, left.rect.centery) or self.button_calibrate.top_rect.collidepoint(right.rect.centerx, right.rect.centery):
             return "Calibrate"
+        elif self.button_back.top_rect.collidepoint(left.rect.centerx, left.rect.centery) or self.button_back.top_rect.collidepoint(right.rect.centerx, right.rect.centery):
+            return "Volver"
         
         return ""
     
@@ -1073,74 +1266,105 @@ class ActivitiesScene(Scene):
             self.time_hand = self.count(self.pressed_apply)
         else:
             self.pressed_apply = pygame.time.get_ticks()
+        # ------------------------------------------
+        if action == "Volver":
+            self.time_hand = self.count(self.pressed_back)
+        else:
+            self.pressed_back = pygame.time.get_ticks()
 
         self.width = self.time_hand * coefficient
 
         if action == "":
             self.reset_time()
-
-        if self.time_hand > settings.TIME_BUTTONS:
+        if self.time_hand >= settings.TIME_BUTTONS:
             if action == "Diagonales":
-                self.diagonales.clicked = True
+                self.diagonales.set_clicked_true()
             elif action == "Calibrate":
-                self.button_calibrate.clicked = True
+                self.button_calibrate.set_pressed(True)
             elif action == "Aplicar":
-                self.button_apply.clicked = True
+                self.button_apply.set_pressed(True)
+            elif action == "Volver":
+                self.button_back.set_pressed(True)
 
     def update(self, dt):
         self.diagonales.update()
-        self.button_calibrate.update()
-        self.button_apply.update()
+        pos = pygame.mouse.get_pos()
+        if any(button.top_rect.collidepoint(pos) for button in self.button_group):
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+        else:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
 class OptionsScene(Scene):
     def __init__(self, game):
         super().__init__(game)
         self._name_scene = "OptionsScene"
-        self.options = settings.FONTS['header'].render(
-            "Opciones", True, settings.BLACK)
 
+        # Text
+        self.options = settings.FONTS['header'].render("Opciones", True, settings.BLACK)
         self.txt_camara = settings.FONTS['small'].render("Cambiar de fuente", True, settings.BLACK)
-        self.camDropDown = DropDown(
-            [settings.GRISCLARO, settings.WHITE],
-            [settings.WHITE, settings.GRISCLARO],
-            100, 250, 200, 35,
-            settings.FONTS['arial_small'],
-            f'{game.current_camara}', [f'{i}' for i in game.device_list])
-
         self.txt_include_user = settings.FONTS['small'].render("Incluir usuario en base de datos (Nombre/Apellido)", True, settings.BLACK)
+        self.txt_delete_user = settings.FONTS['small'].render("Eliminar usuario de la base de datos (Nombre/Apellido)", True, settings.BLACK)
+        # Input text box
         self.input_create_user = InputBox(100, 330, 200, 35, text='')
         self.input_create_surname = InputBox(350, 330, 200, 35, text='')
-
-        self.txt_delete_user = settings.FONTS['small'].render("Eliminar usuario de la base de datos (Nombre/Apellido)", True, settings.BLACK)
         self.input_delete_user = InputBox(100, 430, 200, 35, text='')
         self.input_delete_surname = InputBox(350, 430, 200, 35, text='')
 
-        self.button_apply = Button((960, self.game.display.get_size()[1]-130), 'Aplicar')
+        # Images
 
-        self.image = pygame.image.load(settings.ATRAS)
-        self.home_btn = ImageButton(self.image, (15, 735), 'atras')
+        # Buttons
+        self.button_back = Button((170, 30),  "Volver", settings.AMARILLO)
+        self.button_apply = Button((960, self.game.display.get_size()[1]-130), 'Aplicar')
+        self.camDropDown = DropDown(
+            [settings.GRISCLARO, settings.WHITE],[settings.WHITE, settings.GRISCLARO],
+            100, 250, 200, 35,
+            settings.FONTS['arial_small'],
+            f'{game.current_camara}', [f'{i}' for i in game.device_list])
+        self.button_group = [self.button_apply, self.button_back, self.camDropDown]
+
+        # Sources
+        self.right_source = Source(self.game.display, settings.PUNTERO_ROJO)
+        self.left_source = Source(self.game.display, settings.PUNTERO_ROJO)
+
+        # Tracking time
+        self.time_hand = 0
+        self.pressed_back = pygame.time.get_ticks()
+
+        # Progress bar
+        self.bar_rect = pygame.Rect(40, (self.game.display.get_size()[1])-50, 700, 30)
+        self.width = 0
 
     def draw(self):
+        # Background
         self.game.display.fill(settings.GRANATE)
+        pygame.draw.rect(self.game.display, settings.AMARILLO, pygame.Rect(40, 160, 1200, 560))
 
-        pygame.draw.rect(self.game.display, settings.AMARILLO,
-                         pygame.Rect(40, 160, 1200, 560))
-
+        # Text
         self.game.display.blit(self.txt_camara, (100, 200))
+        self.game.display.blit(self.txt_include_user, (100, 300))
+        self.game.display.blit(self.txt_delete_user, (100, 400))
+        self.game.display.blit(self.options, (settings.WIDTH//3+30, 10))
+
+        # Buttons
+        self.button_apply.draw(self.game.display)
+        self.button_back.draw(self.game.display)
+
+        # Sources
+        self.right_source.draw(self.game.display)
+        self.left_source.draw(self.game.display)
+        
+        # DropDown
         self.camDropDown.draw(self.game.display)
 
-        self.game.display.blit(self.txt_include_user, (100, 300))
+        # Input text
         self.input_create_user.draw(self.game.display)
         self.input_create_surname.draw(self.game.display)
-
-        self.game.display.blit(self.txt_delete_user, (100, 400))
         self.input_delete_user.draw(self.game.display)
         self.input_delete_surname.draw(self.game.display)
-
-        self.button_apply.draw(self.game.display)
-
-        self.home_btn.draw(self.game.display)
-        self.game.display.blit(self.options, (settings.WIDTH//3+30, 10))
+        
+        # Draw progress bar
+        pygame.draw.rect(self.game.display, settings.WHITE,(41, (self.game.display.get_size()[1])-50, self.width, 30))
+        pygame.draw.rect(self.game.display, settings.BLACK, self.bar_rect, 2)
 
     def include_user(self, name, surname):
         broker = Broker()
@@ -1160,9 +1384,9 @@ class OptionsScene(Scene):
         self.input_delete_user.handle_event(events)
         self.input_delete_surname.handle_event(events)
         self.camDropDown.update(events)
-        if self.home_btn.on_click(events):
+        if self.button_back.get_pressed() or self.button_back.on_click(events):
             self.game.change_scene(MenuScene(self.game))
-        if self.button_apply.on_click(events) or self.button_apply.clicked:
+        if self.button_apply.get_pressed() or self.button_apply.on_click(events):
             cam = int(self.camDropDown.getMain())
             if self.game.current_camara != cam:
                 self.game.change_camara(cam)
@@ -1177,5 +1401,52 @@ class OptionsScene(Scene):
 
             self.game.get_users()
 
+    def check_collide(self, left, right):
+        if self.button_back.top_rect.collidepoint(left.rect.centerx, left.rect.centery) or self.button_back.top_rect.collidepoint(right.rect.centerx, right.rect.centery):
+            return "Volver"
+
+        return ""
+    def reset_time(self):
+        self.time_hand = 0
+        self.width = 0
+
+    def tracking(self, results):
+        action = ""
+        coefficient = settings.WIDTH_LOAD_BAR / settings.TIME_BUTTONS
+        left_hand, right_hand = get_points(results)
+        self.left_source.rect.centerx = left_hand[0] * settings.WIDTH
+        self.left_source.rect.centery = left_hand[1] * settings.HEIGHT
+        self.right_source.rect.centerx = right_hand[0] * settings.WIDTH
+        self.right_source.rect.centery = right_hand[1] * settings.HEIGHT
+
+        # Colisiones
+        action = self.check_collide(self.left_source, self.right_source)
+        # ------------------------------------------
+        if action == "Volver":
+            self.time_hand = self.count(self.pressed_back)
+        else:
+           self.pressed_back = pygame.time.get_ticks()
+        # ------------------------------------------
+
+        self.width = self.time_hand * coefficient
+
+        if action == "":
+            self.reset_time()
+
+        if self.time_hand > settings.TIME_BUTTONS:
+            if action == "Volver":
+                self.button_back.set_pressed(True)
+
+    def count(self, start_ticks):
+        seconds = (pygame.time.get_ticks()-start_ticks) / \
+            1000  # calculate how many seconds
+        if seconds >= settings.TIME_BUTTONS:
+            return seconds
+        return seconds
+
     def update(self, dt):
-        self.button_apply.update()
+        pos = pygame.mouse.get_pos()
+        if any(button.top_rect.collidepoint(pos) for button in self.button_group):
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+        else:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
