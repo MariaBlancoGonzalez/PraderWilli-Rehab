@@ -7,8 +7,13 @@ import pygame
 import sys
 from utils import *
 from settings import CAPTION, WIDTH, HEIGHT
-from scenes import MenuScene #, RecordScene, CalibrationScene, DiagonalsScene, OptionsScene, TutorialScene
-
+from scenes.menuScene import MenuScene #, RecordScene, CalibrationScene, DiagonalsScene, OptionsScene, TutorialScene
+from scenes.activitiesScene import ActivitiesScene
+from scenes.recordScene import RecordScene
+from scenes.tutorialScene import TutorialScene
+from scenes.optionScene import OptionsScene
+from scenes.calibrationScene import CalibrationScene
+from scenes.diagonalesScene import DiagonalsScene
 from broker import Broker
 
 class Initiator:
@@ -32,7 +37,7 @@ class Initiator:
         self.device_list = []
         self.current_camara = 0
         self.flag_cam = False
-        self._scene = MenuScene(self)
+        self.__scene = MenuScene(self)
     
     def get_users(self):
         broker = Broker()
@@ -58,17 +63,23 @@ class Initiator:
             self.current_camara = self.device_list[0]
         
     def change_scene(self, scene):
-        self._scene = scene
+        self.__scene = scene
 
+    def get_scene(self):
+        return self.__scene
+    
     def change_camara(self, camara):
         self.current_camara = camara
         self.flag_cam = True
 
     def run(self):
+        current_scene = self.get_scene()
         if self.device_list == []:
             # TODO cuando no hay camara disponible
             cap = cv2.VideoCapture(2)
         else:
+            print(current_scene, MenuScene)
+            new_scene = None
             cap = cv2.VideoCapture(self.current_camara)
             mp_pose = mp.solutions.pose
             with mp_pose.Pose(
@@ -95,39 +106,47 @@ class Initiator:
                     image = cv2.cvtColor(cv2.flip(resized, 2), cv2.COLOR_BGR2RGB)
                     results = pose.process(image)
                     pygame.surfarray.blit_array(self.display, image.swapaxes(0, 1))
-                        
+                    
+                    if new_scene is not None:
+                        self.change_scene(new_scene)
+                        current_scene = new_scene
+
                     # Some necessary events for some specific scenes
-                    if self._scene.get_name() == 'MenuScene':
-                        self._scene.tracking(results)
-                        self._scene.events(ev)
-                        self._scene.update(dt)
-                        self._scene.draw()
-                    elif self._scene.get_name() == 'RecordScene':
-                        self._scene.events(ev)
-                        self._scene.update(dt)
-                        self._scene.draw()
-                    elif self._scene.get_name() == 'TutorialScene':
-                        self._scene.events(ev)
-                        self._scene.update(dt)
-                        self._scene.draw()
-                    elif self._scene.get_name() == 'Calibration':
-                        self._scene.body_controller(results)
-                        self._scene.update(dt)
-                        self._scene.draw()
-                    elif self._scene.get_name() == 'DiagonalesSuperiores':
-                        self._scene.body_controller(results)
-                        self._scene.update(dt)
-                        self._scene.events(ev)
-                        self._scene.draw()
-                    elif self._scene.get_name() == 'ActivitiesScene':
-                        self._scene.tracking(results)
-                        self._scene.update(dt)
-                        self._scene.events(ev)
-                        self._scene.draw()
-                    elif self._scene.get_name() == 'OptionsScene':
-                        self._scene.update(dt)
-                        self._scene.events(ev)
-                        self._scene.draw()
+                    if current_scene.get_name() == 'MenuScene':
+                        current_scene.tracking(results)
+                        new_scene = current_scene.events(ev)
+                        current_scene.update(dt)
+                        current_scene.draw()
+                    elif current_scene.get_name() == 'RecordScene':
+                        current_scene.tracking(results)
+                        new_scene = current_scene.events(ev)
+                        current_scene.update(dt)
+                        current_scene.draw()
+                    elif current_scene.get_name() == 'TutorialScene':
+                        current_scene.tracking(results)
+                        new_scene = current_scene.events(ev)
+                        current_scene.update(dt)
+                        current_scene.draw()
+                    elif current_scene.get_name() == 'CalibrationScene':
+                        current_scene.body_controller(results)
+                        current_scene.update(dt)
+                        new_scene = current_scene.events(dt)
+                        current_scene.draw()
+                    elif current_scene.get_name() == 'DiagonalsScene':
+                        current_scene.body_controller(results)
+                        current_scene.update(dt)
+                        new_scene = current_scene.events(ev)
+                        current_scene.draw()
+                    elif current_scene.get_name() == 'ActivitiesScene':
+                        current_scene.tracking(results)
+                        new_scene = current_scene.events(ev)
+                        current_scene.update(dt)
+                        current_scene.draw()
+                    elif current_scene.get_name() == 'OptionsScene':
+                        current_scene.tracking(results)
+                        new_scene = current_scene.events(ev)
+                        current_scene.update(dt)
+                        current_scene.draw()
                         
                     pygame.display.update()
                 

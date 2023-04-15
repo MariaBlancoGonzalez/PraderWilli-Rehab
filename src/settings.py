@@ -16,6 +16,7 @@ ESTRELLA = './assets/icons/estrella.png'
 ROJO = './assets/icons/rojo.png'
 VERDE = './assets/icons/verde.png'
 BODY = './assets/images/body.png'
+LINEA_HORIZONTAL = './assets/icons/linea_horizontal.png'
 PUNTERO_ROJO = './assets/icons/red_circle.png'
 BOMBA = './assets/icons/bomb.png'
 MASCOTA_NORMAL = './assets/images/normal.png'
@@ -101,6 +102,7 @@ FEET_BOX = 50
 MANOS_IMG = ROCKET
 ERROR = BOMBA
 ACIERTO = ESTRELLA
+MUSIC_DIAGONALES = './assets/sound/music_diag.wav'
 
 # PUNTUACION
 ACIERTO = 100
