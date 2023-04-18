@@ -3,12 +3,14 @@ import mariadb as db
 import logging
 import sys
 import configparser
- 
+
 logging.getLogger().setLevel(logging.INFO)
-class Broker():
+
+
+class Broker:
     def __init__(self):
-        self.cursor = ''
-        
+        self.cursor = ""
+
         self.cursor = None
         self.conn = None
 
@@ -16,20 +18,16 @@ class Broker():
     def connect(self):
         # connection to the database
         config = configparser.ConfigParser()
-        config.read(r'./docs/credenciales.ini')
+        config.read(r"./docs/credenciales.ini")
 
-        username = config.get('DB', 'username')
-        pwd = config.get('DB','password')
-        datab = config.get('DB','db')
-        db_host = config.get('DB','host')
-        db_port = config.getint('DB','port')
+        username = config.get("DB", "username")
+        pwd = config.get("DB", "password")
+        datab = config.get("DB", "db")
+        db_host = config.get("DB", "host")
+        db_port = config.getint("DB", "port")
         try:
             self.conn = db.connect(
-                user=username,
-                password=pwd,
-                host=db_host,
-                port=db_port,
-                database=datab
+                user=username, password=pwd, host=db_host, port=db_port, database=datab
             )
         except db.Error as e:
             logging.error(f"Error connecting to MariaDB Platform: {e}")
@@ -69,7 +67,7 @@ class Broker():
             self.cursor.execute(statement)
             users = []
             for i in self.cursor.fetchall():
-                users.append((i[0],i[1]))
+                users.append((i[0], i[1]))
             return users
         except db.Error as e:
             logging.error(f"Error retrieving entry from database: {e}")
@@ -91,7 +89,17 @@ class Broker():
         except db.Error as e:
             logging.error(f"Error retrieving entry from database: {e}")
 
-    def add_score(self, alumno, ejercicio, fecha, tiempo, fallosizq, aciertosizq, fallosdrch, aciertosdrch):
+    def add_score(
+        self,
+        alumno,
+        ejercicio,
+        fecha,
+        tiempo,
+        fallosizq,
+        aciertosizq,
+        fallosdrch,
+        aciertosdrch,
+    ):
         try:
             statement = f"INSERT INTO Puntuaciones (PT_A_id, PT_E_id, PT_fecha, PT_tiempo, PT_fallos_izquierda, PT_aciertos_izquierda, PT_fallos_derecha, PT_aciertos_derecha) VALUES ({alumno}, {ejercicio}, '{fecha}', {tiempo}, {fallosizq}, {aciertosizq}, {fallosdrch}, {aciertosdrch})"
             self.cursor.execute(statement)
@@ -101,7 +109,7 @@ class Broker():
             logging.error(f"Error adding entry to database: {e}")
 
     def get_last_score(self, PT_E_id, PT_A_id, number_score=20):
-        query = f'SELECT * FROM Puntuaciones p WHERE p.PT_A_id = {int(PT_A_id)} and p.PT_E_id = {int(PT_E_id)} ORDER BY p.PT_id DESC LIMIT {number_score}'
+        query = f"SELECT * FROM Puntuaciones p WHERE p.PT_A_id = {int(PT_A_id)} and p.PT_E_id = {int(PT_E_id)} ORDER BY p.PT_id DESC LIMIT {number_score}"
         try:
             self.cursor.execute(query)
             return self.cursor.fetchall()
@@ -109,7 +117,7 @@ class Broker():
             logging.error(f"Error getting information from the database: {e}")
 
     def get_score(self, PT_E_id, PT_A_id, number_score_days=10):
-        query = f'SELECT * FROM Puntuaciones p WHERE p.PT_A_id = {int(PT_A_id)} and p.PT_E_id = {int(PT_E_id)} and p.PT_fecha >= DATE(NOW() - INTERVAL {number_score_days} DAY)'
+        query = f"SELECT * FROM Puntuaciones p WHERE p.PT_A_id = {int(PT_A_id)} and p.PT_E_id = {int(PT_E_id)} and p.PT_fecha >= DATE(NOW() - INTERVAL {number_score_days} DAY)"
         try:
             self.cursor.execute(query)
             return self.cursor.fetchall()
@@ -122,17 +130,20 @@ class Broker():
             self.cursor.execute(statement)
             exer = []
             for i in self.cursor.fetchall():
-                exer.append((i[0],i[1]))
+                exer.append((i[0], i[1]))
             return exer
         except db.Error as e:
             logging.error(f"Error retrieving entry from database: {e}")
 
     def delete_user(self, name, surname):
-        statement = f"DELETE FROM Alumno WHERE A_nombre='{name}' and A_apellido='{surname}'"
+        statement = (
+            f"DELETE FROM Alumno WHERE A_nombre='{name}' and A_apellido='{surname}'"
+        )
         try:
             self.cursor.execute(statement)
         except db.Error as e:
             logging.error(f"Error getting information from the database: {e}")
+
     # End
     def close(self):
         self.conn.close()

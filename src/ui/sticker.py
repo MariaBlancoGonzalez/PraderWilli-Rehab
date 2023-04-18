@@ -1,16 +1,17 @@
 import pygame
 from pygame.sprite import Sprite
 
-class Sticker(pygame.sprite.Sprite):
+
+class Sticker(Sprite):
     """A class to represent a single landmark."""
-    def __init__(self, screen, image, width, height, x=45, y=45, trap = False):
+
+    def __init__(self, screen, image, width, height, x=45, y=45, trap=False):
         super(Sticker, self).__init__()
         self.screen = screen
 
         self.image = pygame.image.load(image)
 
-        self.image = pygame.transform.scale(
-            self.image, (x, y))
+        self.image = pygame.transform.scale(self.image, (x, y))
         self.rect = self.image.get_rect()
 
         # Insider clock
@@ -21,7 +22,7 @@ class Sticker(pygame.sprite.Sprite):
 
     def get_trap(self):
         return self.trap
-    
+
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
@@ -30,4 +31,3 @@ class Sticker(pygame.sprite.Sprite):
             # and 500 ms have elapsed, kill the sprite.
             if pygame.time.get_ticks() - self.time >= 3000:
                 self.kill()
-
