@@ -16,6 +16,7 @@ class OptionsScene(Scene):
     def __init__(self, game):
         super().__init__(game)
         self._name_scene = "OptionsScene"
+        self.conn = game.connection
 
         # Text
         self.options = settings.FONTS["header"].render("Opciones", True, settings.BLACK)
@@ -43,6 +44,7 @@ class OptionsScene(Scene):
         self.button_apply = Button(
             (960, self.game.display.get_size()[1] - 130), "Aplicar"
         )
+
         self.camDropDown = DropDown(
             [settings.GRISCLARO, settings.WHITE],
             [settings.WHITE, settings.GRISCLARO],
@@ -124,26 +126,41 @@ class OptionsScene(Scene):
         self.input_delete_user.handle_event(events)
         self.input_delete_surname.handle_event(events)
         self.camDropDown.update(events)
+
         if self.button_back.get_pressed() or self.button_back.on_click(events):
             return MenuScene(self.game)
         if self.button_apply.get_pressed() or self.button_apply.on_click(events):
+            db_access = False
             cam = int(self.camDropDown.getMain())
             if self.game.current_camara != cam:
                 self.game.change_camara(cam)
 
-            self.include_user(
-                self.input_create_user.get_text(), self.input_create_surname.get_text()
-            ) if self.input_create_user.get_text() != "" and self.input_create_surname.get_text() != "" else None
+
+            if self.input_create_user.get_text() != "" and self.input_create_surname.get_text() != "":
+                # Si hay conexion bbdd
+                if self.conn == 0:
+                    self.include_user(self.input_create_user.get_text(), self.input_create_surname.get_text())
+                # Offline
+                else:
+                    pass
+                db_access = True
+
             self.input_create_user.reset()
             self.input_create_surname.reset()
 
-            self.delete_user(
-                self.input_delete_user.get_text(), self.input_delete_surname.get_text()
-            ) if self.input_delete_user.get_text() != "" and self.input_delete_surname.get_text() != "" else None
+            if self.input_delete_user.get_text() != "" and self.input_delete_surname.get_text() != "":
+                if self.conn == 0:
+                    self.delete_user(self.input_delete_user.get_text(), self.input_delete_surname.get_text())
+                else:
+                    pass
+                db_access = True
+                
             self.input_delete_user.reset()
             self.input_delete_surname.reset()
 
-            self.game.get_users()
+            if db_access:
+                if self.conn == 0:
+                    self.game.get_users()
         return None
 
     def check_collide(self, left, right):

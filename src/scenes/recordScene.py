@@ -1,6 +1,7 @@
 import pygame
 import datetime
 import os
+import json
 from broker import Broker
 from scenes.scene import Scene
 import settings
@@ -76,14 +77,19 @@ class RecordScene(Scene):
         self.current_exer = self.exerDropDown.main
         self.id_exer = get_id(self.exerDropDown.main)
         self.id_user = get_id(self.game.current_user)
-
+    
         # Get data
+        self.data = []
         self.tiempo = []
         self.izq_errores = []
         self.izq_aciertos = []
         self.drcha_errores = []
         self.drcha_aciertos = []
-        self.get_data()
+
+        if game.connection == 0:
+            self.get_data()
+        else:
+            self.get_data_json()
 
         # Variables to compute
         self.best_score, self.best_day = 0, 0
@@ -147,8 +153,29 @@ class RecordScene(Scene):
     def get_data(self):
         broker = Broker()
         broker.connect()
+        
         self.data = broker.get_score(self.id_exer, self.id_user, 10)
+        print(self.data)
         broker.close()
+    
+    def get_data_json(self):
+        with open('default.json', 'r') as f:
+            data = json.load(f)
+
+        for score in data['puntuaciones']:
+            date = datetime.datetime.strptime(score['PT_fecha'], '%Y-%m-%d')
+            values = [
+                score['PT_id'],
+                score['PT_A_id'],
+                score['PT_E_id'],
+                date,
+                score['PT_tiempo'],
+                score['PT_fallos_izquierda'],
+                score['PT_aciertos_izquierda'],
+                score['PT_fallos_derecha'],
+                score['PT_aciertos_derecha']
+            ]
+            self.data.append(tuple(values))
 
     def events(self, events):
         self.userDropDown.update(events)
