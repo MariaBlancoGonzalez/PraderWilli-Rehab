@@ -5,19 +5,14 @@ import mediapipe as mp
 
 import pygame
 import sys
+import json 
 from utils import *
 from settings import CAPTION, WIDTH, HEIGHT
 from scenes.menuScene import (
     MenuScene,
 )  # , RecordScene, CalibrationScene, DiagonalsScene, OptionsScene, TutorialScene
-from scenes.activitiesScene import ActivitiesScene
-from scenes.recordScene import RecordScene
-from scenes.tutorialScene import TutorialScene
-from scenes.optionScene import OptionsScene
-from scenes.calibrationScene import CalibrationScene
-from scenes.diagonalesScene import DiagonalsScene
 from broker import Broker
-
+from pose_tracking.cam_initialazer import check_availability
 
 class Initiator:
     def __init__(self):
@@ -32,38 +27,46 @@ class Initiator:
         self.users = []
         self.user_list = []
         self.exercises = []
-        self.get_users()
-        self.get_exer()
-        self.current_user = self.user_list[0]
-        self.exer_list = create_list(self.exercises)
+        self.exer_list = []
+        self.connection = self.check_connection()
+        
+        self.get_credentials() if self.connection == 0 else self.get_json_credentials()
 
+        self.current_user = self.user_list[0]
+        
         self.device_list = []
         self.current_camara = 0
         self.flag_cam = False
         self.__scene = MenuScene(self)
 
-    def get_users(self):
-        broker = Broker()
-        broker.connect()
-        self.users = broker.get_users()
-        self.user_list = create_list(self.users)
-        self.current_user = self.user_list[0]
-        broker.close()
+    def check_connection(self):
+        br = Broker()
+        status = br.connect()
+        if status == 0:
+            br.close()
+        return status
 
-    def get_exer(self):
+    def get_json_credentials(self):
+        with open('default.json', 'r') as f:
+            data = json.load(f)
+        
+        self.user_list = [f"{data['id']}-{data['credentials']['usuario']}_{data['credentials']['apellido']}"]
+        self.exer_list = ['1-Diagonales']
+
+    def get_credentials(self):
         broker = Broker()
-        broker.connect()
+        _ = broker.connect()
+        
+        self.users = broker.get_users()
+        self.user_list = create_list_users(self.users)
+        self.current_user = self.user_list[0]
         self.exercises = broker.get_exercises()
+        self.exer_list = create_list(self.exercises)
         broker.close()
 
     def set_up(self):
-        for i in range(10):
-            cap = cv2.VideoCapture(i)
-            if cap.read()[0]:
-                self.device_list.append(i)
-            cap.release()
-        if self.device_list != []:
-            self.current_camara = self.device_list[0]
+        self.device_list = check_availability()
+        self.current_camara = self.device_list[0]
 
     def change_scene(self, scene):
         self.__scene = scene
@@ -81,7 +84,6 @@ class Initiator:
             # TODO cuando no hay camara disponible
             cap = cv2.VideoCapture(2)
         else:
-            print(current_scene, MenuScene)
             new_scene = None
             cap = cv2.VideoCapture(self.current_camara)
             mp_pose = mp.solutions.pose

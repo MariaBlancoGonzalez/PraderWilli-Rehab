@@ -22,7 +22,11 @@ def create_list(data):
         return [f"{i[0]}-{i[1]}" for i in data]
     else:
         return "No data exist"
-
+def create_list_users(data):
+    if data != None:
+        return [f"{i[0]}-{i[1]}_{i[2]}" for i in data]
+    else:
+        return "No data exist"
 
 def get_id(name):
     return name.split("-")[0]
@@ -45,7 +49,6 @@ def distribute_data(data):
 
     return tiempo, izq_errores, izq_aciertos, drcha_errores, drcha_aciertos
 
-
 def reset_time():
     return 0, 0
 
@@ -61,3 +64,19 @@ def count(start_ticks):
 
 def reset_pygame_timer():
     return pygame.time.get_ticks()
+
+def get_str_time(min, sec):
+    minutes = ''
+    if len(min) == 1:
+        minutes = f'0{min}'
+    else:
+        minutes = f'{min}'
+    segundos = ''
+    if sec == 0:
+        segundos = '00'
+    elif len(sec) == 1:
+        segundos = f'0{sec}'
+    elif len(sec) == 2:
+        segundos = f'{sec}'
+    
+    return f'{minutes}:{segundos}'
