@@ -80,6 +80,36 @@ def create_diagonal_points_left(results):
 
     return hand_pos
 
+def create_top_margin(results):
+    # FOR RIGHT PART
+    shoulder = escale_coor_pix(
+        results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER].x,
+        results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER].y,
+    )
+    elbow = escale_coor_pix(
+        results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_ELBOW].x,
+        results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_ELBOW].y,
+    )
+    hand = get_points_right(results)
+    hand = escale_coor_pix(hand[0], hand[1])
+
+    # PIXEL VECTOR
+    shoulder_to_elbow = (elbow[0] - shoulder[0], elbow[1] - shoulder[1])
+
+    shoulder_elbow_segment = euclidean_distance(
+        shoulder_to_elbow[0], shoulder_to_elbow[1]
+    )
+
+    elbow_to_hand = (hand[0] - elbow[0], hand[1] - elbow[1])
+    elbow_hand_segment = euclidean_distance(elbow_to_hand[0], elbow_to_hand[1])
+    # Multiplica el vector del codo a la mano por la longitud del vector del hombro al codo
+    margin_point = (
+        shoulder[0],
+        shoulder[1] -  (elbow_hand_segment + shoulder_elbow_segment),
+    )
+
+    return margin_point
+
 
 def get_points_left(results):
     # For each hand
@@ -128,25 +158,25 @@ def get_points_right(results):
 def get_points(results):
     # For each hand
     try:
-        left_x = get_mid(
+        right_x = get_mid(
             float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_WRIST].x),
             float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_PINKY].x),
             float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_INDEX].x),
         )
 
-        left_y = get_mid(
+        right_y = get_mid(
             float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_WRIST].y),
             float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_PINKY].y),
             float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_INDEX].y),
         )
 
-        right_x = get_mid(
+        left_x = get_mid(
             float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_WRIST].x),
             float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_PINKY].x),
             float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_INDEX].x),
         )
 
-        right_y = get_mid(
+        left_y = get_mid(
             float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_WRIST].y),
             float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_PINKY].y),
             float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_INDEX].y),
