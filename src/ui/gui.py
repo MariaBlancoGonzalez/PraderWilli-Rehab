@@ -3,7 +3,6 @@ import pygame
 from settings import FONTS
 from settings import WHITE, GRANATE, GRIS, BLACK
 
-
 class ImageButton:
     def __init__(self, image, position, callback, scale=(25, 25)):
         self.image = image
@@ -90,6 +89,7 @@ class Button:
                 and self.top_rect.collidepoint(pos)
             ):
                 return True
+
         return False
 
     def set_pressed(self, bool):
@@ -245,7 +245,7 @@ class InputBox:
         return self.text
 
     def reset(self):
-        self.text = ""
+        self.text = ''
         self.txt_surface = FONTS["medium"].render(self.text, True, self.color)
         self.active = False
 
@@ -257,7 +257,7 @@ class InputNumberBox:
         self.text = text
         self.txt_surface = FONTS["medium"].render(self.text, True, self.color)
         self.active = False
-
+        self.comma = True
     def handle_event(self, events):
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -277,14 +277,19 @@ class InputNumberBox:
                     elif 48 <= event.key <= 59:
                         self.text += event.unicode
                     # For commas 46 = '.' and 44 = ','
-                    elif event.key == 46 or event.key == 44:
+                    elif event.key == 46 and self.comma:
                         self.text += event.unicode
+                        self.comma = False
                     # Re-render the text.
                     self.txt_surface = FONTS["medium"].render(
                         self.text, True, self.color
                     )
 
     def get_text(self):
+
+        if self.text != "":
+            if str(self.text)[0] == '.':
+                return ""
         return self.text
 
     def update(self):
