@@ -32,10 +32,10 @@ class OptionsScene(Scene):
             settings.BLACK,
         )
         # Input text box
-        self.input_create_user = InputBox(100, 330, 200, 35, text="")
-        self.input_create_surname = InputBox(350, 330, 200, 35, text="")
-        self.input_delete_user = InputBox(100, 430, 200, 35, text="")
-        self.input_delete_surname = InputBox(350, 430, 200, 35, text="")
+        self.input_create_user = InputBox(100, 330, 200, 35, text='')
+        self.input_create_surname = InputBox(350, 330, 200, 35, text='')
+        self.input_delete_user = InputBox(100, 430, 200, 35, text='')
+        self.input_delete_surname = InputBox(350, 430, 200, 35, text='')
 
         # Images
 
@@ -160,7 +160,7 @@ class OptionsScene(Scene):
 
             if db_access:
                 if self.conn == 0:
-                    self.game.get_users()
+                    self.game.get_credentials()
         return None
 
     def check_collide(self, left, right):

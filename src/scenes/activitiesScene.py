@@ -132,8 +132,7 @@ class ActivitiesScene(Scene):
         if self.button_modify.on_click(events):
             self.modify_components = True
         if self.button_calibrate.get_pressed() or self.button_calibrate.on_click(
-            events
-        ):
+            events):
             from scenes.calibrationScene import CalibrationScene
 
             return CalibrationScene(self.game)
@@ -145,7 +144,7 @@ class ActivitiesScene(Scene):
                 else settings.TIEMPO_JUEGO
             )
             settings.VELOCIDAD_ENTRE_BOLAS = (
-                int(self.input_time_appear.get_text())
+                float(self.input_time_appear.get_text())
                 if self.input_time_appear.get_text() != ""
                 else settings.VELOCIDAD_ENTRE_BOLAS
             )

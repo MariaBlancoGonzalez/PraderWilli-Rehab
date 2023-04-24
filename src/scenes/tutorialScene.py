@@ -19,10 +19,6 @@ class TutorialScene(Scene):
         )
 
         # Images
-        self.flecha_drch = pygame.image.load(settings.FLECHA_DERECHA)
-        self.flecha_izq = pygame.image.load(settings.FLECHA_IZQUIERDA)
-        self.pet = pygame.image.load(settings.MASCOTA_NORMAL)
-        self.pet = pygame.transform.scale(self.pet, (500, 500))
         historial = pygame.image.load(settings.HISTORIAL)
         historial = pygame.transform.scale(historial, (1000, 500))
         opciones = pygame.image.load(settings.OPCIONES)
@@ -120,7 +116,7 @@ class TutorialScene(Scene):
         ):
             if self.current_image > 0:
                 self.current_image -= 1
-            self.reset_time()
+            self.time_hand, self.width = reset_time()
             self.button_arrow_left.set_pressed(False)
         if self.button_arrow_right.get_pressed() or self.button_arrow_right.on_click(
             events

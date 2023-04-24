@@ -1,5 +1,6 @@
 from scenes.scene import Scene
 import pygame
+import json
 
 import settings
 from ui.source import Source
@@ -36,6 +37,8 @@ class DiagonalsScene(Scene):
         self.right_source = Source(game.display, settings.ROCKET)
         self.left_source = Source(game.display, settings.ROCKET)
         self.hands = Group([self.right_source, self.left_source])
+        self.right_hand = Group([self.right_source])
+        self.left_hand = Group([self.left_source])
 
         # No se dibujan, simplemente sirven como un Sprite checker para que los pies no se salgan
         self.right_foot = Source(self.game.display, settings.LINEA_HORIZONTAL)
@@ -60,8 +63,14 @@ class DiagonalsScene(Scene):
         self.errores_izquierda = 0
         self.errores_derecha = 0
 
+        # Score total and partial to show
         self.puntuacion = 0
-
+        self.correct_score = settings.FONTS["medium"].render(
+                str(settings.ACIERTO), True, settings.BLACK
+                 )
+        self.error_score = settings.FONTS["medium"].render(
+                str(settings.FALLO), True, settings.BLACK
+                 )
         # Text
         self.texto = BackgroundText(
             "Atrapa las estrellas con las manos",
@@ -123,15 +132,16 @@ class DiagonalsScene(Scene):
             self.music_playing = True
             left_hand_bound = create_diagonal_points_left(game.static_points)
             right_hand_bound = create_diagonal_points_right(game.static_points)
+            top_margin = create_top_margin(game.static.points)
             self.shoulder_left, self.shoulder_right = get_shoulder_pos(
                 game.static_points
             )
-
+            self.margin = (top_margin[0], top_margin[1])
             self.bound_left_hand = (left_hand_bound[0], left_hand_bound[1])
             self.bound_right_hand = (right_hand_bound[0], right_hand_bound[1])
 
         else:
-            self.bound_left_hand, self.bound_left_hand = (0, 0), (0, 0)
+            self.bound_left_hand, self.bound_left_hand, self.margin = (0, 0), (0, 0), settings.MARGIN
 
         # Tracking time during game
         self.time_left = pygame.time.get_ticks()
@@ -152,8 +162,11 @@ class DiagonalsScene(Scene):
 
     def events(self, events):
         if self.end:
-            self.introduced_data()
-            return ActivitiesScene(self.game)
+            if self.game.connection == 0:
+                self.introduced_data()
+                return ActivitiesScene(self.game)
+            else:
+                self.write_data_json()
         return None
 
     def update(self, dt):
@@ -204,7 +217,7 @@ class DiagonalsScene(Scene):
 
         # Get initial points
         if not self.calibration:
-            self.calibration_object.body_controller(results)
+            self.calibration_object.tracking(results)
             self.calibration_object.update(0)
             self.calibration_object.draw()
             self.calibration = self.calibration_object.calibrated
@@ -230,10 +243,13 @@ class DiagonalsScene(Scene):
 
                 left_hand_bound = create_diagonal_points_left(results)
                 right_hand_bound = create_diagonal_points_right(results)
+                top_margin = create_top_margin(results)
                 self.shoulder_left, self.shoulder_right = get_shoulder_pos(results)
+                self.margin = (top_margin[0], top_margin[1])
                 self.bound_left_hand = (left_hand_bound[0], left_hand_bound[1])
                 self.bound_right_hand = (right_hand_bound[0], right_hand_bound[1])
                 self.music.play()
+                print(self.margin)
                 # self.music_playing = True
         # Pantalla de 3,2,1...
         if self.time_instr < 3 and self.calibration and not self.end:
@@ -292,7 +308,7 @@ class DiagonalsScene(Scene):
             # Crear acierto y fallo
             if len(self.points_left) == 0 and not left_tramp and bola_permitida_izq:
                 left_x = random.uniform(self.bound_left_hand[0], self.shoulder_right[0])
-                left_y = random.uniform(self.shoulder_right[1], settings.MARGIN)
+                left_y = random.uniform(self.shoulder_right[1], settings.MARGIN if self.margin[1] <= 0 else self.margin[1]) # En vez de margin
 
                 if left_x > settings.WIDTH:
                     left_x = settings.WIDTH - settings.MARGIN
@@ -316,7 +332,7 @@ class DiagonalsScene(Scene):
                 right_x = random.uniform(
                     self.shoulder_left[0], self.bound_right_hand[0]
                 )
-                right_y = random.uniform(self.shoulder_left[1], settings.MARGIN)
+                right_y = random.uniform(self.shoulder_left[1], settings.MARGIN if self.margin[1] <= 0 else self.margin[1])
 
                 if right_x > settings.WIDTH:
                     right_x = settings.WIDTH - settings.MARGIN
@@ -352,10 +368,10 @@ class DiagonalsScene(Scene):
             self.right_source.rect.centery = right_hand[1] * settings.HEIGHT
 
             hit_list_left = pygame.sprite.groupcollide(
-                self.hands, self.points_left, False, True
+                self.left_hand, self.points_left, False, True
             )
             hit_list_right = pygame.sprite.groupcollide(
-                self.hands, self.points_right, False, True
+                self.right_hand, self.points_right, False, True
             )
 
             # Check the list of colliding sprites, and add one to the score for each one.
@@ -372,6 +388,7 @@ class DiagonalsScene(Scene):
                     )
                     self.explosiones.add(explosion)
                     self.explosion.play()
+                    self.game.display.blit(self.error_score, (self.right_source.rect.centerx, self.right_source.rect.centery))
                 else:
                     self.aciertos_derecha += 1
                     self.puntuacion += settings.ACIERTO
@@ -384,6 +401,7 @@ class DiagonalsScene(Scene):
                     )
                     self.fireworks.add(firework)
                     self.press_star.play()
+                    self.game.display.blit(self.correct_score, (self.right_source.rect.centerx, self.right_source.rect.centery))
                 self.time_right = pygame.time.get_ticks()
 
             for _ in hit_list_left:
@@ -399,6 +417,8 @@ class DiagonalsScene(Scene):
                     )
                     self.explosiones.add(explosion)
                     self.explosion.play()
+                    
+                    self.game.display.blit(self.error_score, (self.left_source.rect.centerx, self.left_source.rect.centery))
                 else:
                     self.aciertos_izquierda += 1
                     self.puntuacion += settings.ACIERTO
@@ -411,6 +431,7 @@ class DiagonalsScene(Scene):
                     )
                     self.fireworks.add(firework)
                     self.press_star.play()
+                    self.game.display.blit(self.correct_score, (self.left_source.rect.centerx, self.left_source.rect.centery))
                 self.time_left = pygame.time.get_ticks()
 
             if len(self.points_left) > 0:
@@ -448,7 +469,7 @@ class DiagonalsScene(Scene):
             min = int(self.current_time / 60)
             sec = int(self.current_time % 60)
             time_txt = settings.FONTS["medium"].render(
-                "Tiempo: {0}".format(f"{min}:{sec}" if sec != 0 else f"{min}:00"),
+                "Tiempo: {0}".format(get_str_time(min, sec)),
                 True,
                 settings.BLACK,
             )
@@ -494,3 +515,23 @@ class DiagonalsScene(Scene):
             self.aciertos_derecha,
         )
         broker.close()
+
+    def write_data_json(self):
+        today = datetime.date.today()
+        today = today.strftime("%Y-%m-%d")
+        new_data = {
+            "PT_id":1, "PT_A_id": id, "PT_E_id": settings.ID_DIAGONALES, "PT_fecha":today, "PT_tiempo": settings.TIEMPO_JUEGO,
+            "PT_fallos_izquierda": self.errores_izquierda,
+            "PT_aciertos_izquierda": self.aciertos_izquierda,
+            "PT_fallos_derecha": self.errores_derecha,
+            "PT_aciertos_derecha": self.aciertos_derecha
+        }
+
+        with open('default.json', 'r') as f:
+            data = json.load(f)
+
+        data['puntuaciones'].append(new_data)
+
+        with open('default.json', 'w') as f:
+            json.dump(data, f)
+
