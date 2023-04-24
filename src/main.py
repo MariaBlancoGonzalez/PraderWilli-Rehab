@@ -133,12 +133,12 @@ class Initiator:
                         current_scene.update(dt)
                         current_scene.draw()
                     elif current_scene.get_name() == "CalibrationScene":
-                        current_scene.body_controller(results)
+                        current_scene.tracking(results)
                         current_scene.update(dt)
                         new_scene = current_scene.events(dt)
                         current_scene.draw()
                     elif current_scene.get_name() == "DiagonalsScene":
-                        current_scene.body_controller(results)
+                        current_scene.tracking(results)
                         current_scene.update(dt)
                         new_scene = current_scene.events(ev)
                         current_scene.draw()

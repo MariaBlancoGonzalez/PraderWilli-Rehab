@@ -67,16 +67,16 @@ def reset_pygame_timer():
 
 def get_str_time(min, sec):
     minutes = ''
-    if len(min) == 1:
+    if len(str(min)) == 1:
         minutes = f'0{min}'
     else:
         minutes = f'{min}'
     segundos = ''
     if sec == 0:
         segundos = '00'
-    elif len(sec) == 1:
+    elif len(str(sec)) == 1:
         segundos = f'0{sec}'
-    elif len(sec) == 2:
+    elif len(str(sec)) == 2:
         segundos = f'{sec}'
     
     return f'{minutes}:{segundos}'
