@@ -1,6 +1,6 @@
 from settings import WIDTH, HEIGHT, TIME_BUTTONS
 import pygame
-
+from math import acos, sqrt, degrees
 
 def get_mid(coord_a, coord_b, coord_c):
     return (coord_a + coord_b + coord_c) / 3
@@ -15,7 +15,6 @@ def escale_coor_pix(coor_x, coor_y, offset_x=0, offset_y=0):
 
 def distance_between_pixels(p1, p2):
     return abs(p2[0] - p1[0])
-
 
 def create_list(data):
     if data != None:
@@ -80,3 +79,29 @@ def get_str_time(min, sec):
         segundos = f'{sec}'
     
     return f'{minutes}:{segundos}'
+
+def get_vectors(p1,p2):
+    return ((p2[0]-p1[0], p2[1]-p1[0]))
+
+
+def angle_calculate_by_points(p1, p2, p3):
+    v1 = get_vectors(p2,p1)
+    v2 = get_vectors(p2,p3)
+    #Calcula el producto punto de los vectores
+    dot_product = v1[0]*v2[0] + v1[1]*v2[1]
+
+    # Calcula la longitud de los vectores
+    length_v1 = sqrt(v1[0]**2 + v1[1]**2)
+    length_v2 = sqrt(v2[0]**2 + v2[1]**2)
+
+    # Calcula el coseno del ángulo entre los vectores
+    cos_angle = dot_product / (length_v1 * length_v2)
+
+    # Calcula el ángulo en radianes y conviértelo a grados
+    angle_rad = acos(cos_angle)
+    angle_deg = degrees(angle_rad)
+
+    # Devuelve el ángulo en grados
+    return angle_deg
+    
+    return degrees(acos(p2p1_p2p3/(mod_p2p1*mod_p2p3)))

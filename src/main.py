@@ -2,16 +2,18 @@
 
 import cv2
 import mediapipe as mp
+import os
 
 import pygame
 import sys
 import json 
 from utils import *
-from settings import CAPTION, WIDTH, HEIGHT
+from settings import CAPTION, WIDTH, HEIGHT, JSON_FILE
 from scenes.menuScene import (
     MenuScene,
 )  # , RecordScene, CalibrationScene, DiagonalsScene, OptionsScene, TutorialScene
 from broker import Broker
+from broker import No_DB
 from pose_tracking.cam_initialazer import check_availability
 
 class Initiator:
@@ -29,8 +31,8 @@ class Initiator:
         self.exercises = []
         self.exer_list = []
         self.connection = self.check_connection()
-        
-        self.get_credentials() if self.connection == 0 else self.get_json_credentials()
+        self.json_object = None
+        self.get_credentials() if self.connection == 0 else self.set_up_json()
 
         self.current_user = self.user_list[0]
         
@@ -46,12 +48,21 @@ class Initiator:
             br.close()
         return status
 
-    def get_json_credentials(self):
-        with open('default.json', 'r') as f:
-            data = json.load(f)
-        
-        self.user_list = [f"{data['id']}-{data['credentials']['usuario']}_{data['credentials']['apellido']}"]
+    def set_up_json(self):
+        if os.path.exists(JSON_FILE):
+            pass
+        else:
+            json_obj = No_DB()
+            json_obj.create_json_file(JSON_FILE)
+
+        with open(JSON_FILE, 'r') as f:
+            json_object = json.load(f)
+
+        self.user_list = [
+            f"{json_object['id']}-{json_object['credentials']['usuario']}_{json_object['credentials']['apellido']}"]
         self.exer_list = ['1-Diagonales']
+
+        self.json_object = No_DB()
 
     def get_credentials(self):
         broker = Broker()
@@ -138,6 +149,11 @@ class Initiator:
                         new_scene = current_scene.events(dt)
                         current_scene.draw()
                     elif current_scene.get_name() == "DiagonalsScene":
+                        current_scene.tracking(results)
+                        current_scene.update(dt)
+                        new_scene = current_scene.events(ev)
+                        current_scene.draw()
+                    elif current_scene.get_name() == "SquadScene":
                         current_scene.tracking(results)
                         current_scene.update(dt)
                         new_scene = current_scene.events(ev)

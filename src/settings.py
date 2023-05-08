@@ -3,6 +3,9 @@ import pygame
 # Texts
 CAPTION = "Prader Willi"
 
+# If not db
+JSON_FILE = 'default.json'
+
 # Cursor
 CURSOR_CLICK = "./assets/icons/cursor_click.png"
 
@@ -62,6 +65,7 @@ FONTS["arial_big"] = pygame.font.SysFont("arial", BIG_ARIAL_FONT)
 CLICKS = "./assets/sound/correct.wav"
 EXPLOSION_SOUND = "./assets/sound/explosion.wav"
 CLAPS = "./assets/sound/claps.wav"
+PIP = "./assets/sound/pi.wav"
 
 # Screen
 WIDTH = 1280
@@ -79,6 +83,7 @@ AZUL_CLARO = "#3194cf"
 AZUL_MARINO = "#317bcf"
 COLOR_ROJO = "#ff0000"
 GRISCLARO = "#9b9b9b"
+
 # GAMA DE COLORES
 GRANATE = "#7a3e48"
 AMARILLO = "#eecd86"
@@ -111,3 +116,7 @@ FALLO = 50
 
 # MEDIAPIPE
 BODY_PARTS = [11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28, 30, 31, 32]
+
+# For squads
+VELOCIDAD_SQUAD = 5
+TIEMPO_JUEGO_SQUAD = 30
