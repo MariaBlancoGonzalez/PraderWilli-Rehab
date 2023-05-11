@@ -31,14 +31,15 @@ MODIFY = "./assets/icons/modificar.png"
 
 # Miniaturas
 MINIATURA_DIAGONALES = "./assets/images/miniatura_diagonales.png"
-
+MINIATURA_SQUAD = "./assets/images/miniatura_squad.png"
+MINIATURA_BALLS = "./assets/images/miniatura_balls.png"
 # Tutorial
 
 
 # Animation folder
 EXPLOSION = "./assets/animations/explosion"
 FIREWORKS = "./assets/animations/fireworks"
-
+SQUADGIF = "./assets/animations/squad"
 # Letter size
 SMALL_FONT = 18
 MEDIUM_FONT = 24
@@ -120,3 +121,9 @@ BODY_PARTS = [11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28, 30, 31, 32]
 # For squads
 VELOCIDAD_SQUAD = 5
 TIEMPO_JUEGO_SQUAD = 30
+FPS_SQUAD = 20
+
+# FOR BALLS
+VELOCIDAD_BALL = 5
+TIEMPO_JUEGO_BALL = 30
+FPS_BALL = 20
