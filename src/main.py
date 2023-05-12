@@ -168,6 +168,12 @@ class Initiator:
                         new_scene = current_scene.events(ev)
                         current_scene.update(dt)
                         current_scene.draw()
+                    elif current_scene.get_name() == "BallScene":
+                        current_scene.update_camera_utilities(image)
+                        current_scene.tracking(results)
+                        new_scene = current_scene.events(ev)
+                        current_scene.update(dt)
+                        current_scene.draw()
 
                     pygame.display.update()
 

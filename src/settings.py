@@ -40,6 +40,7 @@ MINIATURA_BALLS = "./assets/images/miniatura_balls.png"
 EXPLOSION = "./assets/animations/explosion"
 FIREWORKS = "./assets/animations/fireworks"
 SQUADGIF = "./assets/animations/squad"
+BALLGIF = "./assets/animations/ball"
 # Letter size
 SMALL_FONT = 18
 MEDIUM_FONT = 24
@@ -127,3 +128,16 @@ FPS_SQUAD = 20
 VELOCIDAD_BALL = 5
 TIEMPO_JUEGO_BALL = 30
 FPS_BALL = 20
+
+# BALL COLORS AVAILABLE
+LOW_RED = [161, 155, 84]
+HIGH_RED = [179, 255, 255]
+LOW_BLUE = [94, 80, 2]
+HIGH_BLUE = [126, 255, 255]
+LOW_GREEN = [25, 52, 72]
+HIGH_GREEM = [102, 255, 255]
+LOW_YELLOW = [20, 100, 100]
+HIGH_YELLOW = [40, 255, 255]
+
+BALL_COLOR_LOWER = LOW_YELLOW
+BALL_COLOR_UPPER = HIGH_YELLOW
