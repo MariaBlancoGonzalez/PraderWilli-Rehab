@@ -1,8 +1,9 @@
 from scenes.scene import Scene
 import pygame
 import json
-
+import cv2
 import settings
+import numpy as np
 from ui.source import Source
 from ui.sticker import Sticker
 from pygame.sprite import Group
@@ -15,12 +16,12 @@ import random
 from utils import *
 from scenes.activitiesScene import ActivitiesScene
 from scenes.calibrationScene import CalibrationScene
-
+from ui.circle_point import Circle
 
 class BallScene(Scene):
     def __init__(self, game):
         super().__init__(game)
-        self._name_scene = "ballScene"
+        self._name_scene = "BallScene"
 
         # Music
         self.music = pygame.mixer.Sound(settings.MUSIC_DIAGONALES)
@@ -32,10 +33,9 @@ class BallScene(Scene):
         # Sources
         self.hand_right = Source(game.display, settings.PUNTERO_ROJO, (50, 50))
         self.hand_left = Source(game.display, settings.PUNTERO_ROJO, (50, 50))
-        self.hands = Group([self.right_source, self.left_source])
+        self.hands = Group([self.hand_right, self.hand_left])
 
         # Game settings
-        self.velocidad_squad = settings.VELOCIDAD_BALL
         self.tiempo_juego = settings.TIEMPO_JUEGO_BALL
 
         self.aciertos = 0
@@ -54,7 +54,7 @@ class BallScene(Scene):
         # Text
         self.texto = BackgroundText(
             "Tira la pelota hacia arriba",
-            (350, 150),
+            (330, 150),
             settings.WHITE,
             settings.GRIS,
             30,
@@ -73,6 +73,8 @@ class BallScene(Scene):
         self.ticks = 0
 
         self.calibration = False if game.static_points == None else True
+        # In case calibration is not done
+        self.calibration_object = CalibrationScene(self.game)
 
         if game.static_points != None:
             self.music.play()
@@ -83,8 +85,7 @@ class BallScene(Scene):
         self.pitido = True
 
         self.draw_part = ''
-        # In case calibration is not done
-        self.calibration_object = CalibrationScene(self.game)
+        
 
         # Some checkers and timer
         self.timer = 0
@@ -96,16 +97,23 @@ class BallScene(Scene):
         self.end = False
         self.data_introduced = False
 
+        # Camera from the main
+        self.image_camera = None
+
+        # Ball color
+        self.ballColorUpper = np.array(settings.BALL_COLOR_UPPER)
+        self.ballColorLower = np.array(settings.BALL_COLOR_LOWER)
         # Animation
         self.ball_gif = Animation(
             self.game.display,
-            600,
+            620,
             500,
             settings.BALLGIF,
-            settings.FPS_BALL, (400, 500)
+            settings.FPS_BALL, (500, 500)
         )
-        self.squadgif_animation = Group(self.squad_gif)
-
+        self.ballgif_animation = Group(self.ball_gif)
+        self.circle_ball = Circle(0,0,0)
+        self.hit = 0
     def events(self, events):
         if self.end:
             if self.game.connection == 0:
@@ -126,13 +134,11 @@ class BallScene(Scene):
             self.texto.draw(self.game.display)
         elif self.time_instr >= 3 and self.calibration and not self.visibility_checker:
             self.texto_partes.draw(self.game.display)
-        angle = settings.FONTS["medium"].render(
-            "{0}º".format(
-                int(self.angle)
-            ),
-            True,
-            settings.BLACK)
+        
         self.hands.draw(self.game.display)
+
+    def update_camera_utilities(self, image):
+        self.image_camera = image
 
     def tracking(self, results):
         self.current_results = results
@@ -156,8 +162,8 @@ class BallScene(Scene):
             self.seconds = 0
             self.time_squad = reset_pygame_timer()
             self.timer = reset_pygame_timer()
-            self.squadgif_animation.draw(self.game.display)
-            self.squadgif_animation.update()
+            self.ballgif_animation.draw(self.game.display)
+            self.ballgif_animation.update()
 
         elif (
             self.time_instr >= 3
@@ -194,9 +200,9 @@ class BallScene(Scene):
 
             # TODO
             # COLLIDE PELOTA CON MANOS
-            hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            hsv = cv2.cvtColor(self.image_camera, cv2.COLOR_RGB2HSV)
 
-            mask = cv2.inRange(hsv, greenLower, greenUpper)
+            mask = cv2.inRange(hsv, self.ballColorLower, self.ballColorUpper)
             mask = cv2.erode(mask, None, iterations=2)
             mask = cv2.dilate(mask, None, iterations=2)
 
@@ -208,9 +214,15 @@ class BallScene(Scene):
                 c = max(cnts, key=cv2.contourArea)
                 ((x, y), radius) = cv2.minEnclosingCircle(c)
 
-                if radius > 10:
-                    cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 2)
+                if radius > 25:
+                    self.circle_ball = Circle(x, y, radius)
 
+            hit_list = pygame.sprite.groupcollide(
+                self.hands, self.circle_ball, False, True)
+            # Check the list of colliding sprites, and add one to the score for each one.
+            for _ in hit_list:
+                self.hit += 1
+                print(self.hit)
 
             if self.current_time <= 0:
                 game_over_text = settings.FONTS["big"].render(
@@ -256,15 +268,8 @@ class BallScene(Scene):
                 "{0}".format(self.puntuacion), True, settings.COLOR_ROJO
             )
             self.game.display.blit(puntos, (1065, 15))
-            if (pygame.time.get_ticks() - self.time_squad) / 1000 >= self.velocidad_squad:
-                self.pitido = True
-                if not self.correct_squad:
-                    self.errores += 1
-                    self.puntuacion -= 50
-                    print("Errores", self.errores)
-                else:
-                    self.correct_squad = False
-                self.time_squad = reset_pygame_timer()
+            
+            #self.time_squad = reset_pygame_timer()
 
         if self.end:
             self.music.stop()
