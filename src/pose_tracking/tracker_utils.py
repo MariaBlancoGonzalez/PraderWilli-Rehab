@@ -209,19 +209,19 @@ def get_shoulder_pos(results):
 def get_feet_points(results):
     # For each hand
     try:
-        left_x = float(
+        right_x = float(
             results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_ANKLE].x
         )
 
-        left_y = float(
+        right_y = float(
             results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_ANKLE].y
         )
 
-        right_x = float(
+        left_x = float(
             results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_ANKLE].x
         )
 
-        right_y = float(
+        left_y = float(
             results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_ANKLE].y
         )
 
@@ -243,6 +243,57 @@ def check_collide(part, left, right, part_str=""):
 def check_visibility(results):
     try:
         visibility = [i.visibility for i in results.pose_landmarks.landmark]
-        return all(i >= 0.65 for i in visibility)
+        return all(i >= 0.55 for i in visibility)
     except:
         return False
+
+def check_visibility_balls(results):
+    try:
+        visibility = [i.visibility for i in results.pose_landmarks.landmark]
+        return all(i >= 0.5 for i in visibility)
+    except:
+        return False
+        
+def get_knees_points(results):
+    # For each hand
+    try:
+        right_x = float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_KNEE].x)
+            
+
+        right_y = float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_KNEE].y)
+
+        left_x = float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_KNEE].x)
+        
+        left_y = float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_KNEE].y)
+
+        # Coordinates
+        return (left_x, left_y), (right_x, right_y)
+
+    except:
+        return (0, 0), (0, 0)
+
+
+def get_hips_points(results):
+    # For each hand
+    try:
+        right_x = float(
+            results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_HIP].x)
+
+        right_y = float(
+            results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_HIP].y)
+
+        left_x = float(
+            results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_HIP].x)
+
+        left_y = float(
+            results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_HIP].y)
+
+        # Coordinates
+        return (left_x, left_y), (right_x, right_y)
+
+    except:
+        return (0, 0), (0, 0)
+
+
+def get_part_forward(results):
+    return 'left' if float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_INDEX].z) < float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_INDEX].z) else 'right'

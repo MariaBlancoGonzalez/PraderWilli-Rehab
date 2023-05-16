@@ -69,7 +69,7 @@ class DiagonalsScene(Scene):
                 str(settings.ACIERTO), True, settings.BLACK
                  )
         self.error_score = settings.FONTS["medium"].render(
-                str(settings.FALLO), True, settings.BLACK
+                str(settings.FALLO_PTO), True, settings.BLACK
                  )
         # Text
         self.texto = BackgroundText(
@@ -159,14 +159,15 @@ class DiagonalsScene(Scene):
 
         # Game complete
         self.end = False
-
+        self.data_introduced = False
     def events(self, events):
         if self.end:
             if self.game.connection == 0:
                 self.introduced_data()
                 return ActivitiesScene(self.game)
             else:
-                self.write_data_json()
+                self.game.json_object.write_data_json(self.errores_izquierda, self.aciertos_derecha, self.errores_derecha, self.aciertos_derecha)
+                return ActivitiesScene(self.game)
         return None
 
     def update(self, dt):
@@ -378,7 +379,7 @@ class DiagonalsScene(Scene):
             for _ in hit_list_right:
                 if self.right_point.get_trap():
                     self.errores_derecha += 1
-                    self.puntuacion -= settings.FALLO
+                    self.puntuacion -= settings.FALLO_PTO
                     explosion = Animation(
                         self.game.display,
                         self.right_point.rect.centerx,
@@ -391,7 +392,7 @@ class DiagonalsScene(Scene):
                     self.game.display.blit(self.error_score, (self.right_source.rect.centerx, self.right_source.rect.centery))
                 else:
                     self.aciertos_derecha += 1
-                    self.puntuacion += settings.ACIERTO
+                    self.puntuacion += settings.ACIERTO_PTO
                     firework = Animation(
                         self.game.display,
                         self.right_point.rect.centerx,
@@ -407,7 +408,7 @@ class DiagonalsScene(Scene):
             for _ in hit_list_left:
                 if self.left_point.get_trap():
                     self.errores_izquierda += 1
-                    self.puntuacion -= settings.FALLO
+                    self.puntuacion -= settings.FALLO_PTO
                     explosion = Animation(
                         self.game.display,
                         self.left_point.rect.centerx,
@@ -421,7 +422,7 @@ class DiagonalsScene(Scene):
                     self.game.display.blit(self.error_score, (self.left_source.rect.centerx, self.left_source.rect.centery))
                 else:
                     self.aciertos_izquierda += 1
-                    self.puntuacion += settings.ACIERTO
+                    self.puntuacion += settings.ACIERTO_PTO
                     firework = Animation(
                         self.game.display,
                         self.left_point.rect.centerx,
@@ -516,22 +517,4 @@ class DiagonalsScene(Scene):
         )
         broker.close()
 
-    def write_data_json(self):
-        today = datetime.date.today()
-        today = today.strftime("%Y-%m-%d")
-        new_data = {
-            "PT_id":1, "PT_A_id": id, "PT_E_id": settings.ID_DIAGONALES, "PT_fecha":today, "PT_tiempo": settings.TIEMPO_JUEGO,
-            "PT_fallos_izquierda": self.errores_izquierda,
-            "PT_aciertos_izquierda": self.aciertos_izquierda,
-            "PT_fallos_derecha": self.errores_derecha,
-            "PT_aciertos_derecha": self.aciertos_derecha
-        }
-
-        with open('default.json', 'r') as f:
-            data = json.load(f)
-
-        data['puntuaciones'].append(new_data)
-
-        with open('default.json', 'w') as f:
-            json.dump(data, f)
-
+    
