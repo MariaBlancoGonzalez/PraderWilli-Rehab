@@ -1,9 +1,8 @@
 from scenes.scene import Scene
 import pygame
 import json
-import cv2
+
 import settings
-import numpy as np
 from ui.source import Source
 from ui.sticker import Sticker
 from pygame.sprite import Group
@@ -16,13 +15,12 @@ import random
 from utils import *
 from scenes.activitiesScene import ActivitiesScene
 from scenes.calibrationScene import CalibrationScene
-from ui.circle_point import Circle
 
-class BallScene(Scene):
+class SquadScene(Scene):
     def __init__(self, game):
         super().__init__(game)
-        self._name_scene = "BallScene"
-
+        self._name_scene = "SquadScene"
+        
         # Music
         self.music = pygame.mixer.Sound(settings.MUSIC_DIAGONALES)
         # self.music_playing = False
@@ -31,32 +29,34 @@ class BallScene(Scene):
         self.pip_sound = pygame.mixer.Sound(settings.PIP)
 
         # Sources
-        self.hand_right = Source(game.display, settings.PUNTERO_ROJO, (50, 50))
-        self.hand_left = Source(game.display, settings.PUNTERO_ROJO, (50, 50))
-        
-        self.hands = Group([self.hand_right, self.hand_left])
-        self.line = Sticker(game.display, settings.LINEA_HORIZONTAL, settings.WIDTH//2, 50,800,50)
+        self.right_feet = Source(game.display, settings.PUNTERO_ROJO, (50,50))
+        self.left_feet = Source(game.display, settings.PUNTERO_ROJO, (50, 50))
+        self.right_knee = Source(game.display, settings.PUNTERO_ROJO, (50, 50))
+        self.left_knee = Source(game.display, settings.PUNTERO_ROJO, (50, 50))
+        self.left_hip = Source(game.display, settings.PUNTERO_ROJO, (50, 50))
+        self.right_hip = Source(game.display, settings.PUNTERO_ROJO, (50, 50))
 
         # Game settings
-        self.tiempo_juego = settings.TIEMPO_JUEGO_BALL
+        self.velocidad_squad = settings.VELOCIDAD_SQUAD 
+        self.tiempo_juego = settings.TIEMPO_JUEGO_SQUAD
 
         self.aciertos = 0
         self.errores = 0
 
         # Score total and partial to show
         self.puntuacion = 0
-
-        self.correct_ball = False
+        self.angle = 0
+        self.correct_squad = False
         self.correct_score = settings.FONTS["medium"].render(
             str(settings.ACIERTO_PTO), True, settings.BLACK
         )
         self.error_score = settings.FONTS["medium"].render(
-            str(settings.FALLO_PTO), True, settings.BLACK
+            str(settings.FALLO), True, settings.BLACK
         )
         # Text
         self.texto = BackgroundText(
-            "Tira la pelota hacia arriba",
-            (330, 150),
+            "Realiza sentadillas",
+            (350, 150),
             settings.WHITE,
             settings.GRIS,
             30,
@@ -75,20 +75,18 @@ class BallScene(Scene):
         self.ticks = 0
 
         self.calibration = False if game.static_points == None else True
-        # In case calibration is not done
-        self.calibration_object = CalibrationScene(self.game)
 
         if game.static_points != None:
             self.music.play()
             self.music_playing = True
 
         # Tracking time during game
-        self.velocidad_balls = settings.VELOCIDAD_BALL
-        self.time_balls = pygame.time.get_ticks()
+        self.time_squad = pygame.time.get_ticks()
         self.pitido = True
 
         self.draw_part = ''
-        
+        # In case calibration is not done
+        self.calibration_object = CalibrationScene(self.game)
 
         # Some checkers and timer
         self.timer = 0
@@ -100,32 +98,23 @@ class BallScene(Scene):
         self.end = False
         self.data_introduced = False
 
-        # Camera from the main
-        self.image_camera = None
-
-        # Ball color
-        self.ballColorUpper = np.array(settings.BALL_COLOR_UPPER)
-        self.ballColorLower = np.array(settings.BALL_COLOR_LOWER)
         # Animation
-        self.ball_gif = Animation(
+        self.squad_gif = Animation(
             self.game.display,
-            620,
+            600,
             500,
-            settings.BALLGIF,
-            settings.FPS_BALL, (500, 500)
+            settings.SQUADGIF,
+            settings.FPS_SQUAD, (400,500)
         )
-        self.ballgif_animation = Group(self.ball_gif)
-        self.circle_ball = Circle(0,0,0)
-        self.hit = 0
-        self.state = [0,0,0] # Up, on hands, down
+        self.squadgif_animation = Group(self.squad_gif)
 
     def events(self, events):
         if self.end:
             if self.game.connection == 0:
-                self.introduced_data()
+                #self.introduced_data()
                 return ActivitiesScene(self.game)
             else:
-                # self.game.json_object.write_data_json(
+                #self.game.json_object.write_data_json(
                 #    self.errores_izquierda, self.aciertos_derecha, self.errores_derecha, self.aciertos_derecha)
                 return ActivitiesScene(self.game)
 
@@ -139,16 +128,37 @@ class BallScene(Scene):
             self.texto.draw(self.game.display)
         elif self.time_instr >= 3 and self.calibration and not self.visibility_checker:
             self.texto_partes.draw(self.game.display)
+        angle = settings.FONTS["medium"].render(
+            "{0}º".format(
+                int(self.angle)
+            ),
+            True,
+            settings.BLACK)
+        # Draw point on the screen
+        if self.draw_part == 'left':
+            self.left_feet.draw(self.game.display)
+            self.left_knee.draw(self.game.display)
+            self.left_hip.draw(self.game.display)
+
+            pygame.draw.lines(
+                self.game.display, settings.COLOR_ROJO, True, [(self.left_hip.rect.centerx, self.left_hip.rect.centery), (self.left_knee.rect.centerx, self.left_knee.rect.centery), (self.left_feet.rect.centerx, self.left_feet.rect.centery)], 5)
+            self.game.display.blit(angle, (self.left_knee.rect.centerx+50, self.left_knee.rect.centery))
         
-        self.hands.draw(self.game.display)
+        elif self.draw_part == 'right':
+            self.right_feet.draw(self.game.display)
+            self.right_knee.draw(self.game.display)
+            self.right_hip.draw(self.game.display)
+
+            pygame.draw.lines(
+                self.game.display, settings.COLOR_ROJO, True, [(self.right_hip.rect.centerx, self.right_hip.rect.centery), (self.right_knee.rect.centerx, self.right_knee.rect.centery), (self.right_feet.rect.centerx, self.right_feet.rect.centery)], 5)
+
+            self.game.display.blit(angle, (self.right_knee.rect.centerx-50, self.right_knee.rect.centery))
         
 
-    def update_camera_utilities(self, image):
-        self.image_camera = image
 
     def tracking(self, results):
         self.current_results = results
-        self.visibility_checker = check_visibility_balls(self.current_results)
+        self.visibility_checker = check_visibility(self.current_results)
         if self.current_results == None:
             return None
 
@@ -166,10 +176,10 @@ class BallScene(Scene):
         if self.time_instr < 3 and self.calibration and not self.end:
             self.time_instr = count(self.ticks)
             self.seconds = 0
-            self.time_balls = reset_pygame_timer()
+            self.time_squad = reset_pygame_timer()
             self.timer = reset_pygame_timer()
-            self.ballgif_animation.draw(self.game.display)
-            self.ballgif_animation.update()
+            self.squadgif_animation.draw(self.game.display)
+            self.squadgif_animation.update()
 
         elif (
             self.time_instr >= 3
@@ -188,83 +198,48 @@ class BallScene(Scene):
             # Cuando esta todo ok
             # Se usa la izquierda en la derecha y viceversa pq se invierte la imagen
             # Para checkeo de pies
-            self.visibility_checker = check_visibility_balls(self.current_results)
+            self.visibility_checker = check_visibility(self.current_results)
             self.mostrar_instrucciones = False
 
             if self.pitido:
-                self.pip_sound.play() 
+                self.pip_sound.play()
                 self.pitido = False
 
-            # Get the point in the hand
-            left_hand, right_hand = get_points(results)
-            left_knee, right_knee = get_hips_points(results)
-            # For each hand
-            self.hand_left.rect.centerx = left_hand[0] * settings.WIDTH
-            self.hand_left.rect.centery = left_hand[1] * settings.HEIGHT
-            self.hand_right.rect.centerx = right_hand[0] * settings.WIDTH
-            self.hand_right.rect.centery = right_hand[1] * settings.HEIGHT
-           
-            hsv = cv2.cvtColor(self.image_camera, cv2.COLOR_RGB2HSV)
+            # Coger puntos pies
+            left_current_foot, rigth_current_foot = get_feet_points(
+                self.current_results)
 
-            mask = cv2.inRange(hsv, self.ballColorLower, self.ballColorUpper)
-            mask = cv2.erode(mask, None, iterations=2)
-            mask = cv2.dilate(mask, None, iterations=2)
+            self.left_feet.rect.centerx = left_current_foot[0] * settings.WIDTH
+            self.left_feet.rect.centery = left_current_foot[1] * settings.HEIGHT
+            self.right_feet.rect.centerx = rigth_current_foot[0] * settings.WIDTH
+            self.right_feet.rect.centery = rigth_current_foot[1] * settings.HEIGHT
 
-            cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
-                            cv2.CHAIN_APPROX_SIMPLE)[-2]
-            center = None
+            # Coger puntos rodillas
+            left_knee, right_knee = get_knees_points(self.current_results)
+            self.left_knee.rect.centerx = left_knee[0] * settings.WIDTH
+            self.left_knee.rect.centery = left_knee[1] * settings.HEIGHT
+            self.right_knee.rect.centerx = right_knee[0] * settings.WIDTH
+            self.right_knee.rect.centery = right_knee[1] * settings.HEIGHT
 
-            if len(cnts) > 0:
-                c = max(cnts, key=cv2.contourArea)
-                ((x, y), radius) = cv2.minEnclosingCircle(c)
+            # Coger caderas
+            left_current_hip, right_current_hip = get_hips_points(self.current_results)
+            self.left_hip.rect.centerx = left_current_hip[0] * settings.WIDTH
+            self.left_hip.rect.centery = left_current_hip[1] * settings.HEIGHT
+            self.right_hip.rect.centerx = right_current_hip[0] * settings.WIDTH
+            self.right_hip.rect.centery = right_current_hip[1] * settings.HEIGHT
 
-                if radius > 25:
-                    self.circle_ball = Circle(x, y, radius)
+            if self.draw_part == "right":
+                self.angle = angle_calculate_by_points(right_current_hip, right_knee, rigth_current_foot)
+            else:
+                self.angle = angle_calculate_by_points(left_current_hip, left_knee, left_current_foot)
 
-            
-
-            hit_list = pygame.sprite.groupcollide(
-                self.hands, Group(self.circle_ball), False, True)
-            # Check the list of colliding sprites, and add one to the score for each one.
-            for _ in hit_list:
-                # estado incial pelota en mano
-                if self.state[1] == 0:
-                    self.state[1] = 1
-                # cuando ha pasado del estado inicial y ha subido
-                elif self.state[0] == 1 and self.state[1] == 1 and self.state[2] != 1:
-                    self.state[2] = 1
-
-            if self.state[1] == 1 and self.state[0] != 1:
-                hit_list_ball_down = pygame.sprite.groupcollide(
-                    Group(self.circle_ball), Group(self.line), False, True)
-                for _ in hit_list_ball_down:
-                    # cuando da la bola en la linea
-                    if self.state[0] == 0:
-                        self.state[0] = 1
-            if self.circle_ball.rect.y > 0 and left_knee[1]*settings.HEIGHT > self.circle_ball.rect.y and right_knee[1]*settings.HEIGHT > self.circle_ball.rect.y and (pygame.time.get_ticks() - self.time_balls) / 1000 < self.velocidad_balls:
-                self.errores += 1
-                self.state = [0,0,0]
-                self.puntuacion -= settings.FALLO_PTO
+            if self.angle <= 90.0:
+                if (pygame.time.get_ticks() - self.time_squad) / 1000 < self.velocidad_squad and not self.correct_squad:
+                    self.aciertos += 1
+                    self.puntuacion += settings.ACIERTO_PTO
+                    self.correct_squad = True
+                    print("Aciertos", self.aciertos)
                 
-                self.time_balls = reset_pygame_timer()
-
-            elif all(element == 1 for element in self.state) and (pygame.time.get_ticks() - self.time_balls) / 1000 < self.velocidad_balls:
-                self.aciertos += 1
-                self.puntuacion += settings.ACIERTO_PTO
-                self.state = [0,0,0]
-                self.pitido = True
-                self.time_balls = reset_pygame_timer()
-            
-            elif (pygame.time.get_ticks() - self.time_balls) / 1000 >= self.velocidad_balls:
-                
-                self.pitido = True
-                if not all(element == 1 for element in self.state):
-                    self.errores += 1
-                    self.puntuacion -= settings.FALLO_PTO
-                    
-                self.state = [0,0,0]
-                self.time_balls = reset_pygame_timer()
-
             if self.current_time <= 0:
                 game_over_text = settings.FONTS["big"].render(
                     "Bien hecho", True, settings.BLACK
@@ -277,7 +252,7 @@ class BallScene(Scene):
                 )
 
                 mistakes_txt = settings.FONTS["medium"].render(
-                    "Aciertos: {0}".format(
+                       "Aciertos: {0}".format(
                         self.aciertos
                     ),
                     True,
@@ -309,7 +284,15 @@ class BallScene(Scene):
                 "{0}".format(self.puntuacion), True, settings.COLOR_ROJO
             )
             self.game.display.blit(puntos, (1065, 15))
-            self.line.draw(self.game.display)
+            if (pygame.time.get_ticks() - self.time_squad) / 1000 >= self.velocidad_squad:
+                self.pitido = True
+                if not self.correct_squad:
+                    self.errores += 1
+                    self.puntuacion -= 50
+                    print("Errores",self.errores)
+                else:
+                    self.correct_squad = False
+                self.time_squad = reset_pygame_timer()
 
         if self.end:
             self.music.stop()
@@ -322,12 +305,12 @@ class BallScene(Scene):
         id = get_id(self.game.current_user)
         broker.add_score(
             id,
-            settings.ID_BALLS,
+            settings.ID_DIAGONALES,
             today,
-            settings.TIEMPO_JUEGO_BALL,
-            self.errores,
-            self.aciertos,
-            0,
-            0,
+            settings.TIEMPO_JUEGO,
+            self.errores_izquierda,
+            self.aciertos_izquierda,
+            self.errores_derecha,
+            self.aciertos_derecha,
         )
         broker.close()
