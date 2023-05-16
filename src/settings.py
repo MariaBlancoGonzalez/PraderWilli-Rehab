@@ -29,6 +29,15 @@ FLECHA_IZQUIERDA = "./assets/icons/izq.png"
 PDF = "./assets/icons/pdf.png"
 MODIFY = "./assets/icons/modificar.png"
 
+# Música
+MUSIC_1 = "./assets/sound/music_1.wav"
+MUSIC_2 = "./assets/sound/music_2.wav"
+MUSIC_3 = "./assets/sound/music_3.wav"
+MUSIC_4 = "./assets/sound/music_4.wav"
+MUSIC_5 = "./assets/sound/music_5.wav"
+MUSIC_6 = "./assets/sound/music_6.wav"
+MUSIC = [MUSIC_1,MUSIC_2,MUSIC_3,MUSIC_4,MUSIC_5,MUSIC_6]
+
 # Miniaturas
 MINIATURA_DIAGONALES = "./assets/images/miniatura_diagonales.png"
 MINIATURA_SQUAD = "./assets/images/miniatura_squad.png"
@@ -41,6 +50,7 @@ EXPLOSION = "./assets/animations/explosion"
 FIREWORKS = "./assets/animations/fireworks"
 SQUADGIF = "./assets/animations/squad"
 BALLGIF = "./assets/animations/ball"
+
 # Letter size
 SMALL_FONT = 18
 MEDIUM_FONT = 24
@@ -110,23 +120,25 @@ FEET_BOX = 50
 MANOS_IMG = ROCKET
 ERROR = BOMBA
 ACIERTO = ESTRELLA
-MUSIC_DIAGONALES = "./assets/sound/music_diag.wav"
+MUSIC_DIAGONALES = "./assets/sound/music_1.wav"
 
 # PUNTUACION
-ACIERTO = 100
-FALLO = 50
+ACIERTO_PTO = 100
+FALLO_PTO = 50
 
 # MEDIAPIPE
 BODY_PARTS = [11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28, 30, 31, 32]
 
 # For squads
+ID_SQUAD = 2
 VELOCIDAD_SQUAD = 5
 TIEMPO_JUEGO_SQUAD = 30
 FPS_SQUAD = 20
 
-# FOR BALLS
-VELOCIDAD_BALL = 5
-TIEMPO_JUEGO_BALL = 30
+# For balls
+ID_BALLS = 3
+VELOCIDAD_BALL = 7
+TIEMPO_JUEGO_BALL = 40
 FPS_BALL = 20
 
 # BALL COLORS AVAILABLE
