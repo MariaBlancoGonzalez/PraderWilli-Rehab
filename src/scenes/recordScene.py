@@ -14,13 +14,13 @@ from pose_tracking.tracker_utils import *
 from utils import *
 from stats.calc import *
 import stats.plots as plt
-
+from stats.diagonalesStats import DiagonalesStats
+from stats.squadStats import SquadStats
 
 class RecordScene(Scene):
     def __init__(self, game):
         super().__init__(game)
         self._name_scene = "RecordScene"
-        self.current_user = game.current_user
 
         # Text
         self.historial = settings.FONTS["header"].render(
@@ -31,7 +31,9 @@ class RecordScene(Scene):
         self.no_data = self.fontUnderline.render(
             f"No hay datos disponibles", True, settings.BLACK
         )
-
+        self.estadisticas = self.fontUnderline.render(
+            f"Estadisticas", True, settings.BLACK
+        )
         # Images
         self.imagePDF = pygame.image.load(settings.PDF)
 
@@ -75,72 +77,17 @@ class RecordScene(Scene):
 
         # Initiate dropdown
         self.current_exer = self.exerDropDown.main
+        self.current_user = game.current_user
         self.id_exer = get_id(self.exerDropDown.main)
         self.id_user = get_id(self.game.current_user)
-    
-        # Get data
-        self.data = []
-        self.tiempo = []
-        self.izq_errores = []
-        self.izq_aciertos = []
-        self.drcha_errores = []
-        self.drcha_aciertos = []
 
-        if game.connection == 0:
-            self.get_data()
-        else:
-            self.get_data_json()
-
-        # Variables to compute
-        self.best_score, self.best_day = 0, 0
-        self.media_total_fallos, self.media_total_aciertos = 0, 0
-        self.media_errores_d, self.media_errores_i = 0, 0
-
-        # This shouldnt be done here TODO
-        if self.data != []:
-            (
-                self.tiempo,
-                self.izq_errores,
-                self.izq_aciertos,
-                self.drcha_errores,
-                self.drcha_aciertos,
-            ) = distribute_data(self.data)
-
-            self.estadisticas = self.fontUnderline.render(
-                f"Estadisticas", True, settings.BLACK
-            )
-
-            self.best_score, self.best_day = get_best_score(self.data)
-            self.media_total_aciertos = calculate_media_total(
-                self.izq_aciertos, self.drcha_aciertos
-            )
-            self.media_total_fallos = calculate_media_total(
-                self.izq_errores, self.drcha_errores
-            )
-
-            self.media_aciertos_d = calculate_media_parte(self.drcha_aciertos)
-            self.media_aciertos_i = calculate_media_parte(self.izq_aciertos)
-
-            self.media_errores_d = calculate_media_parte(self.drcha_errores)
-            self.media_errores_i = calculate_media_parte(self.izq_errores)
-
-            self.canvas_izq, self.raw_data_izq = plt.create_right_hand_two_lines(
-                self.izq_errores, self.izq_aciertos, self.tiempo, "izquierda"
-            )
-            self.size_izq = self.canvas_izq.get_width_height()
-
-            self.surf_izq = pygame.image.fromstring(
-                self.raw_data_izq, self.size_izq, "RGB"
-            )
-
-            self.canvas_drcha, self.raw_data_drcha = plt.create_right_hand_two_lines(
-                self.drcha_errores, self.drcha_aciertos, self.tiempo, "derecha"
-            )
-            self.size_drcha = self.canvas_drcha.get_width_height()
-
-            self.surf_drcha = pygame.image.fromstring(
-                self.raw_data_drcha, self.size_drcha, "RGB"
-            )
+        if int(self.id_exer) == settings.ID_DIAGONALES:
+            self.current_activity_object = DiagonalesStats(game.current_user, self.id_exer, self.id_user, game.connection)
+        elif int(self.id_exer) == settings.ID_BALLS:
+            self.current_activity_object = BallsStats(game.current_user, self.id_exer, self.id_user, game.connection)
+        elif int(self.id_exer) == settings.ID_SQUAD:
+            self.current_activity_object = SquadStats(game.current_user, self.id_exer, self.id_user, game.connection)
+        self.current_activity_object.create_measures()
 
         # Tracking time
         self.time_hand = 0
@@ -150,41 +97,14 @@ class RecordScene(Scene):
         self.bar_rect = pygame.Rect(40, (game.display.get_size()[1]) - 50, 700, 30)
         self.width = 0
 
-    def get_data(self):
-        broker = Broker()
-        broker.connect()
-        
-        self.data = broker.get_score(self.id_exer, self.id_user, 10)
-        print(self.data)
-        broker.close()
-    
-    def get_data_json(self):
-        with open('default.json', 'r') as f:
-            data = json.load(f)
-
-        for score in data['puntuaciones']:
-            date = datetime.datetime.strptime(score['PT_fecha'], '%Y-%m-%d')
-            values = [
-                score['PT_id'],
-                score['PT_A_id'],
-                score['PT_E_id'],
-                date,
-                score['PT_tiempo'],
-                score['PT_fallos_izquierda'],
-                score['PT_aciertos_izquierda'],
-                score['PT_fallos_derecha'],
-                score['PT_aciertos_derecha']
-            ]
-            self.data.append(tuple(values))
-
     def events(self, events):
         self.userDropDown.update(events)
-        self.game.current_user = self.userDropDown.main
         self.exerDropDown.update(events)
+
         if self.button_back.get_pressed() or self.button_back.on_click(events):
             from scenes.menuScene import MenuScene
-
             return MenuScene(self.game)
+
         if self.pdfDownload.on_click(events):
             user = self.current_user.split("-")[1]
             filename = f'{user}_{datetime.datetime.now().strftime("%d-%m")}.pdf'
@@ -192,57 +112,28 @@ class RecordScene(Scene):
                 with open(filename, "wb") as file:
                     file.write("")
 
-            doc = MyDocTemplate(filename, self.id_user, self.id_exer)
+            doc = MyDocTemplate(filename, self.id_user,
+                                self.id_exer, self.game.connection)
             doc.create_doc(doc)
         return None
 
     def update(self, dt):
-        if self.current_user != self.game.current_user:
-            self.current_user = self.game.current_user
-            self.id_exer = get_id(self.exerDropDown.main)
+        if self.current_user != self.userDropDown.main or self.current_exer != self.exerDropDown.main:
+            self.current_user = self.userDropDown.main
             self.id_user = get_id(self.current_user)
-            self.get_data()
+            self.current_exer = self.exerDropDown.main
+            self.id_exer = get_id(self.current_exer)
 
-            if self.data != []:
-                self.best_score, self.best_day = get_best_score(self.data)
-
-                self.media_total_aciertos = calculate_media_total(
-                    self.izq_aciertos, self.drcha_aciertos
-                )
-                self.media_total_fallos = calculate_media_total(
-                    self.izq_errores, self.drcha_errores
-                )
-
-                self.media_aciertos_d = calculate_media_parte(self.drcha_aciertos)
-                self.media_aciertos_i = calculate_media_parte(self.izq_aciertos)
-
-                self.media_errores_d = calculate_media_parte(self.drcha_errores)
-                self.media_errores_i = calculate_media_parte(self.izq_errores)
-
-                self.canvas_izq, self.raw_data_izq = plt.create_right_hand_two_lines(
-                    self.izq_errores, self.izq_aciertos, self.tiempo, "izquierda"
-                )
-                self.size_izq = self.canvas_izq.get_width_height()
-
-                self.surf_izq = pygame.image.fromstring(
-                    self.raw_data_izq, self.size_izq, "RGB"
-                )
-
-                (
-                    self.canvas_drcha,
-                    self.raw_data_drcha,
-                ) = plt.create_right_hand_two_lines(
-                    self.drcha_errores, self.drcha_aciertos, self.tiempo, "derecha"
-                )
-                self.size_drcha = self.canvas_drcha.get_width_height()
-
-                self.surf_drcha = pygame.image.fromstring(
-                    self.raw_data_drcha, self.size_drcha, "RGB"
-                )
-
-            else:
-                self.best_score, self.best_day = 0, 0
-
+            if int(self.id_exer) == settings.ID_DIAGONALES:
+                self.current_activity_object = DiagonalesStats(
+                    self.current_user, self.id_exer, self.id_user, self.game.connection)
+            elif int(self.id_exer) == settings.ID_BALLS:
+                self.current_activity_object = BallsStats(
+                    self.current_user, self.id_exer, self.id_user, self.game.connection)
+            elif int(self.id_exer) == settings.ID_SQUAD:
+                self.current_activity_object = SquadStats(
+                    self.current_user, self.id_exer, self.id_user, self.game.connection)
+            self.current_activity_object.create_measures()
         pos = pygame.mouse.get_pos()
         if any(button.top_rect.collidepoint(pos) for button in self.button_group):
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
@@ -252,78 +143,10 @@ class RecordScene(Scene):
     def draw(self):
         # Backgroun colors
         self.game.display.fill(settings.GRANATE)
-        pygame.draw.rect(
-            self.game.display, settings.AMARILLO, pygame.Rect(40, 160, 1200, 560)
-        )
+        pygame.draw.rect(self.game.display, settings.AMARILLO, pygame.Rect(40, 160, 1200, 560))
 
         # Text
         self.game.display.blit(self.historial, (settings.WIDTH // 3 + 30, 10))
-
-        if self.data != [] and self.game.current_user == self.current_user:
-            self.mejor = settings.FONTS["arial_small"].render(
-                f"-Mejor marca: {self.best_score}", True, settings.BLACK
-            )
-            self.dia = settings.FONTS["arial_small"].render(
-                f"-Fecha: {self.best_day}", True, settings.BLACK
-            )
-
-            self.media_fallos = settings.FONTS["arial_small"].render(
-                f"-Aciertos medios: {round(self.media_total_fallos,2)}",
-                True,
-                settings.BLACK,
-            )
-            self.media_aciertos = settings.FONTS["arial_small"].render(
-                f"-Errores medios: {round(self.media_total_aciertos,2)}",
-                True,
-                settings.BLACK,
-            )
-
-            self.media_aciertos_dr = settings.FONTS["arial_small"].render(
-                f"-Aciertos medios derecha: {round(self.media_aciertos_d,2)}",
-                True,
-                settings.BLACK,
-            )
-            self.media_aciertos_iz = settings.FONTS["arial_small"].render(
-                f"-Aciertos medios izquierda: {round(self.media_aciertos_i,2)}",
-                True,
-                settings.BLACK,
-            )
-
-            self.media_err_dr = settings.FONTS["arial_small"].render(
-                f"-Errores medios derecha: {round(self.media_errores_d,2)}",
-                True,
-                settings.BLACK,
-            )
-            self.media_err_iz = settings.FONTS["arial_small"].render(
-                f"-Errores medios izquierda: {round(self.media_errores_i,2)}",
-                True,
-                settings.BLACK,
-            )
-
-            # Statistics rectangle
-            self.rect_stats = pygame.Surface((370, 525))  # the size of your rect
-            self.rect_stats.set_alpha(128)  # alpha level
-
-            # this fills the entire surface
-            self.rect_stats.fill((255, 255, 255))
-
-            # Statistics
-            self.game.display.blit(self.rect_stats, (840, 170))
-            self.game.display.blit(self.surf_izq, (40, 160))
-            self.game.display.blit(self.surf_drcha, (40, 430))
-            self.game.display.blit(self.mejor, (870, 230))
-            self.game.display.blit(self.estadisticas, (860, 180))
-            self.game.display.blit(self.dia, (870, 280))
-            self.game.display.blit(self.media_fallos, (870, 330))
-            self.game.display.blit(self.media_aciertos, (870, 380))
-            self.game.display.blit(self.media_aciertos_dr, (870, 430))
-            self.game.display.blit(self.media_aciertos_iz, (870, 480))
-            self.game.display.blit(self.media_err_dr, (870, 530))
-            self.game.display.blit(self.media_err_iz, (870, 580))
-
-        else:
-            # If there is no data
-            self.game.display.blit(self.no_data, (100, 200))
 
         # Buttons
         self.button_back.draw(self.game.display)
@@ -342,6 +165,80 @@ class RecordScene(Scene):
             (41, (self.game.display.get_size()[1]) - 50, self.width, 30),
         )
         pygame.draw.rect(self.game.display, settings.BLACK, self.bar_rect, 2)
+
+        if self.current_activity_object.data != []:
+            # Draw graphs and stats depending on the game
+            if int(self.id_exer) == settings.ID_DIAGONALES:
+                stats = self.current_activity_object.stats
+                graphs = self.current_activity_object.graphs
+                # Statistics rectangle
+                rect_stats = pygame.Surface((370, 525))  # the size of your rect
+                rect_stats.set_alpha(128)  # alpha level
+
+                # this fills the entire surface
+                rect_stats.fill((255, 255, 255))
+                self.game.display.blit(rect_stats, (840, 170))
+
+                # Gráficas
+                self.game.display.blit(graphs[0][1], (40, 160))
+                self.game.display.blit(graphs[1][1], (40, 430))
+
+                # Statistics
+                self.game.display.blit(self.estadisticas, (860, 180))
+                
+                counter = 230
+                for i in range(len(stats)):
+                    self.game.display.blit(settings.FONTS["arial_small"].render(
+                        f"{stats[i][0]} {stats[i][1]}",
+                        True,
+                        settings.BLACK,
+                    ), (870, counter))
+                    counter += 50
+
+            elif int(self.id_exer) == settings.ID_SQUAD:
+                pass
+            elif int(self.id_exer) == settings.ID_BALLS:
+                rect_stats = pygame.Surface(
+                    (370, 525))  # the size of your rect
+                rect_stats.set_alpha(128)  # alpha level
+
+                # this fills the entire surface
+                rect_stats.fill((255, 255, 255))
+                self.game.display.blit(rect_stats, (840, 170))
+                stats = self.current_activity_object.stats
+                graphs = self.current_activity_object.graphs
+                # Gráficas
+                self.game.display.blit(graphs[0][1], (40, 180))
+
+                # Statistics
+                self.game.display.blit(self.estadisticas, (860, 180))
+
+                counter = 230
+                for i in range(len(stats)-2):
+                    self.game.display.blit(settings.FONTS["arial_small"].render(
+                        f"{stats[i][0]} {stats[i][1]}",
+                        True,
+                        settings.BLACK,
+                    ), (870, counter))
+                    counter += 50
+
+                self.game.display.blit(settings.FONTS["arial_small"].render(
+                    f"{stats[len(stats)-2][0]} {stats[len(stats)-2][1]}",
+                    True,
+                    settings.BLACK,
+                ), (130, 570))
+                self.game.display.blit(settings.FONTS["arial_small"].render(
+                    f"{stats[len(stats)-1][0]} {stats[len(stats)-1][1]}",
+                    True,
+                    settings.BLACK,
+                ), (130, 620))
+
+        else:
+            self.game.display.blit(settings.FONTS["arial_small"].render(
+                f"No hay datos disponibles",
+                True,
+                settings.BLACK,
+            ), (120, 180))
 
     def check_collide(self, left, right):
         if self.button_back.top_rect.collidepoint(
