@@ -25,7 +25,9 @@ class DiagonalsScene(Scene):
         self.left_feet = 0
 
         # Music
-        self.music = pygame.mixer.Sound(settings.MUSIC_DIAGONALES)
+        song = random.randint(0, 5)
+        self.music = pygame.mixer.Sound(settings.MUSIC[song])
+        self.music.set_volume(0.5)
         # self.music_playing = False
 
         # Sounds
@@ -53,6 +55,15 @@ class DiagonalsScene(Scene):
         self.explosiones = Group()
         self.fireworks = Group()
 
+        # Animation
+        self.diag_gif = Animation(
+            self.game.display,
+            620,
+            500,
+            settings.DIAGGIF,
+            settings.FPS_DIAG, (500, 500)
+        )
+        self.diaggif_animation = Group(self.diag_gif)
         # Game settings
         self.trampas = settings.PORCENTAJE_TRAMPAS
         self.velocidad_bolas = settings.VELOCIDAD_ENTRE_BOLAS
@@ -66,7 +77,7 @@ class DiagonalsScene(Scene):
         # Score total and partial to show
         self.puntuacion = 0
         self.correct_score = settings.FONTS["medium"].render(
-                str(settings.ACIERTO), True, settings.BLACK
+                str(settings.ACIERTO_PTO), True, settings.BLACK
                  )
         self.error_score = settings.FONTS["medium"].render(
                 str(settings.FALLO_PTO), True, settings.BLACK
@@ -74,7 +85,7 @@ class DiagonalsScene(Scene):
         # Text
         self.texto = BackgroundText(
             "Atrapa las estrellas con las manos",
-            (120, 300),
+            (250, 150),
             settings.WHITE,
             settings.GRIS,
             30,
@@ -132,7 +143,7 @@ class DiagonalsScene(Scene):
             self.music_playing = True
             left_hand_bound = create_diagonal_points_left(game.static_points)
             right_hand_bound = create_diagonal_points_right(game.static_points)
-            top_margin = create_top_margin(game.static.points)
+            top_margin = create_top_margin(game.static_points)
             self.shoulder_left, self.shoulder_right = get_shoulder_pos(
                 game.static_points
             )
@@ -250,16 +261,19 @@ class DiagonalsScene(Scene):
                 self.bound_left_hand = (left_hand_bound[0], left_hand_bound[1])
                 self.bound_right_hand = (right_hand_bound[0], right_hand_bound[1])
                 self.music.play()
-                print(self.margin)
                 # self.music_playing = True
+        elif self.calibration and self.time_instr<=0 and not self.end:
+            self.ticks = pygame.time.get_ticks()
         # Pantalla de 3,2,1...
         if self.time_instr < 3 and self.calibration and not self.end:
+            print(self.time_instr)
             self.time_instr = count(self.ticks)
             self.seconds = 0
             self.time_right = reset_pygame_timer()
             self.time_left = reset_pygame_timer()
             self.timer = reset_pygame_timer()
-
+            self.diaggif_animation.draw(self.game.display)
+            self.diaggif_animation.update()
         elif (
             self.time_instr >= 3
             and self.calibration
@@ -496,6 +510,7 @@ class DiagonalsScene(Scene):
             self.fireworks.update()
 
         if self.end:
+        
             self.music.stop()
             self.claps.play()
 

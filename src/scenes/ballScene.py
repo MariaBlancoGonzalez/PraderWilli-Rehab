@@ -24,11 +24,14 @@ class BallScene(Scene):
         self._name_scene = "BallScene"
 
         # Music
-        self.music = pygame.mixer.Sound(settings.MUSIC_DIAGONALES)
+        song = random.randint(0, 5)
+        self.music = pygame.mixer.Sound(settings.MUSIC[song])
+        self.music.set_volume(0.5)
         # self.music_playing = False
 
         # Sounds
         self.pip_sound = pygame.mixer.Sound(settings.PIP)
+        self.pip_sound.set_volume(1)
 
         # Sources
         self.hand_right = Source(game.display, settings.PUNTERO_ROJO, (50, 50))
@@ -71,7 +74,7 @@ class BallScene(Scene):
 
         # Tracking time to show instruc.
         self.mostrar_instrucciones = True
-        self.time_instr = 0
+        self.time_instr_balls = 0
         self.ticks = 0
 
         self.calibration = False if game.static_points == None else True
@@ -80,15 +83,15 @@ class BallScene(Scene):
 
         if game.static_points != None:
             self.music.play()
+            self.music.set_volume(0.6)
             self.music_playing = True
 
         # Tracking time during game
         self.velocidad_balls = settings.VELOCIDAD_BALL
         self.time_balls = pygame.time.get_ticks()
         self.pitido = True
-
-        self.draw_part = ''
-        
+        self.correct = False
+        self.wrong = False
 
         # Some checkers and timer
         self.timer = 0
@@ -115,6 +118,8 @@ class BallScene(Scene):
             settings.FPS_BALL, (500, 500)
         )
         self.ballgif_animation = Group(self.ball_gif)
+
+        # Para la pelota
         self.circle_ball = Circle(0,0,0)
         self.hit = 0
         self.state = [0,0,0] # Up, on hands, down
@@ -137,7 +142,7 @@ class BallScene(Scene):
     def draw(self):
         if self.mostrar_instrucciones and self.calibration:
             self.texto.draw(self.game.display)
-        elif self.time_instr >= 3 and self.calibration and not self.visibility_checker:
+        elif self.time_instr_balls >= 3 and self.calibration and not self.visibility_checker:
             self.texto_partes.draw(self.game.display)
         
         self.hands.draw(self.game.display)
@@ -161,10 +166,12 @@ class BallScene(Scene):
             self.ticks = pygame.time.get_ticks()
             if self.calibration:
                 self.music.play()
-                self.draw_part = get_part_forward(results)
+        elif self.calibration and self.time_instr_balls <= 0 and not self.end:
+            self.ticks = pygame.time.get_ticks()
         # Pantalla de 3,2,1...
-        if self.time_instr < 3 and self.calibration and not self.end:
-            self.time_instr = count(self.ticks)
+        
+        if self.time_instr_balls < 3 and self.calibration and not self.end:
+            self.time_instr_balls = count(self.ticks)
             self.seconds = 0
             self.time_balls = reset_pygame_timer()
             self.timer = reset_pygame_timer()
@@ -172,7 +179,7 @@ class BallScene(Scene):
             self.ballgif_animation.update()
 
         elif (
-            self.time_instr >= 3
+            self.time_instr_balls >= 3
             and self.calibration
             and not self.visibility_checker
             and not self.end
@@ -180,7 +187,7 @@ class BallScene(Scene):
             # Para checkeo de pies
             pass
         elif (
-            self.time_instr >= 3
+            self.time_instr_balls >= 3
             and self.calibration
             and self.visibility_checker
             and not self.end
@@ -207,8 +214,8 @@ class BallScene(Scene):
             hsv = cv2.cvtColor(self.image_camera, cv2.COLOR_RGB2HSV)
 
             mask = cv2.inRange(hsv, self.ballColorLower, self.ballColorUpper)
-            mask = cv2.erode(mask, None, iterations=2)
-            mask = cv2.dilate(mask, None, iterations=2)
+            mask = cv2.erode(mask, None, iterations=1)
+            mask = cv2.dilate(mask, None, iterations=1)
 
             cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
                             cv2.CHAIN_APPROX_SIMPLE)[-2]
@@ -220,50 +227,44 @@ class BallScene(Scene):
 
                 if radius > 25:
                     self.circle_ball = Circle(x, y, radius)
-
             
+            if self.wrong is not True:
+                hit_list = pygame.sprite.groupcollide(
+                    self.hands, Group(self.circle_ball), False, True)
+                # Check the list of colliding sprites, and add one to the score for each one.
+                for _ in hit_list:
+                    # estado incial pelota en mano
+                    if self.state[1] == 0:
+                        self.state[1] = 1
+                    # cuando ha pasado del estado inicial y ha subido
+                    if self.state[0] == 1 and self.state[1] == 1 and self.state[2] != 1:
+                        self.state[2] = 1
 
-            hit_list = pygame.sprite.groupcollide(
-                self.hands, Group(self.circle_ball), False, True)
-            # Check the list of colliding sprites, and add one to the score for each one.
-            for _ in hit_list:
-                # estado incial pelota en mano
-                if self.state[1] == 0:
-                    self.state[1] = 1
-                # cuando ha pasado del estado inicial y ha subido
-                elif self.state[0] == 1 and self.state[1] == 1 and self.state[2] != 1:
-                    self.state[2] = 1
+                if self.state[1] == 1 and self.state[0] != 1:
+                    hit_list_ball_down = pygame.sprite.groupcollide(
+                        Group(self.circle_ball), Group(self.line), False, True)
+                    for _ in hit_list_ball_down:
+                        # cuando da la bola en la linea
+                        if self.state[0] == 0:
+                            self.state[0] = 1
 
-            if self.state[1] == 1 and self.state[0] != 1:
-                hit_list_ball_down = pygame.sprite.groupcollide(
-                    Group(self.circle_ball), Group(self.line), False, True)
-                for _ in hit_list_ball_down:
-                    # cuando da la bola en la linea
-                    if self.state[0] == 0:
-                        self.state[0] = 1
-            if self.circle_ball.rect.y > 0 and left_knee[1]*settings.HEIGHT > self.circle_ball.rect.y and right_knee[1]*settings.HEIGHT > self.circle_ball.rect.y and (pygame.time.get_ticks() - self.time_balls) / 1000 < self.velocidad_balls:
+            if self.circle_ball.rect.y > 0 and left_knee[1]*settings.HEIGHT < self.circle_ball.rect.y and right_knee[1]*settings.HEIGHT < self.circle_ball.rect.y and (pygame.time.get_ticks() - self.time_balls) / 1000 < self.velocidad_balls and self.correct == False and self.wrong == False:
                 self.errores += 1
-                self.state = [0,0,0]
                 self.puntuacion -= settings.FALLO_PTO
-                
-                self.time_balls = reset_pygame_timer()
-
-            elif all(element == 1 for element in self.state) and (pygame.time.get_ticks() - self.time_balls) / 1000 < self.velocidad_balls:
+                self.wrong = True
+            elif all(element == 1 for element in self.state) and (pygame.time.get_ticks() - self.time_balls) / 1000 < self.velocidad_balls and self.correct == False and self.wrong == False:
                 self.aciertos += 1
                 self.puntuacion += settings.ACIERTO_PTO
-                self.state = [0,0,0]
-                self.pitido = True
-                self.time_balls = reset_pygame_timer()
-            
-            elif (pygame.time.get_ticks() - self.time_balls) / 1000 >= self.velocidad_balls:
-                
-                self.pitido = True
-                if not all(element == 1 for element in self.state):
+                self.correct = True
+            if (pygame.time.get_ticks() - self.time_balls) / 1000 >= self.velocidad_balls:
+                if self.correct == False and self.wrong == False:
                     self.errores += 1
                     self.puntuacion -= settings.FALLO_PTO
-                    
+                self.correct = False
+                self.wrong = False
                 self.state = [0,0,0]
                 self.time_balls = reset_pygame_timer()
+                self.pitido = True
 
             if self.current_time <= 0:
                 game_over_text = settings.FONTS["big"].render(

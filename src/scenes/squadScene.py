@@ -22,7 +22,9 @@ class SquadScene(Scene):
         self._name_scene = "SquadScene"
         
         # Music
-        self.music = pygame.mixer.Sound(settings.MUSIC_DIAGONALES)
+        song = random.randint(0, 5)
+        self.music = pygame.mixer.Sound(settings.MUSIC[song])
+        self.music.set_volume(0.5)
         # self.music_playing = False
 
         # Sounds
@@ -51,7 +53,7 @@ class SquadScene(Scene):
             str(settings.ACIERTO_PTO), True, settings.BLACK
         )
         self.error_score = settings.FONTS["medium"].render(
-            str(settings.FALLO), True, settings.BLACK
+            str(settings.FALLO_PTO), True, settings.BLACK
         )
         # Text
         self.texto = BackgroundText(
@@ -71,7 +73,7 @@ class SquadScene(Scene):
 
         # Tracking time to show instruc.
         self.mostrar_instrucciones = True
-        self.time_instr = 0
+        self.time_instr_squad = 0
         self.ticks = 0
 
         self.calibration = False if game.static_points == None else True
@@ -126,7 +128,7 @@ class SquadScene(Scene):
     def draw(self):
         if self.mostrar_instrucciones and self.calibration:
             self.texto.draw(self.game.display)
-        elif self.time_instr >= 3 and self.calibration and not self.visibility_checker:
+        elif self.time_instr_squad >= 3 and self.calibration and not self.visibility_checker:
             self.texto_partes.draw(self.game.display)
         angle = settings.FONTS["medium"].render(
             "{0}º".format(
@@ -172,9 +174,11 @@ class SquadScene(Scene):
             if self.calibration:
                 self.music.play()
                 self.draw_part = get_part_forward(results)
+        elif self.calibration and self.time_instr_squad <= 0 and not self.end:
+            self.ticks = pygame.time.get_ticks()
         # Pantalla de 3,2,1...
-        if self.time_instr < 3 and self.calibration and not self.end:
-            self.time_instr = count(self.ticks)
+        if self.time_instr_squad < 3 and self.calibration and not self.end:
+            self.time_instr_squad = count(self.ticks)
             self.seconds = 0
             self.time_squad = reset_pygame_timer()
             self.timer = reset_pygame_timer()
@@ -182,7 +186,7 @@ class SquadScene(Scene):
             self.squadgif_animation.update()
 
         elif (
-            self.time_instr >= 3
+            self.time_instr_squad >= 3
             and self.calibration
             and not self.visibility_checker
             and not self.end
@@ -190,7 +194,7 @@ class SquadScene(Scene):
             # Para checkeo de pies
             pass
         elif (
-            self.time_instr >= 3
+            self.time_instr_squad >= 3
             and self.calibration
             and self.visibility_checker
             and not self.end
@@ -238,7 +242,6 @@ class SquadScene(Scene):
                     self.aciertos += 1
                     self.puntuacion += settings.ACIERTO_PTO
                     self.correct_squad = True
-                    print("Aciertos", self.aciertos)
                 
             if self.current_time <= 0:
                 game_over_text = settings.FONTS["big"].render(
