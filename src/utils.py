@@ -1,6 +1,7 @@
 from settings import WIDTH, HEIGHT, TIME_BUTTONS
 import pygame
 from math import acos, sqrt, degrees
+import numpy as np
 
 def get_mid(coord_a, coord_b, coord_c):
     return (coord_a + coord_b + coord_c) / 3
@@ -48,6 +49,43 @@ def distribute_data(data):
 
     return tiempo, izq_errores, izq_aciertos, drcha_errores, drcha_aciertos
 
+
+def distribute_data_stats(data):
+    fecha, errores, aciertos, caidas, tiempo = (
+        [],
+        [],
+        [],
+        [],
+        [],
+    )
+    for i in data:
+        fecha.append(i[3].strftime("%d/%m"))
+        errores.append(i[5])
+        aciertos.append(i[6])
+        caidas.append(i[7])
+        tiempo.append(i[4])
+
+
+    return fecha, errores, aciertos, caidas, tiempo
+
+
+def distribute_data_squad(data):
+    fecha, errores, aciertos, tiempo = (
+        [],
+        [],
+        [],
+        [],
+    )
+    for i in data:
+        fecha.append(i[3].strftime("%d/%m"))
+        errores.append(i[5])
+        aciertos.append(i[6])
+        tiempo.append(i[4])
+
+    return fecha, errores, aciertos, tiempo
+
+
+
 def reset_time():
     return 0, 0
 
@@ -85,6 +123,7 @@ def get_vectors(p1,p2):
 
 
 def angle_calculate_by_points(p1, p2, p3):
+    '''# left_current_hip, left_knee, left_current_foot
     v1 = get_vectors(p2,p1)
     v2 = get_vectors(p2,p3)
     #Calcula el producto punto de los vectores
@@ -104,4 +143,8 @@ def angle_calculate_by_points(p1, p2, p3):
     # Devuelve el ángulo en grados
     return angle_deg
     
-    return degrees(acos(p2p1_p2p3/(mod_p2p1*mod_p2p3)))
+    return degrees(acos(p2p1_p2p3/(mod_p2p1*mod_p2p3)))'''
+    radians = np.arctan2(p3[1] - p2[1], p3[0]-p2[0]) - \
+        np.arctan2(p1[1]-p2[1], p1[0]-p2[0])
+    angle = np.abs(radians*180.0/np.pi)
+    return angle
