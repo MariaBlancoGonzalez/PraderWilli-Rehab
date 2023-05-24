@@ -1,3 +1,4 @@
+from pygame.sprite import Group
 import math
 
 from utils import *
@@ -247,6 +248,33 @@ def check_visibility(results):
     except:
         return False
 
+
+def check_visibility_squad(results):
+    try:
+        
+        ankle = float(
+            results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_ANKLE].visibility
+        )
+
+
+        shoulder = float(
+            results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER].visibility
+        )
+
+        hip = float(
+            results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_HIP].visibility
+        )
+
+        knee = float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_KNEE].visibility
+        )
+        visib = [ankle, shoulder, hip, knee]
+        # Coordinates
+        return all(i >= 0.65 for i in visib)
+
+    except:
+        return False
+
+
 def check_visibility_balls(results):
     try:
         visibility = [i.visibility for i in results.pose_landmarks.landmark]
@@ -297,3 +325,27 @@ def get_hips_points(results):
 
 def get_part_forward(results):
     return 'left' if float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_INDEX].z) < float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_INDEX].z) else 'right'
+
+from settings import WIDTH
+from settings import HEIGHT
+def update_pose_points(results):
+    pose_group = Group()
+    try:
+        if results.pose_landmarks:
+            for landmark in results.pose_landmarks.landmark:
+                # Convertir las coordenadas normalizadas a las coordenadas de la imagen
+                x = int(landmark.x * WIDTH)
+                y = int(landmark.y * HEIGHT)
+
+                # Crear un sprite para cada punto de la pose y agregarlo al grupo
+                pose_point = pygame.sprite.Sprite()
+                pose_point.rect = pygame.Rect(x, y, 5, 5)  # Tamaño del punto
+                pose_point.image = pygame.Surface(pose_point.rect.size)
+                # Color del punto (rojo en este caso)
+                pose_point.image.fill((255, 0, 0))
+                pose_point.rect.center = (x, y)
+                pose_group.add(pose_point)
+        return pose_group
+    except:
+        return pose_group
+
