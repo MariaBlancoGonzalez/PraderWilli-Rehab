@@ -31,7 +31,7 @@ class ActivitiesScene(Scene):
             "Sentadillas", True, settings.BLACK
         )
         self.txt_balls = settings.FONTS["small"].render(
-            "Lanzar pelota", True, settings.BLACK
+            "Esquivar pelotas", True, settings.BLACK
         )
         self.txt_time_appear = settings.FONTS["small"].render(
             "Tiempo en el que los elementos aparecen", True, settings.BLACK
@@ -49,7 +49,7 @@ class ActivitiesScene(Scene):
             "Tiempo entre sentadillas", True, settings.BLACK
         )
         self.txt_change_time_ball = settings.FONTS["small"].render(
-            "Tiempo entre lanzar pelota", True, settings.BLACK
+            "Velocidad de pelotas", True, settings.BLACK
         )
 
 
@@ -147,7 +147,7 @@ class ActivitiesScene(Scene):
 
         self.game.display.blit(self.txt_diagonales, (150, 360))
         self.game.display.blit(self.txt_squad, (600, 360))
-        self.game.display.blit(self.txt_balls, (1000, 360))
+        self.game.display.blit(self.txt_balls, (1010, 360))
         self.diagonales.draw(self.game.display)
         self.squad.draw(self.game.display)
         self.balls.draw(self.game.display)
@@ -358,6 +358,20 @@ class ActivitiesScene(Scene):
             self.pressed_back = pygame.time.get_ticks()
 
         self.width = self.time_hand * coefficient
+        if self.width > settings.WIDTH_LOAD_BAR + 10:
+            print(self.width)
+            if action == "Diagonales":
+                self.diagonales.set_clicked_true()
+            elif action == "Squad":
+                self.squad.set_clicked_true()
+            elif action == "Balls":
+                self.balls.set_clicked_true()
+            elif action == "Calibrate":
+                self.button_calibrate.set_pressed(True)
+            elif action == "Aplicar":
+                self.button_apply.set_pressed(True)
+            elif action == "Volver":
+                self.button_back.set_pressed(True)
 
         if action == "":
             self.time_hand, self.width = reset_time()

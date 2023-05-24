@@ -16,7 +16,7 @@ import random
 from utils import *
 from scenes.activitiesScene import ActivitiesScene
 from scenes.calibrationScene import CalibrationScene
-from ui.circle_point import Circle
+from ui.moving_sprites import Moving_Sprite
 
 class BallScene(Scene):
     def __init__(self, game):
@@ -32,34 +32,24 @@ class BallScene(Scene):
         # Sounds
         self.pip_sound = pygame.mixer.Sound(settings.PIP)
         self.pip_sound.set_volume(1)
-
-        # Sources
-        self.hand_right = Source(game.display, settings.PUNTERO_ROJO, (50, 50))
-        self.hand_left = Source(game.display, settings.PUNTERO_ROJO, (50, 50))
-        
-        self.hands = Group([self.hand_right, self.hand_left])
-        self.line = Sticker(game.display, settings.LINEA_HORIZONTAL, settings.WIDTH//2, 50,800,50)
-
+        self.error_sound = pygame.mixer.Sound(settings.ERROR_SOUND)
+        self.error_sound.set_volume(1)
+        self.explosion_sound = pygame.mixer.Sound(settings.EXPLOSION_SOUND)
         # Game settings
-        self.tiempo_juego = settings.TIEMPO_JUEGO_BALL
+        self.tiempo_juego = settings.TIEMPO_JUEGO_MOVILIDAD
 
-        self.aciertos = 0
         self.errores = 0
-
+        
         # Score total and partial to show
         self.puntuacion = 0
 
-        self.correct_ball = False
-        self.correct_score = settings.FONTS["medium"].render(
-            str(settings.ACIERTO_PTO), True, settings.BLACK
-        )
         self.error_score = settings.FONTS["medium"].render(
             str(settings.FALLO_PTO), True, settings.BLACK
         )
         # Text
         self.texto = BackgroundText(
-            "Tira la pelota hacia arriba",
-            (330, 150),
+            "Evita que te den las pelotas",
+            (240, 150),
             settings.WHITE,
             settings.GRIS,
             30,
@@ -75,11 +65,15 @@ class BallScene(Scene):
         # Tracking time to show instruc.
         self.mostrar_instrucciones = True
         self.time_instr_balls = 0
-        self.ticks = 0
+        
 
         self.calibration = False if game.static_points == None else True
         # In case calibration is not done
         self.calibration_object = CalibrationScene(self.game)
+        if self.calibration_object != None:
+            self.ticks = pygame.time.get_ticks()
+        else:
+            self.ticks = 0
 
         if game.static_points != None:
             self.music.play()
@@ -87,7 +81,6 @@ class BallScene(Scene):
             self.music_playing = True
 
         # Tracking time during game
-        self.velocidad_balls = settings.VELOCIDAD_BALL
         self.time_balls = pygame.time.get_ticks()
         self.pitido = True
         self.correct = False
@@ -106,23 +99,16 @@ class BallScene(Scene):
         # Camera from the main
         self.image_camera = None
 
-        # Ball color
-        self.ballColorUpper = np.array(settings.BALL_COLOR_UPPER)
-        self.ballColorLower = np.array(settings.BALL_COLOR_LOWER)
-        # Animation
-        self.ball_gif = Animation(
-            self.game.display,
-            620,
-            500,
-            settings.BALLGIF,
-            settings.FPS_BALL, (500, 500)
-        )
-        self.ballgif_animation = Group(self.ball_gif)
-
-        # Para la pelota
-        self.circle_ball = Circle(0,0,0)
-        self.hit = 0
-        self.state = [0,0,0] # Up, on hands, down
+        # Config
+        self.probabilidad = settings.PROBABILIDAD
+        self.speed = settings.BALL_SPEED
+        self.footbal_image = pygame.image.load(settings.FOOTBALL)
+        self.basket_image = pygame.image.load(settings.BASKETBALL)
+        self.tennis_image = pygame.image.load(settings.TENISBALL)
+        self.rugby_image = pygame.image.load(settings.RUGBYBALL)
+        self.balls = Group()
+        self.body = Group()
+        self.explosiones = Group()
 
     def events(self, events):
         if self.end:
@@ -144,10 +130,9 @@ class BallScene(Scene):
             self.texto.draw(self.game.display)
         elif self.time_instr_balls >= 3 and self.calibration and not self.visibility_checker:
             self.texto_partes.draw(self.game.display)
-        
-        self.hands.draw(self.game.display)
-        
 
+        self.balls.draw(self.game.display)
+    
     def update_camera_utilities(self, image):
         self.image_camera = image
 
@@ -166,8 +151,6 @@ class BallScene(Scene):
             self.ticks = pygame.time.get_ticks()
             if self.calibration:
                 self.music.play()
-        elif self.calibration and self.time_instr_balls <= 0 and not self.end:
-            self.ticks = pygame.time.get_ticks()
         # Pantalla de 3,2,1...
         
         if self.time_instr_balls < 3 and self.calibration and not self.end:
@@ -175,8 +158,6 @@ class BallScene(Scene):
             self.seconds = 0
             self.time_balls = reset_pygame_timer()
             self.timer = reset_pygame_timer()
-            self.ballgif_animation.draw(self.game.display)
-            self.ballgif_animation.update()
 
         elif (
             self.time_instr_balls >= 3
@@ -202,96 +183,50 @@ class BallScene(Scene):
                 self.pip_sound.play() 
                 self.pitido = False
 
-            # Get the point in the hand
-            left_hand, right_hand = get_points(results)
-            left_knee, right_knee = get_hips_points(results)
-            # For each hand
-            self.hand_left.rect.centerx = left_hand[0] * settings.WIDTH
-            self.hand_left.rect.centery = left_hand[1] * settings.HEIGHT
-            self.hand_right.rect.centerx = right_hand[0] * settings.WIDTH
-            self.hand_right.rect.centery = right_hand[1] * settings.HEIGHT
-           
-            hsv = cv2.cvtColor(self.image_camera, cv2.COLOR_RGB2HSV)
+            self.body = update_pose_points(results)
 
-            mask = cv2.inRange(hsv, self.ballColorLower, self.ballColorUpper)
-            mask = cv2.erode(mask, None, iterations=1)
-            mask = cv2.dilate(mask, None, iterations=1)
-
-            cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
-                            cv2.CHAIN_APPROX_SIMPLE)[-2]
-            center = None
-
-            if len(cnts) > 0:
-                c = max(cnts, key=cv2.contourArea)
-                ((x, y), radius) = cv2.minEnclosingCircle(c)
-
-                if radius > 25:
-                    self.circle_ball = Circle(x, y, radius)
+            self.balls.update(self.speed)
             
-            if self.wrong is not True:
-                hit_list = pygame.sprite.groupcollide(
-                    self.hands, Group(self.circle_ball), False, True)
-                # Check the list of colliding sprites, and add one to the score for each one.
-                for _ in hit_list:
-                    # estado incial pelota en mano
-                    if self.state[1] == 0:
-                        self.state[1] = 1
-                    # cuando ha pasado del estado inicial y ha subido
-                    if self.state[0] == 1 and self.state[1] == 1 and self.state[2] != 1:
-                        self.state[2] = 1
-
-                if self.state[1] == 1 and self.state[0] != 1:
-                    hit_list_ball_down = pygame.sprite.groupcollide(
-                        Group(self.circle_ball), Group(self.line), False, True)
-                    for _ in hit_list_ball_down:
-                        # cuando da la bola en la linea
-                        if self.state[0] == 0:
-                            self.state[0] = 1
-
-            if self.circle_ball.rect.y > 0 and left_knee[1]*settings.HEIGHT < self.circle_ball.rect.y and right_knee[1]*settings.HEIGHT < self.circle_ball.rect.y and (pygame.time.get_ticks() - self.time_balls) / 1000 < self.velocidad_balls and self.correct == False and self.wrong == False:
+            # Generate spheres randomly.
+            if random.randrange(100) < self.probabilidad:
+                self.balls.add(Moving_Sprite(self.game.display, self.footbal_image))
+            
+            if random.randrange(100) < self.probabilidad:
+                self.balls.add(Moving_Sprite(self.game.display, self.basket_image))
+            
+            if random.randrange(100) < self.probabilidad:
+                self.balls.add(Moving_Sprite(self.game.display, self.tennis_image))
+            
+            if random.randrange(100) < self.probabilidad:
+                self.balls.add(Moving_Sprite(self.game.display, self.rugby_image))
+            
+            for ball in self.balls.sprites():
+                # kill spheres when they leave the screen.
+                if ball.rect.top > settings.HEIGHT:
+                    self.puntuacion += settings.ACIERTO_BALLS
+                    ball.kill()
+            
+            # This will find collisions between landmarks and spheres, killing the sprite of last group which collided.
+            hit_list = pygame.sprite.groupcollide(self.body, self.balls, False, True)
+            
+            for sprite in hit_list:
+                explosion = Animation(
+                    self.game.display,
+                    sprite.rect.centerx,
+                    sprite.rect.centery,
+                    settings.EXPLOSION,
+                    settings.FPS_EXPLOSION,
+                )
+                self.explosiones.add(explosion)
+                self.explosion_sound.play()
                 self.errores += 1
-                self.puntuacion -= settings.FALLO_PTO
-                self.wrong = True
-            elif all(element == 1 for element in self.state) and (pygame.time.get_ticks() - self.time_balls) / 1000 < self.velocidad_balls and self.correct == False and self.wrong == False:
-                self.aciertos += 1
-                self.puntuacion += settings.ACIERTO_PTO
-                self.correct = True
-            if (pygame.time.get_ticks() - self.time_balls) / 1000 >= self.velocidad_balls:
-                if self.correct == False and self.wrong == False:
-                    self.errores += 1
-                    self.puntuacion -= settings.FALLO_PTO
-                self.correct = False
-                self.wrong = False
-                self.state = [0,0,0]
-                self.time_balls = reset_pygame_timer()
-                self.pitido = True
+                self.puntuacion -= settings.FALLO_BALLS
+                self.error_sound.play()
 
-            if self.current_time <= 0:
-                game_over_text = settings.FONTS["big"].render(
-                    "Bien hecho", True, settings.BLACK
-                )
-                self.game.display.blit(
-                    game_over_text,
-                    game_over_text.get_rect(
-                        center=(settings.WIDTH // 2, settings.HEIGHT // 2)
-                    ),
-                )
-
-                mistakes_txt = settings.FONTS["medium"].render(
-                    "Aciertos: {0}".format(
-                        self.aciertos
-                    ),
-                    True,
-                    settings.BLACK,
-                )
-                self.game.display.blit(mistakes_txt, (15, 15))
-
-                self.end = True
-
+            # Mostrar en pantalla
             new_time = (pygame.time.get_ticks() - self.timer) / 1000
 
             self.current_time = self.tiempo_juego - int(new_time)
-
             min = int(self.current_time / 60)
             sec = int(self.current_time % 60)
             time_txt = settings.FONTS["medium"].render(
@@ -310,7 +245,11 @@ class BallScene(Scene):
                 "{0}".format(self.puntuacion), True, settings.COLOR_ROJO
             )
             self.game.display.blit(puntos, (1065, 15))
-            self.line.draw(self.game.display)
+            self.explosiones.draw(self.game.display)
+            self.explosiones.update()
+
+        if self.current_time <= 0:
+            self.end = True
 
         if self.end:
             self.music.stop()
@@ -325,9 +264,9 @@ class BallScene(Scene):
             id,
             settings.ID_BALLS,
             today,
-            settings.TIEMPO_JUEGO_BALL,
+            settings.TIEMPO_JUEGO_MOVILIDAD,
             self.errores,
-            self.aciertos,
+            0,
             0,
             0,
         )

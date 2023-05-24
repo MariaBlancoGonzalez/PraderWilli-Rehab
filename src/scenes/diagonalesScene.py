@@ -25,6 +25,8 @@ class DiagonalsScene(Scene):
         self.left_feet = 0
 
         # Music
+        self.pip_sound = pygame.mixer.Sound(settings.PIP)
+        self.pip_sound.set_volume(1)
         song = random.randint(0, 5)
         self.music = pygame.mixer.Sound(settings.MUSIC[song])
         self.music.set_volume(0.5)
@@ -85,7 +87,7 @@ class DiagonalsScene(Scene):
         # Text
         self.texto = BackgroundText(
             "Atrapa las estrellas con las manos",
-            (250, 150),
+            (180, 150),
             settings.WHITE,
             settings.GRIS,
             30,
@@ -168,6 +170,8 @@ class DiagonalsScene(Scene):
         self.feet_checker = True
         self.current_time = self.tiempo_juego
 
+
+        self.pitido = True
         # Game complete
         self.end = False
         self.data_introduced = False
@@ -186,7 +190,7 @@ class DiagonalsScene(Scene):
 
     def draw(self):
         if self.mostrar_instrucciones and self.calibration:
-            self.texto.draw(self.game.display)
+            pass
         elif self.time_instr >= 3 and self.calibration and not self.feet_checker:
             self.texto_pies.draw(self.game.display)
         elif self.time_instr >= 3 and self.calibration and not self.visibility_checker:
@@ -274,6 +278,7 @@ class DiagonalsScene(Scene):
             self.timer = reset_pygame_timer()
             self.diaggif_animation.draw(self.game.display)
             self.diaggif_animation.update()
+            self.texto.draw(self.game.display)
         elif (
             self.time_instr >= 3
             and self.calibration
@@ -306,6 +311,10 @@ class DiagonalsScene(Scene):
             self.mostrar_instrucciones = False
             left_tramp = random.random() < self.trampas
             right_tramp = random.random() < self.trampas
+
+            if self.pitido:
+                self.pip_sound.play()
+                self.pitido = False
 
             # Si puedo poner bolas
             bola_permitida_drch = (

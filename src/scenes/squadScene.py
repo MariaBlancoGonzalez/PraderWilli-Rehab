@@ -29,6 +29,9 @@ class SquadScene(Scene):
 
         # Sounds
         self.pip_sound = pygame.mixer.Sound(settings.PIP)
+        self.pip_sound.set_volume(1)
+        self.error_sound = pygame.mixer.Sound(settings.ERROR_SOUND)
+        self.error_sound.set_volume(1)
 
         # Sources
         self.right_feet = Source(game.display, settings.PUNTERO_ROJO, (50,50))
@@ -74,7 +77,7 @@ class SquadScene(Scene):
         # Tracking time to show instruc.
         self.mostrar_instrucciones = True
         self.time_instr_squad = 0
-        self.ticks = 0
+        
 
         self.calibration = False if game.static_points == None else True
 
@@ -86,9 +89,13 @@ class SquadScene(Scene):
         self.time_squad = pygame.time.get_ticks()
         self.pitido = True
 
-        self.draw_part = ''
+        self.draw_part = 'right'
         # In case calibration is not done
         self.calibration_object = CalibrationScene(self.game)
+        if self.calibration_object != None:
+            self.ticks = pygame.time.get_ticks()
+        else:
+            self.ticks = 0
 
         # Some checkers and timer
         self.timer = 0
@@ -136,17 +143,8 @@ class SquadScene(Scene):
             ),
             True,
             settings.BLACK)
-        # Draw point on the screen
-        if self.draw_part == 'left':
-            self.left_feet.draw(self.game.display)
-            self.left_knee.draw(self.game.display)
-            self.left_hip.draw(self.game.display)
 
-            pygame.draw.lines(
-                self.game.display, settings.COLOR_ROJO, True, [(self.left_hip.rect.centerx, self.left_hip.rect.centery), (self.left_knee.rect.centerx, self.left_knee.rect.centery), (self.left_feet.rect.centerx, self.left_feet.rect.centery)], 5)
-            self.game.display.blit(angle, (self.left_knee.rect.centerx+50, self.left_knee.rect.centery))
-        
-        elif self.draw_part == 'right':
+        if self.draw_part == 'right':
             self.right_feet.draw(self.game.display)
             self.right_knee.draw(self.game.display)
             self.right_hip.draw(self.game.display)
@@ -160,7 +158,8 @@ class SquadScene(Scene):
 
     def tracking(self, results):
         self.current_results = results
-        self.visibility_checker = check_visibility(self.current_results)
+        self.visibility_checker = check_visibility_squad(self.current_results)
+
         if self.current_results == None:
             return None
 
@@ -173,9 +172,10 @@ class SquadScene(Scene):
             self.ticks = pygame.time.get_ticks()
             if self.calibration:
                 self.music.play()
-                self.draw_part = get_part_forward(results)
-        elif self.calibration and self.time_instr_squad <= 0 and not self.end:
-            self.ticks = pygame.time.get_ticks()
+
+        #if self.calibration and self.time_instr_squad <= 0 and not self.end:
+        #    self.ticks = pygame.time.get_ticks()
+        
         # Pantalla de 3,2,1...
         if self.time_instr_squad < 3 and self.calibration and not self.end:
             self.time_instr_squad = count(self.ticks)
@@ -202,8 +202,9 @@ class SquadScene(Scene):
             # Cuando esta todo ok
             # Se usa la izquierda en la derecha y viceversa pq se invierte la imagen
             # Para checkeo de pies
-            self.visibility_checker = check_visibility(self.current_results)
             self.mostrar_instrucciones = False
+            self.visibility_checker = check_visibility(self.current_results)
+            
 
             if self.pitido:
                 self.pip_sound.play()
@@ -219,29 +220,35 @@ class SquadScene(Scene):
             self.right_feet.rect.centery = rigth_current_foot[1] * settings.HEIGHT
 
             # Coger puntos rodillas
-            left_knee, right_knee = get_knees_points(self.current_results)
-            self.left_knee.rect.centerx = left_knee[0] * settings.WIDTH
-            self.left_knee.rect.centery = left_knee[1] * settings.HEIGHT
+            _, right_knee = get_knees_points(self.current_results)
+            
             self.right_knee.rect.centerx = right_knee[0] * settings.WIDTH
             self.right_knee.rect.centery = right_knee[1] * settings.HEIGHT
 
             # Coger caderas
-            left_current_hip, right_current_hip = get_hips_points(self.current_results)
-            self.left_hip.rect.centerx = left_current_hip[0] * settings.WIDTH
-            self.left_hip.rect.centery = left_current_hip[1] * settings.HEIGHT
+            _, right_current_hip = get_hips_points(self.current_results)
+
             self.right_hip.rect.centerx = right_current_hip[0] * settings.WIDTH
             self.right_hip.rect.centery = right_current_hip[1] * settings.HEIGHT
 
             if self.draw_part == "right":
                 self.angle = angle_calculate_by_points(right_current_hip, right_knee, rigth_current_foot)
-            else:
-                self.angle = angle_calculate_by_points(left_current_hip, left_knee, left_current_foot)
-
-            if self.angle <= 90.0:
+            
+            if self.angle <= 100.0:
                 if (pygame.time.get_ticks() - self.time_squad) / 1000 < self.velocidad_squad and not self.correct_squad:
                     self.aciertos += 1
                     self.puntuacion += settings.ACIERTO_PTO
                     self.correct_squad = True
+
+            if (pygame.time.get_ticks() - self.time_squad) / 1000 >= self.velocidad_squad:
+                if not self.correct_squad:
+                    self.errores += 1
+                    self.puntuacion -= 50
+                    self.error_sound.play()
+                
+                self.correct_squad = False
+                self.pitido = True
+                self.time_squad = reset_pygame_timer()
                 
             if self.current_time <= 0:
                 game_over_text = settings.FONTS["big"].render(
@@ -287,15 +294,7 @@ class SquadScene(Scene):
                 "{0}".format(self.puntuacion), True, settings.COLOR_ROJO
             )
             self.game.display.blit(puntos, (1065, 15))
-            if (pygame.time.get_ticks() - self.time_squad) / 1000 >= self.velocidad_squad:
-                self.pitido = True
-                if not self.correct_squad:
-                    self.errores += 1
-                    self.puntuacion -= 50
-                    print("Errores",self.errores)
-                else:
-                    self.correct_squad = False
-                self.time_squad = reset_pygame_timer()
+
 
         if self.end:
             self.music.stop()
