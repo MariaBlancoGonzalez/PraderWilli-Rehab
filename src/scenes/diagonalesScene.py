@@ -8,6 +8,7 @@ from ui.sticker import Sticker
 from pygame.sprite import Group
 from ui.gui import BackgroundText
 from broker import Broker
+from broker import No_DB
 from pose_tracking.tracker_utils import *
 import datetime
 from ui.animation import Animation
@@ -175,13 +176,23 @@ class DiagonalsScene(Scene):
         # Game complete
         self.end = False
         self.data_introduced = False
+
+
+        # Time bar
+        # Progress bar
+        self.bar_rect = pygame.Rect(
+            200, 25, 500, 10)
+        self.width = 0
+        self.coefficient = 500 / settings.TIEMPO_JUEGO
+
     def events(self, events):
         if self.end:
             if self.game.connection == 0:
                 self.introduced_data()
                 return ActivitiesScene(self.game)
             else:
-                self.game.json_object.write_data_json(self.errores_izquierda, self.aciertos_derecha, self.errores_derecha, self.aciertos_derecha)
+                json_object = No_DB()
+                json_object.write_data_json(settings.EXER_0_JSON, settings.ID_DIAGONALES, settings.TIEMPO_JUEGO, self.errores_izquierda, self.aciertos_derecha, self.errores_derecha, self.aciertos_derecha)
                 return ActivitiesScene(self.game)
         return None
 
@@ -490,6 +501,25 @@ class DiagonalsScene(Scene):
 
             self.current_time = self.tiempo_juego - int(new_time)
 
+            self.width = self.current_time * self.coefficient
+            
+            rect_stats = pygame.Surface(
+                (settings.WIDTH, 50))  # the size of your rect
+            rect_stats.set_alpha(128)  # alpha level
+            # this fills the entire surface
+            rect_stats.fill((255, 255, 255))
+            self.game.display.blit(rect_stats, (0, 0))
+
+            # Time bar
+            pygame.draw.rect(
+                self.game.display,
+                settings.RED,
+                (201, 25, self.width, 10),
+            )
+            pygame.draw.rect(self.game.display,
+                             settings.BLACK, self.bar_rect, 2)
+
+            # Time
             min = int(self.current_time / 60)
             sec = int(self.current_time % 60)
             time_txt = settings.FONTS["medium"].render(
@@ -498,7 +528,6 @@ class DiagonalsScene(Scene):
                 settings.BLACK,
             )
             self.game.display.blit(time_txt, (15, 15))
-
             puntuacion = settings.FONTS["medium"].render(
                 "Puntuacion: ", True, settings.BLACK
             )
@@ -509,6 +538,8 @@ class DiagonalsScene(Scene):
             )
             self.game.display.blit(puntos, (1065, 15))
 
+            
+            
             # Draw point on the screen
             self.hands.draw(self.game.display)
             self.points_left.draw(self.game.display)

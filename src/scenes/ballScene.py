@@ -39,7 +39,7 @@ class BallScene(Scene):
         self.tiempo_juego = settings.TIEMPO_JUEGO_MOVILIDAD
 
         self.errores = 0
-        
+        self.total_bolas = 0
         # Score total and partial to show
         self.puntuacion = 0
 
@@ -110,14 +110,21 @@ class BallScene(Scene):
         self.body = Group()
         self.explosiones = Group()
 
+        # Time bar
+        # Progress bar
+        self.bar_rect = pygame.Rect(200, 25, 500, 10)
+        self.width = 0
+        self.coefficient = 500 / settings.TIEMPO_JUEGO_MOVILIDAD
+
     def events(self, events):
         if self.end:
             if self.game.connection == 0:
                 self.introduced_data()
                 return ActivitiesScene(self.game)
             else:
-                # self.game.json_object.write_data_json(
-                #    self.errores_izquierda, self.aciertos_derecha, self.errores_derecha, self.aciertos_derecha)
+                json_object = No_DB()
+                json_object.write_data_json(settings.EXER_2_JSON, settings.ID_BALLS, settings.TIEMPO_JUEGO_MOVILIDAD,
+                                            self.errores, self.total_bolas)
                 return ActivitiesScene(self.game)
 
         return None
@@ -189,15 +196,19 @@ class BallScene(Scene):
             
             # Generate spheres randomly.
             if random.randrange(100) < self.probabilidad:
+                self.total_bolas +=1
                 self.balls.add(Moving_Sprite(self.game.display, self.footbal_image))
             
             if random.randrange(100) < self.probabilidad:
+                self.total_bolas += 1
                 self.balls.add(Moving_Sprite(self.game.display, self.basket_image))
             
             if random.randrange(100) < self.probabilidad:
+                self.total_bolas += 1
                 self.balls.add(Moving_Sprite(self.game.display, self.tennis_image))
             
             if random.randrange(100) < self.probabilidad:
+                self.total_bolas += 1
                 self.balls.add(Moving_Sprite(self.game.display, self.rugby_image))
             
             for ball in self.balls.sprites():
@@ -227,6 +238,24 @@ class BallScene(Scene):
             new_time = (pygame.time.get_ticks() - self.timer) / 1000
 
             self.current_time = self.tiempo_juego - int(new_time)
+            self.width = self.current_time * self.coefficient
+
+            rect_stats = pygame.Surface(
+                (settings.WIDTH, 50))  # the size of your rect
+            rect_stats.set_alpha(128)  # alpha level
+            # this fills the entire surface
+            rect_stats.fill((255, 255, 255))
+            self.game.display.blit(rect_stats, (0, 0))
+
+            # Time bar
+            pygame.draw.rect(
+                self.game.display,
+                settings.RED,
+                (201, 25, self.width, 10),
+            )
+            pygame.draw.rect(self.game.display,
+                             settings.BLACK, self.bar_rect, 2)
+
             min = int(self.current_time / 60)
             sec = int(self.current_time % 60)
             time_txt = settings.FONTS["medium"].render(
