@@ -8,7 +8,7 @@ import pygame
 import sys
 import json 
 from utils import *
-from settings import CAPTION, WIDTH, HEIGHT, JSON_FILE
+from settings import CAPTION, WIDTH, HEIGHT, EXER_0_JSON, EXER_1_JSON, EXER_2_JSON
 from scenes.menuScene import (
     MenuScene,
 )  # , RecordScene, CalibrationScene, DiagonalsScene, OptionsScene, TutorialScene
@@ -30,8 +30,16 @@ class Initiator:
         self.user_list = []
         self.exercises = []
         self.exer_list = []
+        # If connection = 0 good connection = 1 no internet
         self.connection = self.check_connection()
-        self.json_object = None
+
+        # Si se han estado almacenando datos del niño sin conexión
+        if self.connection == 0:
+            # checkea si hay algún json que no sea {}, si lo hay almacena los datos
+            self.check_json_files(EXER_0_JSON)
+            self.check_json_files(EXER_1_JSON)
+            self.check_json_files(EXER_2_JSON)
+
         self.get_credentials() if self.connection == 0 else self.set_up_json()
 
         self.current_user = self.user_list[0]
@@ -48,22 +56,6 @@ class Initiator:
             br.close()
         return status
 
-    def set_up_json(self):
-        if os.path.exists(JSON_FILE):
-            pass
-        else:
-            json_obj = No_DB()
-            json_obj.create_json_file(JSON_FILE)
-
-        with open(JSON_FILE, 'r') as f:
-            json_object = json.load(f)
-
-        self.user_list = [
-            f"{json_object['id']}-{json_object['credentials']['usuario']}_{json_object['credentials']['apellido']}"]
-        self.exer_list = ['1-Diagonales']
-
-        self.json_object = No_DB()
-
     def get_credentials(self):
         broker = Broker()
         _ = broker.connect()
@@ -74,6 +66,20 @@ class Initiator:
         self.exercises = broker.get_exercises()
         self.exer_list = create_list(self.exercises)
         broker.close()
+
+    def check_json_files(self, file):
+        data = []
+        with open(file, 'r') as f:
+            json_object = json.load(f)
+            if json_object != []:
+                # Introduce into db
+                broker = Broker()
+                broker.connect()
+                for i in json_object:
+                    broker.add_score(i['PT_A_id'], i['PT_E_id'], i['PT_fecha'], i['PT_tiempo'],
+                                    i['PT_fallos_izquierda'], i['PT_aciertos_izquierda'], i['PT_fallos_derecha'], i['PT_aciertos_derecha'])
+        with open(file, 'w') as f:
+            json.dump(data, f)
 
     def set_up(self):
         self.device_list = check_availability()
@@ -176,7 +182,6 @@ class Initiator:
                         current_scene.draw()
 
                     pygame.display.update()
-
 
 if __name__ == "__main__":
     initiate = Initiator()

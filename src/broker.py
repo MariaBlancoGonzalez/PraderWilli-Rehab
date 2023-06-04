@@ -3,7 +3,8 @@ import mariadb as db
 import logging
 import sys
 import configparser
-
+import datetime
+import json
 logging.getLogger().setLevel(logging.INFO)
 
 
@@ -29,12 +30,13 @@ class Broker:
             self.conn = db.connect(
                 user=username, password=pwd, host=db_host, port=db_port, database=datab
             )
+            self.cursor = self.conn.cursor()
+            # Status success
+            return 0
         except db.Error as e:
-            logging.error(f"Error connecting to MariaDB Platform: {e}")
-            sys.exit(1)
-
+            # Status error
+            return 1
         # Get Cursor
-        self.cursor = self.conn.cursor()
 
     def add_user(self, name, lastname):
         try:
@@ -67,7 +69,7 @@ class Broker:
             self.cursor.execute(statement)
             users = []
             for i in self.cursor.fetchall():
-                users.append((i[0], i[1]))
+                users.append((i[0], i[1], i[2]))
             return users
         except db.Error as e:
             logging.error(f"Error retrieving entry from database: {e}")
@@ -147,3 +149,45 @@ class Broker:
     # End
     def close(self):
         self.conn.close()
+
+class No_DB:
+    def __init__(self):
+        self.a_id = 1
+        today = datetime.date.today()
+        self.today = today.strftime("%Y-%m-%d")
+
+    def write_new_json(self):
+        new_data = {
+            "PT_E_id": self.id_game, "PT_fecha": self.today, "PT_tiempo": self.game_time,
+            "PT_fallos_izquierda": errores_izquierda,
+            "PT_aciertos_izquierda": aciertos_izquierda,
+            "PT_fallos_derecha": errores_derecha,
+            "PT_aciertos_derecha": aciertos_derecha
+        }
+
+    def create_json_file(self, file_name):
+        dictionary = {"id": self.id_user,
+                "puntuaciones":[]
+        }
+
+        jsonString = json.dumps(dictionary, indent=4)
+
+        with open(file_name, "w") as outfile:
+            outfile.write(jsonString)
+
+    def write_data_json(self, file, id_game, time, errores_izquierda=0, aciertos_izquierda=0, errores_derecha=0, aciertos_derecha=0):
+        new_data = {
+            "PT_A_id": self.a_id, "PT_E_id": id_game, "PT_fecha": self.today, "PT_tiempo": time,
+            "PT_fallos_izquierda": errores_izquierda,
+            "PT_aciertos_izquierda": aciertos_izquierda,
+            "PT_fallos_derecha": errores_derecha,
+            "PT_aciertos_derecha": aciertos_derecha
+        }
+
+        with open(file, 'r') as f:
+            data = json.load(f)
+
+        data.append(new_data)
+
+        with open(file, 'w') as f:
+            json.dump(data, f)
