@@ -252,16 +252,12 @@ class ActivitiesScene(Scene):
             return CalibrationScene(self.game)
 
         if self.button_apply.get_pressed() or self.button_apply.on_click(events):
-            settings.TIEMPO_JUEGO = (
-                int(self.input_time.get_text())
-                if self.input_time.get_text() != ""
-                else settings.TIEMPO_JUEGO
-            )
-            settings.VELOCIDAD_ENTRE_BOLAS = (
-                float(self.input_time_appear.get_text())
-                if self.input_time_appear.get_text() != ""
-                else settings.VELOCIDAD_ENTRE_BOLAS
-            )
+            if self.input_time.get_text() != "":
+                new_json_value(settings.EXER_0_CONFIG, "TIEMPO_JUEGO", int(self.input_time.get_text()))
+
+            if self.input_time_appear.get_text() != "":
+                new_json_value(settings.EXER_0_CONFIG, "VELOCIDAD_ENTRE_BOLAS", float(self.input_time_appear.get_text()))
+
             self.input_time.reset()
             self.input_time_appear.reset()
             self.modify_components = False
@@ -272,16 +268,11 @@ class ActivitiesScene(Scene):
             self.input_time_appear.handle_event(events)
         
         if self.button_apply_squad.get_pressed() or self.button_apply_squad.on_click(events):
-            settings.TIEMPO_JUEGO_SQUAD = (
-                int(self.input_time_squad.get_text())
-                if self.input_time_squad.get_text() != ""
-                else settings.TIEMPO_JUEGO_SQUAD
-            )
-            settings.VELOCIDAD_SQUAD = (
-                float(self.input_time_do_squad.get_text())
-                if self.input_time_do_squad.get_text() != ""
-                else settings.VELOCIDAD_SQUAD
-            )
+            if self.input_time_squad.get_text() != "":
+                new_json_value(settings.EXER_1_CONFIG, "TIEMPO_JUEGO_SQUAD", int(self.input_time_squad.get_text()))
+            if self.input_time_do_squad.get_text() != "":
+                new_json_value(settings.EXER_1_CONFIG, "VELOCIDAD_SQUAD", (float(self.input_time_do_squad.get_text())))
+            
             self.input_time_squad.reset()
             self.input_time_do_squad.reset()
             self.modify_squad= False
@@ -292,16 +283,12 @@ class ActivitiesScene(Scene):
             self.input_time_do_squad.handle_event(events)
 
         if self.button_apply_balls.get_pressed() or self.button_apply_balls.on_click(events):
-            settings.TIEMPO_JUEGO_MOVILIDAD = (
-                int(self.input_time_balls.get_text())
-                if self.input_time_balls.get_text() != ""
-                else settings.TIEMPO_JUEGO_MOVILIDAD
-            )
-            settings.BALL_SPEED = (
-                float(self.input_time_do_balls.get_text())
-                if self.input_time_do_balls.get_text() != ""
-                else settings.BALL_SPEED
-            )
+            if self.input_time_balls.get_text() != "":
+                new_json_value(settings.EXER_2_CONFIG, "TIEMPO_JUEGO_MOVILIDAD", int(self.input_time_balls.get_text()))
+
+            if self.input_time_do_balls.get_text() != "":
+                new_json_value(settings.EXER_2_CONFIG, "BALL_SPEED", int(self.input_time_do_balls.get_text()))
+
             self.input_time_balls.reset()
             self.input_time_do_balls.reset()
             self.modify_balls = False

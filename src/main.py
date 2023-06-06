@@ -31,7 +31,7 @@ class Initiator:
         self.exercises = []
         self.exer_list = []
         # If connection = 0 good connection = 1 no internet
-        self.connection = self.check_connection()
+        self.connection = 1#self.check_connection()
 
         # Si se han estado almacenando datos del niño sin conexión
         if self.connection == 0:
@@ -40,7 +40,7 @@ class Initiator:
             self.check_json_files(EXER_1_JSON)
             self.check_json_files(EXER_2_JSON)
 
-        self.get_credentials() if self.connection == 0 else self.set_up_json()
+        self.get_credentials() 
 
         self.current_user = self.user_list[0]
         
@@ -57,15 +57,21 @@ class Initiator:
         return status
 
     def get_credentials(self):
-        broker = Broker()
-        _ = broker.connect()
-        
-        self.users = broker.get_users()
-        self.user_list = create_list_users(self.users)
-        self.current_user = self.user_list[0]
-        self.exercises = broker.get_exercises()
-        self.exer_list = create_list(self.exercises)
-        broker.close()
+        if self.connection == 0:
+            broker = Broker()
+            _ = broker.connect()
+            
+            self.users = broker.get_users()
+            self.user_list = create_list_users(self.users)
+            self.current_user = self.user_list[0]
+            self.exercises = broker.get_exercises()
+            self.exer_list = create_list(self.exercises)
+            broker.close()
+        else:
+            self.users = ['Usuario_Default']
+            self.user_list = self.users
+            self.current_user = self.users[0]
+            self.exer_list = ['1-Diagonales superiores', '2-Squad', '3-Balls']
 
     def check_json_files(self, file):
         data = []

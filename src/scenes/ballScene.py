@@ -36,8 +36,8 @@ class BallScene(Scene):
         self.error_sound.set_volume(1)
         self.explosion_sound = pygame.mixer.Sound(settings.EXPLOSION_SOUND)
         # Game settings
-        self.tiempo_juego = settings.TIEMPO_JUEGO_MOVILIDAD
-
+        self.tiempo_juego = self.read(settings.EXER_2_CONFIG, "TIEMPO_JUEGO_MOVILIDAD")
+    
         self.errores = 0
         self.total_bolas = 0
         # Score total and partial to show
@@ -100,8 +100,8 @@ class BallScene(Scene):
         self.image_camera = None
 
         # Config
-        self.probabilidad = settings.PROBABILIDAD
-        self.speed = settings.BALL_SPEED
+        self.probabilidad = self.read(settings.EXER_2_CONFIG, "PROBABILIDAD")
+        self.speed = self.read(settings.EXER_2_CONFIG, "BALL_SPEED")
         self.footbal_image = pygame.image.load(settings.FOOTBALL)
         self.basket_image = pygame.image.load(settings.BASKETBALL)
         self.tennis_image = pygame.image.load(settings.TENISBALL)
@@ -114,7 +114,7 @@ class BallScene(Scene):
         # Progress bar
         self.bar_rect = pygame.Rect(200, 25, 500, 10)
         self.width = 0
-        self.coefficient = 500 / settings.TIEMPO_JUEGO_MOVILIDAD
+        self.coefficient = 500 / self.tiempo_juego
 
     def events(self, events):
         if self.end:
@@ -123,7 +123,7 @@ class BallScene(Scene):
                 return ActivitiesScene(self.game)
             else:
                 json_object = No_DB()
-                json_object.write_data_json(settings.EXER_2_JSON, settings.ID_BALLS, settings.TIEMPO_JUEGO_MOVILIDAD,
+                json_object.write_data_json(settings.EXER_2_JSON, settings.ID_BALLS, self.tiempo_juego,
                                             self.errores, self.total_bolas)
                 return ActivitiesScene(self.game)
 

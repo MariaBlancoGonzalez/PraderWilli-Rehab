@@ -43,8 +43,8 @@ class SquadScene(Scene):
         self.right_hip = Source(game.display, settings.PUNTERO_ROJO, (50, 50))
 
         # Game settings
-        self.velocidad_squad = settings.VELOCIDAD_SQUAD 
-        self.tiempo_juego = settings.TIEMPO_JUEGO_SQUAD
+        self.velocidad_squad = self.read(settings.EXER_1_CONFIG, "VELOCIDAD_SQUAD") 
+        self.tiempo_juego = self.read(settings.EXER_1_CONFIG, "TIEMPO_JUEGO_SQUAD")
 
         self.aciertos = 0
         self.errores = 0
@@ -124,7 +124,7 @@ class SquadScene(Scene):
         self.bar_rect = pygame.Rect(
             200, 25, 500, 10)
         self.width = 0
-        self.coefficient = 500 / settings.TIEMPO_JUEGO_SQUAD
+        self.coefficient = 500 / self.tiempo_juego
 
     def events(self, events):
         if self.end:
@@ -133,7 +133,7 @@ class SquadScene(Scene):
                 return ActivitiesScene(self.game)
             else:
                 json_object = No_DB()
-                json_object.write_data_json(settings.EXER_1_JSON, settings.ID_SQUAD, settings.TIEMPO_JUEGO_SQUAD,
+                json_object.write_data_json(settings.EXER_1_JSON, settings.ID_SQUAD, self.tiempo_juego,
                                             self.errores, self.aciertos)
                 return ActivitiesScene(self.game)
 

@@ -3,6 +3,9 @@ from utils import *
 import stats.plots as plt
 from stats.calc import *
 from broker import Broker
+import json
+import datetime
+from settings import EXER_0_JSON
 class DiagonalesStats:
     def __init__(self, txt_exer, id_exer, id_user, connection):
         self.name = txt_exer
@@ -81,13 +84,12 @@ class DiagonalesStats:
         broker.close()
 
     def get_data_json(self):
-        with open(settings.EXER_0_JSON, 'r') as f:
+        with open(EXER_0_JSON, 'r') as f:
             data = json.load(f)
-
-        for score in data['puntuaciones']:
-            date = datetime.datetime.strptime(score['PT_fecha'], '%Y-%m-%d')
+        for score in data:
+            date = datetime.datetime.strptime(score['PT_fecha'], '%Y-%m-%d').date()
             values = [
-                score['PT_id'],
+                0,
                 score['PT_A_id'],
                 score['PT_E_id'],
                 date,

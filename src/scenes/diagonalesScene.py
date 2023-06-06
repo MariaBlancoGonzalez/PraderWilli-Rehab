@@ -68,9 +68,9 @@ class DiagonalsScene(Scene):
         )
         self.diaggif_animation = Group(self.diag_gif)
         # Game settings
-        self.trampas = settings.PORCENTAJE_TRAMPAS
-        self.velocidad_bolas = settings.VELOCIDAD_ENTRE_BOLAS
-        self.tiempo_juego = settings.TIEMPO_JUEGO
+        self.trampas = self.read(settings.EXER_0_CONFIG, "PORCENTAJE_TRAMPAS")
+        self.velocidad_bolas = self.read(settings.EXER_0_CONFIG, "VELOCIDAD_ENTRE_BOLAS")
+        self.tiempo_juego = self.read(settings.EXER_0_CONFIG, "TIEMPO_JUEGO")
 
         self.aciertos_izquierda = 0
         self.aciertos_derecha = 0
@@ -176,7 +176,6 @@ class DiagonalsScene(Scene):
         # Game complete
         self.end = False
         self.data_introduced = False
-
 
         # Time bar
         # Progress bar
@@ -571,5 +570,3 @@ class DiagonalsScene(Scene):
             self.aciertos_derecha,
         )
         broker.close()
-
-    

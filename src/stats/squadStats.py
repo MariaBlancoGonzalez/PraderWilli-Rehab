@@ -4,7 +4,8 @@ import stats.plots as plt
 from stats.calc import *
 from broker import Broker
 import statistics
-
+import json
+from settings import EXER_1_JSON
 class SquadStats:
     def __init__(self, txt_exer, id_exer, id_user, connection):
         self.name = txt_exer
@@ -74,17 +75,16 @@ class SquadStats:
         broker.close()
 
     def get_data_json(self):
-        with open('default.json', 'r') as f:
+        with open(EXER_1_JSON, 'r') as f:
             data = json.load(f)
-
-        for score in data['puntuaciones']:
-            date = datetime.datetime.strptime(score['PT_fecha'], '%Y-%m-%d')
+        for score in data:
+            date = datetime.datetime.strptime(score['PT_fecha'], '%Y-%m-%d').date()
             values = [
-                score['PT_id'],
+                0,
                 score['PT_A_id'],
                 score['PT_E_id'],
                 date,
-                score['PT_fecha'],
+                score['PT_tiempo'],
                 score['PT_fallos_izquierda'],
                 score['PT_aciertos_izquierda'],
                 score['PT_fallos_derecha'],

@@ -2,6 +2,7 @@ from settings import WIDTH, HEIGHT, TIME_BUTTONS
 import pygame
 from math import acos, sqrt, degrees
 import numpy as np
+import json
 from collections import defaultdict
 
 def get_mid(coord_a, coord_b, coord_c):
@@ -132,3 +133,16 @@ def angle_calculate_by_points(p1, p2, p3):
     l3 = np.linalg.norm(p1 - p2)
     # Calcular el ángulo
     return degrees(acos((l1**2 + l3**2 - l2**2) / (2 * l1 * l3)))
+
+def read(file, text):
+    json_dict = json.loads(file)
+    # Obtener el valor asociado a la clave especificada
+    valor = json_dict.get(text)
+    return valor
+
+def new_json_value(file, key, nuevo_valor):
+    with open(file, 'r') as archivo:
+        contenido = archivo.read()
+        print(contenido)
+        json_dict[key] = nuevo_valor    
+        archivo.dumps(json_dict)

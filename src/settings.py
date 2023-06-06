@@ -3,10 +3,15 @@ import pygame
 # Texts
 CAPTION = "Prader Willi"
 
-# If not db
+# Data
 EXER_0_JSON = './data/0.json'
 EXER_1_JSON = './data/1.json'
 EXER_2_JSON = './data/2.json'
+
+# Config
+EXER_0_CONFIG = './config/Exer_0_config.json'
+EXER_1_CONFIG = './config/Exer_1_config.json'
+EXER_2_CONFIG = './config/Exer_2_config.json'
 
 # Cursor
 CURSOR_CLICK = "./assets/icons/cursor_click.png"
@@ -117,11 +122,8 @@ WIDTH_LOAD_BAR = 700
 
 # FOR GAME DIAGONALES
 ID_DIAGONALES = 1
-VELOCIDAD_ENTRE_BOLAS = 2
-PORCENTAJE_TRAMPAS = 0.2
 FPS_EXPLOSION = 0.2
 FPS_FIREWORKS = 0.2
-TIEMPO_JUEGO = 20
 VISIBILIDAD = 0.8
 FEET_MARGIN = 30
 FEET_BOX = 50
@@ -139,14 +141,9 @@ BODY_PARTS = [11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28, 30, 31, 32]
 
 # For squads
 ID_SQUAD = 2
-VELOCIDAD_SQUAD = 3
-TIEMPO_JUEGO_SQUAD = 20
 FPS_SQUAD = 20
 
 # For balls
 ID_BALLS = 3
-TIEMPO_JUEGO_MOVILIDAD = 30
-BALL_SPEED = 15
-PROBABILIDAD = 2
 ACIERTO_BALLS = 10
 FALLO_BALLS = 10

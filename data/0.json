@@ -1,1 +1,10 @@
-[]
+[{
+  "PT_A_id": 1,
+  "PT_E_id": 1,
+  "PT_fecha": "2023-06-06",
+  "PT_tiempo": 20,
+  "PT_fallos_izquierda": 0,
+  "PT_aciertos_izquierda": 3,
+  "PT_fallos_derecha": 1,
+  "PT_aciertos_derecha": 6
+}]
