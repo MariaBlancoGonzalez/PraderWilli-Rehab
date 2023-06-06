@@ -2,6 +2,7 @@ from settings import WIDTH, HEIGHT, TIME_BUTTONS
 import pygame
 from math import acos, sqrt, degrees
 import numpy as np
+from collections import defaultdict
 
 def get_mid(coord_a, coord_b, coord_c):
     return (coord_a + coord_b + coord_c) / 3
@@ -33,43 +34,26 @@ def get_id(name):
 
 
 def distribute_data(data):
-    tiempo, izq_errores, izq_aciertos, drcha_errores, drcha_aciertos = (
+    tiempo, tiempo_ejer, izq_errores, izq_aciertos, drcha_errores, drcha_aciertos = (
+        [],
         [],
         [],
         [],
         [],
         [],
     )
+
     for i in data:
         tiempo.append(i[3].strftime("%d/%m"))
+        tiempo_ejer.append(i[4])
         izq_errores.append(i[5])
         izq_aciertos.append(i[6])
         drcha_errores.append(i[7])
         drcha_aciertos.append(i[8])
-
-    return tiempo, izq_errores, izq_aciertos, drcha_errores, drcha_aciertos
-
+    
+    return tiempo, tiempo_ejer, izq_errores, izq_aciertos, drcha_errores, drcha_aciertos
 
 def distribute_data_stats(data):
-    fecha, errores, aciertos, caidas, tiempo = (
-        [],
-        [],
-        [],
-        [],
-        [],
-    )
-    for i in data:
-        fecha.append(i[3].strftime("%d/%m"))
-        errores.append(i[5])
-        aciertos.append(i[6])
-        caidas.append(i[7])
-        tiempo.append(i[4])
-
-
-    return fecha, errores, aciertos, caidas, tiempo
-
-
-def distribute_data_squad(data):
     fecha, errores, aciertos, tiempo = (
         [],
         [],
@@ -85,6 +69,22 @@ def distribute_data_squad(data):
     return fecha, errores, aciertos, tiempo
 
 
+def distribute_data_squad(data):
+    fecha, errores, aciertos, media_angulo, tiempo = (
+        [],
+        [],
+        [],
+        [],
+        [],
+    )
+    for i in data:
+        fecha.append(i[3].strftime("%d/%m"))
+        errores.append(i[5])
+        aciertos.append(i[6])
+        media_angulo.append(i[7])
+        tiempo.append(i[4])
+
+    return fecha, errores, aciertos, media_angulo, tiempo
 
 def reset_time():
     return 0, 0
@@ -123,28 +123,12 @@ def get_vectors(p1,p2):
 
 
 def angle_calculate_by_points(p1, p2, p3):
-    '''# left_current_hip, left_knee, left_current_foot
-    v1 = get_vectors(p2,p1)
-    v2 = get_vectors(p2,p3)
-    #Calcula el producto punto de los vectores
-    dot_product = v1[0]*v2[0] + v1[1]*v2[1]
 
-    # Calcula la longitud de los vectores
-    length_v1 = sqrt(v1[0]**2 + v1[1]**2)
-    length_v2 = sqrt(v2[0]**2 + v2[1]**2)
-
-    # Calcula el coseno del ángulo entre los vectores
-    cos_angle = dot_product / (length_v1 * length_v2)
-
-    # Calcula el ángulo en radianes y conviértelo a grados
-    angle_rad = acos(cos_angle)
-    angle_deg = degrees(angle_rad)
-
-    # Devuelve el ángulo en grados
-    return angle_deg
-    
-    return degrees(acos(p2p1_p2p3/(mod_p2p1*mod_p2p3)))'''
-    radians = np.arctan2(p3[1] - p2[1], p3[0]-p2[0]) - \
-        np.arctan2(p1[1]-p2[1], p1[0]-p2[0])
-    angle = np.abs(radians*180.0/np.pi)
-    return angle
+    p1 = np.array([p1[0], p1[1]])
+    p2 = np.array([p2[0], p2[1]])
+    p3 = np.array([p3[0], p3[1]])
+    l1 = np.linalg.norm(p2 - p3)
+    l2 = np.linalg.norm(p1 - p3)
+    l3 = np.linalg.norm(p1 - p2)
+    # Calcular el ángulo
+    return degrees(acos((l1**2 + l3**2 - l2**2) / (2 * l1 * l3)))

@@ -3,6 +3,7 @@ from utils import *
 import stats.plots as plt
 from stats.calc import *
 from broker import Broker
+import statistics
 
 class SquadStats:
     def __init__(self, txt_exer, id_exer, id_user, connection):
@@ -19,41 +20,46 @@ class SquadStats:
     def create_measures(self):
         self.get_data()
         if self.data != []:
-            fecha, errores, aciertos, caidas, tiempo = distribute_data_stats(
+            fecha, errores, aciertos, media_angulo, tiempo = distribute_data_squad(
                 self.data)
+    
+            fecha, errores, aciertos,media_angulo, tiempo = sumar_valores_misma_fecha_squad(
+                fecha, errores, aciertos,media_angulo, tiempo)
 
-            self.create_stats(fecha, errores, aciertos, caidas, tiempo)
-            self.create_graphs(fecha, errores, aciertos, caidas, tiempo)
+            self.create_stats(fecha, errores, aciertos, media_angulo, tiempo)
+            self.create_graphs(fecha, errores, aciertos, media_angulo, tiempo)
         
-    def create_graphs(self, fecha, errores, aciertos, caidas, tiempo):
-        canvas, raw_data = plt.create_groupbar_chart(
-            fecha, errores, aciertos, caidas, tiempo)
+    def create_graphs(self, fecha, errores, aciertos, media_angulo, tiempo):
+        canvas, raw_data = plt.create_groupbar_chart_squad(
+            fecha, errores, aciertos, tiempo)
         size = canvas.get_width_height()
 
         surf = pygame.image.fromstring(raw_data, size, "RGB")
-        self.graphs.append(('Izquierda', surf))
+        self.graphs.append(('Errores/Aciertos', surf))
 
-    def create_stats(self, fecha, errores, aciertos, caidas, tiempo):
-        cumulo_errores = [errores[i]+caidas[i] for i in range(len(aciertos))]
-        
+        canvas, raw_data = plt.create_line_chart(media_angulo, fecha, tiempo)
+        size = canvas.get_width_height()
+
+        surf = pygame.image.fromstring(raw_data, size, "RGB")
+        self.graphs.append(('Ángulo', surf))
+
+    def create_stats(self, fecha, errores, aciertos, media_angulo, tiempo):        
         acierto_tiempo, best_score_day, best_score_acierto, time_of_best_day = get_best_day(aciertos, fecha, tiempo)
         # Este método tambien sirve para el peor
         errores_tiempo, worst_score_day, worst_score_error, time_of_worst_day = get_best_day(
-            cumulo_errores, fecha, tiempo)
+            errores, fecha, tiempo)
         
-        self.stats.append(('-Mejor marca correcto/tiempo: ', best_score_acierto))
-        self.stats.append(('-Aciertos/segundos: ', acierto_tiempo))
+        self.stats.append(('-Mejor marca sentadilla/tiempo: ', best_score_acierto))
+        self.stats.append(('-Sentadiila/segundos: ', acierto_tiempo))
         self.stats.append(('-Fecha de esta marca: ', best_score_day))
         self.stats.append(('-Tiempo empleado en esta marca: ', time_of_best_day))
         
-        self.stats.append(('-Peor marca correcto/tiempo: ', worst_score_error))
+        self.stats.append(('-Peor marca errores/tiempo: ', worst_score_error))
         self.stats.append(('-Errores/segundos: ', errores_tiempo))
         self.stats.append(('-Fecha de esta marca: ', worst_score_day))
         self.stats.append(('-Tiempo empleado en esta marca: ', time_of_worst_day))
 
-        self.stats.append(('-Errores+Caidas totales: ', sum(cumulo_errores)))
-        self.stats.append(('-Aciertos totales: ', sum(aciertos)))
-
+        self.stats.append(('-Media de ángulo actual: ', round(statistics.mean(media_angulo), 2)))
     def get_data(self):
         if self.connect == 0:
             self.get_data_online()
@@ -64,6 +70,7 @@ class SquadStats:
         broker = Broker()
         broker.connect()
         self.data = broker.get_score(self.id_exer, self.id_user, 10)
+        broker.delete_temporary_table()
         broker.close()
 
     def get_data_json(self):

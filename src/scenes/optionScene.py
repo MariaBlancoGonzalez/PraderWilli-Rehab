@@ -32,10 +32,10 @@ class OptionsScene(Scene):
             settings.BLACK,
         )
         # Input text box
-        self.input_create_user = InputBox(100, 330, 200, 35, text='')
-        self.input_create_surname = InputBox(350, 330, 200, 35, text='')
-        self.input_delete_user = InputBox(100, 430, 200, 35, text='')
-        self.input_delete_surname = InputBox(350, 430, 200, 35, text='')
+        self.input_create_user = InputBox(100, 330, 200, 35)
+        self.input_create_surname = InputBox(350, 330, 200, 35)
+        self.input_delete_user = InputBox(100, 430, 200, 35)
+        self.input_delete_surname = InputBox(350, 430, 200, 35)
 
         # Images
 
@@ -76,6 +76,9 @@ class OptionsScene(Scene):
         pygame.draw.rect(
             self.game.display, settings.AMARILLO, pygame.Rect(40, 160, 1200, 560)
         )
+        for i in range(4):
+            pygame.draw.rect(self.game.display, (0, 0, 0),
+                             (40, 160, 1200, 560), 2)
 
         # Text
         self.game.display.blit(self.txt_camara, (100, 200))

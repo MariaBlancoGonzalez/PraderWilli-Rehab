@@ -6,7 +6,10 @@ docs/
 # C extensions
 *.so
 *.md
+<<<<<<< HEAD
 
+=======
+>>>>>>> ee5f444 (Modificado stats)
 # Distribution / packaging
 .Python
 build/

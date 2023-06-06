@@ -1,7 +1,6 @@
 import pygame
 from pygame.sprite import Sprite
 
-
 class Sticker(Sprite):
     """A class to represent a single landmark."""
 

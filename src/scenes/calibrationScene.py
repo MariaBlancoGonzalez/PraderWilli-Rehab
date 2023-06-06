@@ -158,12 +158,7 @@ class CalibrationScene(Scene):
             self.seconds = 0
         elif self.time_instr >= 3:
             try:
-                if (
-                    results.pose_landmarks.landmark[
-                        mp_pose.PoseLandmark.NOSE
-                    ].visibility
-                    > 0.6
-                ):
+                if results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE].visibility > 0.6:
                     if not all(item is True for item in self.checker):
                         self.verde_cabeza.draw(self.screen)
                     self.checker[0] = True
@@ -171,12 +166,7 @@ class CalibrationScene(Scene):
                     self.rojo_cabeza.draw(self.screen)
                     self.checker[0] = False
                 # Manos
-                if (
-                    results.pose_landmarks.landmark[
-                        mp_pose.PoseLandmark.RIGHT_WRIST
-                    ].visibility
-                    > 0.6
-                ):
+                if results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_WRIST].visibility > 0.6:
                     if not all(item is True for item in self.checker):
                         self.verde_drch_mano.draw(self.screen)
                     self.checker[1] = True
@@ -184,12 +174,7 @@ class CalibrationScene(Scene):
                     self.rojo_drch_mano.draw(self.screen)
                     self.checker[1] = False
 
-                if (
-                    results.pose_landmarks.landmark[
-                        mp_pose.PoseLandmark.LEFT_WRIST
-                    ].visibility
-                    > 0.6
-                ):
+                if results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_WRIST].visibility > 0.6:
                     if not all(item is True for item in self.checker):
                         self.verde_izq_mano.draw(self.screen)
                     self.checker[2] = True
@@ -198,12 +183,7 @@ class CalibrationScene(Scene):
                     self.checker[2] = False
 
                 # Pies
-                if (
-                    results.pose_landmarks.landmark[
-                        mp_pose.PoseLandmark.RIGHT_ANKLE
-                    ].visibility
-                    > 0.6
-                ):
+                if results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_ANKLE].visibility > 0.6:
                     if not all(item is True for item in self.checker):
                         self.verde_drch_pie.draw(self.screen)
                     self.checker[3] = True
@@ -211,12 +191,7 @@ class CalibrationScene(Scene):
                     self.rojo_drch_pie.draw(self.screen)
                     self.checker[3] = False
 
-                if (
-                    results.pose_landmarks.landmark[
-                        mp_pose.PoseLandmark.LEFT_ANKLE
-                    ].visibility
-                    > 0.6
-                ):
+                if results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_ANKLE].visibility > 0.6:
                     if not all(item is True for item in self.checker):
                         self.verde_izq_pie.draw(self.screen)
                     self.checker[4] = True

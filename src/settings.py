@@ -4,7 +4,9 @@ import pygame
 CAPTION = "Prader Willi"
 
 # If not db
-JSON_FILE = 'default.json'
+EXER_0_JSON = './data/0.json'
+EXER_1_JSON = './data/1.json'
+EXER_2_JSON = './data/2.json'
 
 # Cursor
 CURSOR_CLICK = "./assets/icons/cursor_click.png"
@@ -23,11 +25,14 @@ BODY = "./assets/images/body.png"
 LINEA_HORIZONTAL = "./assets/icons/linea_horizontal.png"
 PUNTERO_ROJO = "./assets/icons/red_circle.png"
 BOMBA = "./assets/icons/bomb.png"
-MASCOTA_NORMAL = "./assets/images/normal.png"
 FLECHA_DERECHA = "./assets/icons/drch.png"
 FLECHA_IZQUIERDA = "./assets/icons/izq.png"
 PDF = "./assets/icons/pdf.png"
 MODIFY = "./assets/icons/modificar.png"
+FOOTBALL = "./assets/icons/pelota.png"
+BASKETBALL = "./assets/icons/pelota-de-baloncesto.png"
+TENISBALL = "./assets/icons/tenis.png"
+RUGBYBALL = "./assets/icons/futbol-americano.png"
 
 # Música
 MUSIC_1 = "./assets/sound/music_1.wav"
@@ -50,6 +55,7 @@ EXPLOSION = "./assets/animations/explosion"
 FIREWORKS = "./assets/animations/fireworks"
 SQUADGIF = "./assets/animations/squad"
 BALLGIF = "./assets/animations/ball"
+DIAGGIF = "./assets/animations/diagonales"
 
 # Letter size
 SMALL_FONT = 18
@@ -78,6 +84,7 @@ CLICKS = "./assets/sound/correct.wav"
 EXPLOSION_SOUND = "./assets/sound/explosion.wav"
 CLAPS = "./assets/sound/claps.wav"
 PIP = "./assets/sound/pi.wav"
+ERROR_SOUND = "./assets/sound/error.wav"
 
 # Screen
 WIDTH = 1280
@@ -95,7 +102,8 @@ AZUL_CLARO = "#3194cf"
 AZUL_MARINO = "#317bcf"
 COLOR_ROJO = "#ff0000"
 GRISCLARO = "#9b9b9b"
-
+AMARILLO_OSCURO = "#e8bb59"
+RED = "#ff0000"
 # GAMA DE COLORES
 GRANATE = "#7a3e48"
 AMARILLO = "#eecd86"
@@ -107,20 +115,20 @@ AZULGRISACEO = "#3d3242"
 TIME_BUTTONS = 2.5
 WIDTH_LOAD_BAR = 700
 
-# FOR GAME 1
+# FOR GAME DIAGONALES
 ID_DIAGONALES = 1
 VELOCIDAD_ENTRE_BOLAS = 2
 PORCENTAJE_TRAMPAS = 0.2
 FPS_EXPLOSION = 0.2
 FPS_FIREWORKS = 0.2
-TIEMPO_JUEGO = 60
+TIEMPO_JUEGO = 20
 VISIBILIDAD = 0.8
 FEET_MARGIN = 30
 FEET_BOX = 50
 MANOS_IMG = ROCKET
 ERROR = BOMBA
 ACIERTO = ESTRELLA
-MUSIC_DIAGONALES = "./assets/sound/music_1.wav"
+FPS_DIAG = 20
 
 # PUNTUACION
 ACIERTO_PTO = 100
@@ -131,25 +139,14 @@ BODY_PARTS = [11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28, 30, 31, 32]
 
 # For squads
 ID_SQUAD = 2
-VELOCIDAD_SQUAD = 5
-TIEMPO_JUEGO_SQUAD = 30
+VELOCIDAD_SQUAD = 3
+TIEMPO_JUEGO_SQUAD = 20
 FPS_SQUAD = 20
 
 # For balls
 ID_BALLS = 3
-VELOCIDAD_BALL = 7
-TIEMPO_JUEGO_BALL = 40
-FPS_BALL = 20
-
-# BALL COLORS AVAILABLE
-LOW_RED = [161, 155, 84]
-HIGH_RED = [179, 255, 255]
-LOW_BLUE = [94, 80, 2]
-HIGH_BLUE = [126, 255, 255]
-LOW_GREEN = [25, 52, 72]
-HIGH_GREEM = [102, 255, 255]
-LOW_YELLOW = [20, 100, 100]
-HIGH_YELLOW = [40, 255, 255]
-
-BALL_COLOR_LOWER = LOW_YELLOW
-BALL_COLOR_UPPER = HIGH_YELLOW
+TIEMPO_JUEGO_MOVILIDAD = 30
+BALL_SPEED = 15
+PROBABILIDAD = 2
+ACIERTO_BALLS = 10
+FALLO_BALLS = 10

@@ -8,7 +8,6 @@ from ui.source import Source
 
 from utils import *
 
-
 class ActivitiesScene(Scene):
     def __init__(self, game):
         super().__init__(game)
@@ -49,9 +48,8 @@ class ActivitiesScene(Scene):
             "Tiempo entre sentadillas", True, settings.BLACK
         )
         self.txt_change_time_ball = settings.FONTS["small"].render(
-            "Velocidad de pelotas", True, settings.BLACK
+            "Velocidad de las pelotas", True, settings.BLACK
         )
-
 
         # Images
         img_diagonales = pygame.image.load(settings.MINIATURA_DIAGONALES)
@@ -72,15 +70,16 @@ class ActivitiesScene(Scene):
         
         self.button_modify_diagonales = ImageButton(img_modify, (230, 390), "modificar", (30, 30))
         self.button_modify_squad = ImageButton(
-            img_modify, (640, 390), "modificar", (30, 30))
+            img_modify, (630, 390), "modificar", (30, 30))
         self.button_modify_balls = ImageButton(
-            img_modify, (1040, 390), "modificar", (30, 30))
+            img_modify, (1030, 390), "modificar", (30, 30))
         self.button_calibrate = Button((970, 30), "Calibrar", settings.AMARILLO)
         self.button_back = Button((170, 30), "Volver", settings.AMARILLO)
-        self.button_apply = Button((900, self.game.display.get_size()[1] - 180), "Aplicar")
-        self.button_apply_squad = Button((900, self.game.display.get_size()[1] - 180), "Aplicar")
+        self.button_apply = Button((940, self.game.display.get_size()[1] - 180), "Aplicar")
+        self.button_apply_squad = Button(
+            (940, self.game.display.get_size()[1] - 180), "Aplicar")
         self.button_apply_balls = Button(
-            (900, self.game.display.get_size()[1] - 180), "Aplicar")
+            (940, self.game.display.get_size()[1] - 180), "Aplicar")
 
         self.button_group = [
             self.button_back,
@@ -107,15 +106,15 @@ class ActivitiesScene(Scene):
 
         # Input text diagonals
         self.input_time = InputNumberBox(100, 520, 200, 35, text="")
-        self.input_time_appear = InputNumberBox(100, 590, 200, 35, text="")
+        self.input_time_appear = InputNumberBox(100, 610, 200, 35, text="")
 
         # Input text squad
         self.input_time_squad = InputNumberBox(100, 520, 200, 35, text="")
-        self.input_time_do_squad = InputNumberBox(100, 590, 200, 35, text="")
+        self.input_time_do_squad = InputNumberBox(100, 610, 200, 35, text="")
 
         # Input text balls
         self.input_time_balls = InputNumberBox(100, 520, 200, 35, text="")
-        self.input_time_do_balls = InputNumberBox(100, 590, 200, 35, text="")
+        self.input_time_do_balls = InputNumberBox(100, 610, 200, 35, text="")
         
         # Tracking time
         self.time_hand = 0
@@ -138,6 +137,24 @@ class ActivitiesScene(Scene):
         pygame.draw.rect(
             self.game.display, settings.AMARILLO, pygame.Rect(50, 100, 1180, 650)
         )
+        for i in range(4):
+            # Rectangulo grande
+            pygame.draw.rect(self.game.display, (0, 0, 0),
+                             (50, 100, 1180, 650), 2)
+            # Rectangulos de los juegos
+            pygame.draw.rect(self.game.display, (0, 0, 0),
+                             (130, 130, 240, 300), 2)
+            pygame.draw.rect(self.game.display, settings.AMARILLO_OSCURO,
+                             (129, 129, 239, 299))
+            pygame.draw.rect(self.game.display, (0, 0, 0),
+                             (530, 130, 240, 300), 2)
+            pygame.draw.rect(self.game.display, settings.AMARILLO_OSCURO,
+                             (529, 129, 239, 299))
+            pygame.draw.rect(self.game.display, (0, 0, 0),
+                             (930, 130, 240, 300), 2)
+            pygame.draw.rect(self.game.display, settings.AMARILLO_OSCURO,
+                             (929, 129, 239, 299))
+
         self.button_calibrate.draw(self.game.display)
         self.button_back.draw(self.game.display)
         self.button_modify_diagonales.draw(self.game.display)
@@ -147,7 +164,7 @@ class ActivitiesScene(Scene):
 
         self.game.display.blit(self.txt_diagonales, (150, 360))
         self.game.display.blit(self.txt_squad, (600, 360))
-        self.game.display.blit(self.txt_balls, (1010, 360))
+        self.game.display.blit(self.txt_balls, (980, 360))
         self.diagonales.draw(self.game.display)
         self.squad.draw(self.game.display)
         self.balls.draw(self.game.display)
@@ -156,24 +173,33 @@ class ActivitiesScene(Scene):
 
         # Modificadores
         if self.modify_components:
+            for i in range(4):
+                pygame.draw.rect(self.game.display, (0, 0, 0),
+                                 (80, 440, 1110, 240), 2)
             self.game.display.blit(self.txt_modificadores, (100, 450))
             self.game.display.blit(self.txt_time, (100, 490))
             self.input_time.draw(self.game.display)
-            self.game.display.blit(self.txt_time_appear, (100, 560))
+            self.game.display.blit(self.txt_time_appear, (100, 580))
             self.input_time_appear.draw(self.game.display)
             self.button_apply.draw(self.game.display)
         elif self.modify_squad:
+            for i in range(4):
+                pygame.draw.rect(self.game.display, (0, 0, 0),
+                                 (80, 440, 1110, 240), 2)
             self.game.display.blit(self.txt_modificadores, (100, 450))
             self.game.display.blit(self.txt_time, (100, 490))
             self.input_time_squad.draw(self.game.display)
-            self.game.display.blit(self.txt_change_time_squad, (100, 560))
+            self.game.display.blit(self.txt_change_time_squad, (100, 580))
             self.input_time_do_squad.draw(self.game.display)
             self.button_apply_squad.draw(self.game.display)
         elif self.modify_balls:
+            for i in range(4):
+                pygame.draw.rect(self.game.display, (0, 0, 0),
+                                 (80, 440, 1110, 240), 2)
             self.game.display.blit(self.txt_modificadores, (100, 450))
             self.game.display.blit(self.txt_time, (100, 490))
             self.input_time_balls.draw(self.game.display)
-            self.game.display.blit(self.txt_change_time_ball, (100, 560))
+            self.game.display.blit(self.txt_change_time_ball, (100, 580))
             self.input_time_do_balls.draw(self.game.display)
             self.button_apply_balls.draw(self.game.display)
 
@@ -207,12 +233,18 @@ class ActivitiesScene(Scene):
 
         if self.button_modify_diagonales.on_click(events):
             self.modify_components = True
+            self.modify_balls = False
+            self.modify_squad = False
 
         if self.button_modify_squad.on_click(events):
             self.modify_squad = True
+            self.modify_components = False
+            self.modify_balls = False
 
         if self.button_modify_balls.on_click(events):
             self.modify_balls = True
+            self.modify_components = False
+            self.modify_squad = False
 
         if self.button_calibrate.get_pressed() or self.button_calibrate.on_click(
             events):
@@ -260,15 +292,15 @@ class ActivitiesScene(Scene):
             self.input_time_do_squad.handle_event(events)
 
         if self.button_apply_balls.get_pressed() or self.button_apply_balls.on_click(events):
-            settings.TIEMPO_JUEGO_BALL = (
+            settings.TIEMPO_JUEGO_MOVILIDAD = (
                 int(self.input_time_balls.get_text())
                 if self.input_time_balls.get_text() != ""
-                else settings.TIEMPO_JUEGO_BALL
+                else settings.TIEMPO_JUEGO_MOVILIDAD
             )
-            settings.VELOCIDAD_BALL = (
+            settings.BALL_SPEED = (
                 float(self.input_time_do_balls.get_text())
                 if self.input_time_do_balls.get_text() != ""
-                else settings.VELOCIDAD_BALL
+                else settings.BALL_SPEED
             )
             self.input_time_balls.reset()
             self.input_time_do_balls.reset()

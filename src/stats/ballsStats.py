@@ -3,7 +3,7 @@ from utils import *
 import stats.plots as plt
 from stats.calc import *
 from broker import Broker
-
+import statistics
 
 class BallStats:
     def __init__(self, txt_exer, id_exer, id_user, connection):
@@ -20,44 +20,47 @@ class BallStats:
     def create_measures(self):
         self.get_data()
         if self.data != []:
-            fecha, errores, aciertos, caidas, tiempo = distribute_data_stats(
+            fecha, errores, aciertos, tiempo = distribute_data_stats(
                 self.data)
+            fecha, errores, aciertos, tiempo = sumar_valores_misma_fecha(
+                fecha, errores, aciertos, tiempo)
 
-            self.create_stats(fecha, errores, aciertos, caidas, tiempo)
-            self.create_graphs(fecha, errores, aciertos, caidas, tiempo)
+            self.create_stats(fecha, errores, aciertos, tiempo)
+            self.create_graphs(fecha, errores, aciertos, tiempo)
 
-    def create_graphs(self, fecha, errores, aciertos, caidas, tiempo):
+    def create_graphs(self, fecha, errores, aciertos, tiempo):
         canvas, raw_data = plt.create_groupbar_chart(
-            fecha, errores, aciertos, caidas, tiempo)
+            fecha, errores, aciertos, tiempo)
         size = canvas.get_width_height()
 
         surf = pygame.image.fromstring(raw_data, size, "RGB")
         self.graphs.append(('Izquierda', surf))
 
-    def create_stats(self, fecha, errores, aciertos, caidas, tiempo):
-        cumulo_errores = [errores[i]+caidas[i] for i in range(len(aciertos))]
-
-        acierto_tiempo, best_score_day, best_score_acierto, time_of_best_day = get_best_day(
-            aciertos, fecha, tiempo)
+    def create_stats(self, fecha, errores, bolas_totales, tiempo):
+        media_impactos = statistics.mean(errores)
+        esquivadas = restar_arrays(bolas_totales, errores)
+        esquiva_tiempo, best_score_day, best_score_acierto, time_of_best_day = get_best_day(
+            esquivadas, fecha, tiempo)
         # Este método tambien sirve para el peor
         errores_tiempo, worst_score_day, worst_score_error, time_of_worst_day = get_best_day(
-            cumulo_errores, fecha, tiempo)
-
+            errores, fecha, tiempo)
+        self.stats.append(('-Media de bolas impactadas total: ',
+                           round(media_impactos, 2)))
+        self.stats.append(('-Mejor marca esquivadas/tiempo: ', round(esquiva_tiempo, 2)))
         self.stats.append(
-            ('-Mejor marca correcto/tiempo: ', best_score_acierto))
-        self.stats.append(('-Aciertos/segundos: ', acierto_tiempo))
+            ('-Mejor marca esquivadas/tiempo: ', best_score_acierto))
         self.stats.append(('-Fecha de esta marca: ', best_score_day))
         self.stats.append(
             ('-Tiempo empleado en esta marca: ', time_of_best_day))
-
-        self.stats.append(('-Peor marca correcto/tiempo: ', worst_score_error))
-        self.stats.append(('-Errores/segundos: ', errores_tiempo))
+        
+        self.stats.append(('-Peor marca impacto/tiempo: ', worst_score_error))
+        self.stats.append(('-Impacto/segundos: ', errores_tiempo))
         self.stats.append(('-Fecha de esta marca: ', worst_score_day))
         self.stats.append(
             ('-Tiempo empleado en esta marca: ', time_of_worst_day))
 
-        self.stats.append(('-Errores+Caidas totales: ', sum(cumulo_errores)))
-        self.stats.append(('-Aciertos totales: ', sum(aciertos)))
+        self.stats.append(('-Errores totales: ', sum(errores)))
+        self.stats.append(('-Bolas totales: ', sum(bolas_totales)))
 
     def get_data(self):
         if self.connect == 0:
@@ -69,6 +72,7 @@ class BallStats:
         broker = Broker()
         broker.connect()
         self.data = broker.get_score(self.id_exer, self.id_user, 10)
+        broker.delete_temporary_table()
         broker.close()
 
     def get_data_json(self):

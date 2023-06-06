@@ -15,6 +15,7 @@ import random
 from utils import *
 from scenes.activitiesScene import ActivitiesScene
 from scenes.calibrationScene import CalibrationScene
+import statistics
 
 class SquadScene(Scene):
     def __init__(self, game):
@@ -47,10 +48,12 @@ class SquadScene(Scene):
 
         self.aciertos = 0
         self.errores = 0
+        self.media_angulo = []
 
         # Score total and partial to show
         self.puntuacion = 0
         self.angle = 0
+
         self.correct_squad = False
         self.correct_score = settings.FONTS["medium"].render(
             str(settings.ACIERTO_PTO), True, settings.BLACK
@@ -115,7 +118,7 @@ class SquadScene(Scene):
             settings.FPS_SQUAD, (400,500)
         )
         self.squadgif_animation = Group(self.squad_gif)
-
+        self.min_angulo = 200
         # Time bar
         # Progress bar
         self.bar_rect = pygame.Rect(
@@ -209,9 +212,9 @@ class SquadScene(Scene):
             # Para checkeo de pies
             self.mostrar_instrucciones = False
             self.visibility_checker = check_visibility(self.current_results)
-            
 
             if self.pitido:
+                angulo = 200
                 self.pip_sound.play()
                 self.pitido = False
 
@@ -240,6 +243,9 @@ class SquadScene(Scene):
                 self.angle = angle_calculate_by_points(right_current_hip, right_knee, rigth_current_foot)
             
             if self.angle <= 100.0:
+                if angulo > self.angle:
+                    angulo = self.angle
+
                 if (pygame.time.get_ticks() - self.time_squad) / 1000 < self.velocidad_squad and not self.correct_squad:
                     self.aciertos += 1
                     self.puntuacion += settings.ACIERTO_PTO
@@ -254,6 +260,7 @@ class SquadScene(Scene):
                 self.correct_squad = False
                 self.pitido = True
                 self.time_squad = reset_pygame_timer()
+                self.media_angulo.append(angulo)
                 
             if self.current_time <= 0:
                 game_over_text = settings.FONTS["big"].render(
@@ -321,6 +328,7 @@ class SquadScene(Scene):
             self.music.stop()
 
     def introduced_data(self):
+        media_ang = statistics.mean(self.media_angulo)
         broker = Broker()
         broker.connect()
         today = datetime.date.today()
@@ -331,9 +339,9 @@ class SquadScene(Scene):
             settings.ID_DIAGONALES,
             today,
             settings.TIEMPO_JUEGO,
-            self.errores_izquierda,
-            self.aciertos_izquierda,
-            self.errores_derecha,
-            self.aciertos_derecha,
+            self.errores,
+            self.aciertos,
+            media_ang,
+            0,
         )
         broker.close()

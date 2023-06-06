@@ -110,7 +110,9 @@ class Button:
     def draw(self, display):
         pygame.draw.rect(display, GRIS, self.bottom_rect)
         pygame.draw.rect(display, self.color, self.top_rect)
-
+        for i in range(4):
+            pygame.draw.rect(display, (0, 0, 0),
+                             self.top_rect, 2)
         display.blit(self.text, self.text_rect)
 
 
@@ -201,13 +203,12 @@ class DropDown:
 
 
 class InputBox:
-    def __init__(self, x, y, w, h, text=""):
+    def __init__(self, x, y, w, h, text=str()):
         self.rect = pygame.Rect(x, y, w, h)
         self.color = BLACK
         self.text = text
         self.txt_surface = FONTS["medium"].render(self.text, True, self.color)
         self.active = False
-
     def handle_event(self, events):
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -223,7 +224,7 @@ class InputBox:
                 if self.active:
                     if event.key == pygame.K_BACKSPACE:
                         self.text = self.text[:-1]
-                    else:
+                    elif event.type == pygame.KEYDOWN:
                         self.text += event.unicode
                     # Re-render the text.
                     self.txt_surface = FONTS["medium"].render(

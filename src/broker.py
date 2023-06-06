@@ -119,10 +119,20 @@ class Broker:
             logging.error(f"Error getting information from the database: {e}")
 
     def get_score(self, PT_E_id, PT_A_id, number_score_days=10):
-        query = f"SELECT * FROM Puntuaciones p WHERE p.PT_A_id = {int(PT_A_id)} and p.PT_E_id = {int(PT_E_id)} and p.PT_fecha >= DATE(NOW() - INTERVAL {number_score_days} DAY)"
+        temp_table = f"CREATE TEMPORARY TABLE LastDates SELECT DISTINCT PT_fecha FROM Puntuaciones WHERE PT_A_id={int(PT_A_id)} AND PT_E_id = {int(PT_E_id)} ORDER BY PT_fecha DESC LIMIT 10;"
+        query = f"SELECT * FROM praderwilli.Puntuaciones p JOIN praderwilli.LastDates ld ON p.PT_fecha = ld.PT_fecha WHERE p.PT_A_id = {int(PT_A_id)} AND p.PT_E_id = {int(PT_E_id)}; "
+
         try:
+            self.cursor.execute(temp_table)
             self.cursor.execute(query)
             return self.cursor.fetchall()
+        except db.Error as e:
+            logging.error(f"Error getting information from the database: {e}")
+
+    def delete_temporary_table(self):
+        query = f"DROP TABLE praderwilli.LastDates"
+        try:
+            self.cursor.execute(query)
         except db.Error as e:
             logging.error(f"Error getting information from the database: {e}")
 

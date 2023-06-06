@@ -6,10 +6,11 @@ from settings import BLACK
 
 
 class Animation(pygame.sprite.Sprite):
-    def __init__(self, screen, x, y, animacion, fps):
+    def __init__(self, screen, x, y, animacion, fps,dim = (90,90)):
         super(Animation, self).__init__()
         self.screen = screen
 
+        self.dim = dim
         self.animaciones = self.cargar_animacion(animacion)
         # Current image
         self.index = 0
@@ -21,6 +22,7 @@ class Animation(pygame.sprite.Sprite):
 
         self.fps = fps
         self.fotograma = 0
+        
 
     def cargar_animacion(self, carpeta):
         animacion = []
@@ -28,7 +30,7 @@ class Animation(pygame.sprite.Sprite):
         for i in files:
             image = pygame.image.load(f"{carpeta}/{i}")
             image.set_colorkey(BLACK)
-            scaled_image = pygame.transform.scale(image, (90, 90))
+            scaled_image = pygame.transform.scale(image, (self.dim[0],self.dim[1]))
             animacion.append(scaled_image)
 
         return animacion
