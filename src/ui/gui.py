@@ -260,6 +260,7 @@ class InputNumberBox:
         self.active = False
         self.comma = True
     def handle_event(self, events):
+        self.comma = False if '.' in self.text or ',' in self.text else True
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 # If the user clicked on the input_box rect.

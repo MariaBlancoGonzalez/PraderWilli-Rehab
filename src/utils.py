@@ -135,7 +135,10 @@ def angle_calculate_by_points(p1, p2, p3):
     return degrees(acos((l1**2 + l3**2 - l2**2) / (2 * l1 * l3)))
 
 def read(file, text):
-    json_dict = json.loads(file)
+    with open(file, 'r') as archivo:
+        contenido = archivo.read()
+
+    json_dict = json.loads(contenido)
     # Obtener el valor asociado a la clave especificada
     valor = json_dict.get(text)
     return valor
@@ -143,6 +146,9 @@ def read(file, text):
 def new_json_value(file, key, nuevo_valor):
     with open(file, 'r') as archivo:
         contenido = archivo.read()
-        print(contenido)
-        json_dict[key] = nuevo_valor    
-        archivo.dumps(json_dict)
+        
+    json_dict = json.loads(contenido)
+
+    json_dict[key] = nuevo_valor    
+    with open(file, 'w') as archivo:
+        archivo.write(json.dumps(json_dict))

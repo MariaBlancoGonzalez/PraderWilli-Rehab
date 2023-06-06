@@ -43,8 +43,8 @@ class SquadScene(Scene):
         self.right_hip = Source(game.display, settings.PUNTERO_ROJO, (50, 50))
 
         # Game settings
-        self.velocidad_squad = self.read(settings.EXER_1_CONFIG, "VELOCIDAD_SQUAD") 
-        self.tiempo_juego = self.read(settings.EXER_1_CONFIG, "TIEMPO_JUEGO_SQUAD")
+        self.velocidad_squad = read(settings.EXER_1_CONFIG, "VELOCIDAD_SQUAD") 
+        self.tiempo_juego = read(settings.EXER_1_CONFIG, "TIEMPO_JUEGO_SQUAD")
 
         self.aciertos = 0
         self.errores = 0
@@ -338,7 +338,7 @@ class SquadScene(Scene):
             id,
             settings.ID_DIAGONALES,
             today,
-            settings.TIEMPO_JUEGO,
+            self.tiempo_juego,
             self.errores,
             self.aciertos,
             media_ang,

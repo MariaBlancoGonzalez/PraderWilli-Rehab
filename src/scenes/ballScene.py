@@ -36,7 +36,7 @@ class BallScene(Scene):
         self.error_sound.set_volume(1)
         self.explosion_sound = pygame.mixer.Sound(settings.EXPLOSION_SOUND)
         # Game settings
-        self.tiempo_juego = self.read(settings.EXER_2_CONFIG, "TIEMPO_JUEGO_MOVILIDAD")
+        self.tiempo_juego = read(settings.EXER_2_CONFIG, "TIEMPO_JUEGO_MOVILIDAD")
     
         self.errores = 0
         self.total_bolas = 0
@@ -100,8 +100,8 @@ class BallScene(Scene):
         self.image_camera = None
 
         # Config
-        self.probabilidad = self.read(settings.EXER_2_CONFIG, "PROBABILIDAD")
-        self.speed = self.read(settings.EXER_2_CONFIG, "BALL_SPEED")
+        self.probabilidad = read(settings.EXER_2_CONFIG, "PROBABILIDAD")
+        self.speed = read(settings.EXER_2_CONFIG, "BALL_SPEED")
         self.footbal_image = pygame.image.load(settings.FOOTBALL)
         self.basket_image = pygame.image.load(settings.BASKETBALL)
         self.tennis_image = pygame.image.load(settings.TENISBALL)
@@ -293,7 +293,7 @@ class BallScene(Scene):
             id,
             settings.ID_BALLS,
             today,
-            settings.TIEMPO_JUEGO_MOVILIDAD,
+            self.tiempo_juego,
             self.errores,
             0,
             0,

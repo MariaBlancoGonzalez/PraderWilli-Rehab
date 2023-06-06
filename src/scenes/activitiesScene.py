@@ -35,6 +35,12 @@ class ActivitiesScene(Scene):
         self.txt_time_appear = settings.FONTS["small"].render(
             "Tiempo en el que los elementos aparecen", True, settings.BLACK
         )
+        self.txt_elemento_trampa= settings.FONTS["small"].render(
+            "Porcentaje de trampa [0,1]", True, settings.BLACK
+        )
+        self.txt_probabilidad_balls= settings.FONTS["small"].render(
+            "Probabilidad bolas [1,100]", True, settings.BLACK
+        )
         self.txt_change_mano = settings.FONTS["small"].render(
             "Elegir miniatura de manos", True, settings.BLACK
         )
@@ -107,6 +113,7 @@ class ActivitiesScene(Scene):
         # Input text diagonals
         self.input_time = InputNumberBox(100, 520, 200, 35, text="")
         self.input_time_appear = InputNumberBox(100, 610, 200, 35, text="")
+        self.input_trap_element = InputNumberBox(500, 520, 200, 35)
 
         # Input text squad
         self.input_time_squad = InputNumberBox(100, 520, 200, 35, text="")
@@ -115,6 +122,7 @@ class ActivitiesScene(Scene):
         # Input text balls
         self.input_time_balls = InputNumberBox(100, 520, 200, 35, text="")
         self.input_time_do_balls = InputNumberBox(100, 610, 200, 35, text="")
+        self.input_prob_element = InputNumberBox(500, 520, 200, 35)
         
         # Tracking time
         self.time_hand = 0
@@ -180,7 +188,9 @@ class ActivitiesScene(Scene):
             self.game.display.blit(self.txt_time, (100, 490))
             self.input_time.draw(self.game.display)
             self.game.display.blit(self.txt_time_appear, (100, 580))
+            self.game.display.blit(self.txt_elemento_trampa, (500, 490))
             self.input_time_appear.draw(self.game.display)
+            self.input_trap_element.draw(self.game.display)
             self.button_apply.draw(self.game.display)
         elif self.modify_squad:
             for i in range(4):
@@ -200,7 +210,9 @@ class ActivitiesScene(Scene):
             self.game.display.blit(self.txt_time, (100, 490))
             self.input_time_balls.draw(self.game.display)
             self.game.display.blit(self.txt_change_time_ball, (100, 580))
+            self.game.display.blit(self.txt_probabilidad_balls, (500, 490))
             self.input_time_do_balls.draw(self.game.display)
+            self.input_prob_element.draw(self.game.display)
             self.button_apply_balls.draw(self.game.display)
 
         # Draw progress bar
@@ -258,6 +270,10 @@ class ActivitiesScene(Scene):
             if self.input_time_appear.get_text() != "":
                 new_json_value(settings.EXER_0_CONFIG, "VELOCIDAD_ENTRE_BOLAS", float(self.input_time_appear.get_text()))
 
+            if self.input_trap_element.get_text() != "" and float(self.input_trap_element.get_text()) > 0 and float(self.input_trap_element.get_text()) < 1:
+                new_json_value(settings.EXER_0_CONFIG, "PORCENTAJE_TRAMPAS", float(self.input_trap_element.get_text()))
+
+            self.input_trap_element.reset()
             self.input_time.reset()
             self.input_time_appear.reset()
             self.modify_components = False
@@ -266,6 +282,7 @@ class ActivitiesScene(Scene):
         if self.modify_components:
             self.input_time.handle_event(events)
             self.input_time_appear.handle_event(events)
+            self.input_trap_element.handle_event(events)
         
         if self.button_apply_squad.get_pressed() or self.button_apply_squad.on_click(events):
             if self.input_time_squad.get_text() != "":
@@ -289,6 +306,10 @@ class ActivitiesScene(Scene):
             if self.input_time_do_balls.get_text() != "":
                 new_json_value(settings.EXER_2_CONFIG, "BALL_SPEED", int(self.input_time_do_balls.get_text()))
 
+            if self.input_prob_element.get_text() != "" and int(self.input_prob_element.get_text()) >= 1 and int(self.input_prob_element.get_text()) <=100:
+                new_json_value(settings.EXER_2_CONFIG, "PROBABILIDAD", int(self.input_prob_element.get_text()))
+            
+            self.input_prob_element.reset()
             self.input_time_balls.reset()
             self.input_time_do_balls.reset()
             self.modify_balls = False
@@ -297,6 +318,7 @@ class ActivitiesScene(Scene):
         if self.modify_balls:
             self.input_time_balls.handle_event(events)
             self.input_time_do_balls.handle_event(events)
+            self.input_prob_element.handle_event(events)
 
         return None
 

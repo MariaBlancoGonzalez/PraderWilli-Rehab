@@ -68,9 +68,9 @@ class DiagonalsScene(Scene):
         )
         self.diaggif_animation = Group(self.diag_gif)
         # Game settings
-        self.trampas = self.read(settings.EXER_0_CONFIG, "PORCENTAJE_TRAMPAS")
-        self.velocidad_bolas = self.read(settings.EXER_0_CONFIG, "VELOCIDAD_ENTRE_BOLAS")
-        self.tiempo_juego = self.read(settings.EXER_0_CONFIG, "TIEMPO_JUEGO")
+        self.trampas = read(settings.EXER_0_CONFIG, "PORCENTAJE_TRAMPAS")
+        self.velocidad_bolas = read(settings.EXER_0_CONFIG, "VELOCIDAD_ENTRE_BOLAS")
+        self.tiempo_juego = read(settings.EXER_0_CONFIG, "TIEMPO_JUEGO")
 
         self.aciertos_izquierda = 0
         self.aciertos_derecha = 0
@@ -182,7 +182,7 @@ class DiagonalsScene(Scene):
         self.bar_rect = pygame.Rect(
             200, 25, 500, 10)
         self.width = 0
-        self.coefficient = 500 / settings.TIEMPO_JUEGO
+        self.coefficient = 500 / self.tiempo_juego
 
     def events(self, events):
         if self.end:
@@ -191,7 +191,7 @@ class DiagonalsScene(Scene):
                 return ActivitiesScene(self.game)
             else:
                 json_object = No_DB()
-                json_object.write_data_json(settings.EXER_0_JSON, settings.ID_DIAGONALES, settings.TIEMPO_JUEGO, self.errores_izquierda, self.aciertos_derecha, self.errores_derecha, self.aciertos_derecha)
+                json_object.write_data_json(settings.EXER_0_JSON, settings.ID_DIAGONALES, self.tiempo_juego, self.errores_izquierda, self.aciertos_derecha, self.errores_derecha, self.aciertos_derecha)
                 return ActivitiesScene(self.game)
         return None
 
@@ -330,13 +330,13 @@ class DiagonalsScene(Scene):
             bola_permitida_drch = (
                 True
                 if (pygame.time.get_ticks() - self.time_right) / 1000
-                >= settings.VELOCIDAD_ENTRE_BOLAS
+                >= self.velocidad_bolas
                 else False
             )
             bola_permitida_izq = (
                 True
                 if (pygame.time.get_ticks() - self.time_left) / 1000
-                >= settings.VELOCIDAD_ENTRE_BOLAS
+                >= self.velocidad_bolas
                 else False
             )
             # Crear acierto y fallo
@@ -563,7 +563,7 @@ class DiagonalsScene(Scene):
             id,
             settings.ID_DIAGONALES,
             today,
-            settings.TIEMPO_JUEGO,
+            self.tiempo_juego,
             self.errores_izquierda,
             self.aciertos_izquierda,
             self.errores_derecha,
