@@ -1,10 +1,112 @@
-[{
-  "PT_A_id": 1,
-  "PT_E_id": 1,
-  "PT_fecha": "2023-06-06",
-  "PT_tiempo": 20,
-  "PT_fallos_izquierda": 0,
-  "PT_aciertos_izquierda": 3,
-  "PT_fallos_derecha": 1,
-  "PT_aciertos_derecha": 6
-}]
+[
+  {
+    "PT_A_id": 1,
+    "PT_E_id": 0,
+    "PT_fecha": "2023-05-03",
+    "PT_tiempo": 20,
+    "PT_fallos_izquierda": 1,
+    "PT_aciertos_izquierda": 6,
+    "PT_fallos_derecha": 2,
+    "PT_aciertos_derecha": 4
+  },
+  {
+    "PT_A_id": 1,
+    "PT_E_id": 0,
+    "PT_fecha": "2023-05-20",
+    "PT_tiempo": 20,
+    "PT_fallos_izquierda": 1,
+    "PT_aciertos_izquierda": 6,
+    "PT_fallos_derecha": 2,
+    "PT_aciertos_derecha": 4
+  },
+  {
+    "PT_A_id": 1,
+    "PT_E_id": 0,
+    "PT_fecha": "2023-05-21",
+    "PT_tiempo": 20,
+    "PT_fallos_izquierda": 1,
+    "PT_aciertos_izquierda": 6,
+    "PT_fallos_derecha": 2,
+    "PT_aciertos_derecha": 4
+  },
+  {
+    "PT_A_id": 1,
+    "PT_E_id": 0,
+    "PT_fecha": "2023-05-23",
+    "PT_tiempo": 20,
+    "PT_fallos_izquierda": 1,
+    "PT_aciertos_izquierda": 6,
+    "PT_fallos_derecha": 2,
+    "PT_aciertos_derecha": 4
+  },
+  {
+    "PT_A_id": 1,
+    "PT_E_id": 0,
+    "PT_fecha": "2023-05-27",
+    "PT_tiempo": 20,
+    "PT_fallos_izquierda": 1,
+    "PT_aciertos_izquierda": 6,
+    "PT_fallos_derecha": 2,
+    "PT_aciertos_derecha": 4
+  },
+  {
+    "PT_A_id": 1,
+    "PT_E_id": 0,
+    "PT_fecha": "2023-05-28",
+    "PT_tiempo": 20,
+    "PT_fallos_izquierda": 1,
+    "PT_aciertos_izquierda": 6,
+    "PT_fallos_derecha": 2,
+    "PT_aciertos_derecha": 4
+  },
+  {
+    "PT_A_id": 1,
+    "PT_E_id": 0,
+    "PT_fecha": "2023-05-30",
+    "PT_tiempo": 20,
+    "PT_fallos_izquierda": 1,
+    "PT_aciertos_izquierda": 6,
+    "PT_fallos_derecha": 2,
+    "PT_aciertos_derecha": 4
+  },
+  {
+    "PT_A_id": 1,
+    "PT_E_id": 0,
+    "PT_fecha": "2023-05-31",
+    "PT_tiempo": 20,
+    "PT_fallos_izquierda": 0,
+    "PT_aciertos_izquierda": 3,
+    "PT_fallos_derecha": 1,
+    "PT_aciertos_derecha": 6
+  },
+  {
+    "PT_A_id": 1,
+    "PT_E_id": 0,
+    "PT_fecha": "2023-06-06",
+    "PT_tiempo": 20,
+    "PT_fallos_izquierda": 2,
+    "PT_aciertos_izquierda": 6,
+    "PT_fallos_derecha": 0,
+    "PT_aciertos_derecha": 5
+  },
+  {
+    "PT_A_id": 1,
+    "PT_E_id": 0,
+    "PT_fecha": "2023-06-06",
+    "PT_tiempo": 20,
+    "PT_fallos_izquierda": 2,
+    "PT_aciertos_izquierda": 6,
+    "PT_fallos_derecha": 0,
+    "PT_aciertos_derecha": 5
+  },
+  {
+    "PT_A_id": 1,
+    "PT_E_id": 0,
+    "PT_fecha": "2023-06-07",
+    "PT_tiempo": 20,
+    "PT_fallos_izquierda": 2,
+    "PT_aciertos_izquierda": 9,
+    "PT_fallos_derecha": 3,
+    "PT_aciertos_derecha": 7
+  }
+]

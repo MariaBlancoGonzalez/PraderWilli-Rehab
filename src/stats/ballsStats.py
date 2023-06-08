@@ -5,9 +5,11 @@ from stats.calc import *
 from broker import Broker
 import statistics
 import json
+from ui.table import Tabla
 from settings import EXER_2_JSON
+
 class BallStats:
-    def __init__(self, txt_exer, id_exer, id_user, connection):
+    def __init__(self, txt_exer, id_exer, id_user, connection, ventana):
         self.name = txt_exer
         self.id_exer = id_exer
         self.id_user = id_user
@@ -17,6 +19,12 @@ class BallStats:
         self.data = []
         self.graphs = []
         self.stats = []
+        self.window = ventana
+
+    def create_table(self, pos):
+        header = ('Fecha','Tiempo','Error izquierda','Acierto izquierda', 'Error derecha', 'Acierto derecha')
+        
+        self.table = Tabla(self.id_exer, self.window, self.data, header, pos)
 
     def create_measures(self):
         self.get_data()

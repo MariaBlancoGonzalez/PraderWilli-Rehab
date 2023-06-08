@@ -8,6 +8,7 @@ import settings
 
 from ui.gui import Button, DropDown, ImageButton
 from ui.source import Source
+from ui.table import Tabla
 
 from stats.pdfReport import MyDocTemplate
 from pose_tracking.tracker_utils import *
@@ -40,6 +41,7 @@ class RecordScene(Scene):
 
         # Buttons
         self.button_back = Button((100, 20), "Volver", settings.AMARILLO)
+        self.button_datos = Button((950, 20), "Ver datos", settings.AMARILLO)
         self.userDropDown = DropDown(
             [settings.GRISCLARO, settings.WHITE],
             [settings.WHITE, settings.GRISCLARO],
@@ -63,13 +65,20 @@ class RecordScene(Scene):
             f"{game.exer_list[0]}",
             game.exer_list,
         )
+        self.button_arrow_left = Button(
+            (45, settings.HEIGHT // 2), "<", settings.GRANATE, 50
+        )
+        self.button_arrow_right = Button(
+            (1178, settings.HEIGHT // 2), ">", settings.GRANATE, 50
+        )
 
-        self.pdfDownload = ImageButton(self.imagePDF, (1170, 100), "pdf", (45, 45))
         self.button_group = [
             self.button_back,
-            self.pdfDownload,
+            self.button_datos,
             self.exerDropDown,
             self.userDropDown,
+            self.button_arrow_left,
+            self.button_arrow_right,
         ]
 
         # Sources
@@ -83,20 +92,27 @@ class RecordScene(Scene):
         self.id_user = get_id(self.game.current_user)
 
         if int(self.id_exer) == settings.ID_DIAGONALES:
-            self.current_activity_object = DiagonalesStats(game.current_user, self.id_exer, self.id_user, game.connection)
+            self.current_activity_object = DiagonalesStats(game.current_user, self.id_exer, self.id_user, game.connection, game.display)
         elif int(self.id_exer) == settings.ID_BALLS:
-            self.current_activity_object = BallStats(game.current_user, self.id_exer, self.id_user, game.connection)
+            self.current_activity_object = BallStats(game.current_user, self.id_exer, self.id_user, game.connection, game.display)
         elif int(self.id_exer) == settings.ID_SQUAD:
-            self.current_activity_object = SquadStats(game.current_user, self.id_exer, self.id_user, game.connection)
+            self.current_activity_object = SquadStats(game.current_user, self.id_exer, self.id_user, game.connection, game.display)
         self.current_activity_object.create_measures()
+        self.current_activity_object.create_table(0)
 
+        self.ver_datos = False
         # Tracking time
         self.time_hand = 0
         self.pressed_back = pygame.time.get_ticks()
+        self.pressed_right = pygame.time.get_ticks()
+        self.pressed_left = pygame.time.get_ticks()
+        self.pressed_datos = pygame.time.get_ticks()
 
         # Progress bar
         self.bar_rect = pygame.Rect(40, (game.display.get_size()[1]) - 50, 700, 30)
         self.width = 0
+
+        self.page = 0
 
     def events(self, events):
         self.userDropDown.update(events)
@@ -106,7 +122,11 @@ class RecordScene(Scene):
             from scenes.menuScene import MenuScene
             return MenuScene(self.game)
 
-        if self.pdfDownload.on_click(events):
+        if self.button_datos.get_pressed() or self.button_datos.on_click(events):
+            self.ver_datos = True if self.ver_datos == False else False
+            self.button_datos.change_text("Visualizaciones")
+
+        '''if self.pdfDownload.on_click(events):
             user = self.current_user.split("-")[1]
             filename = f'{user}_{datetime.datetime.now().strftime("%d-%m")}.pdf'
             if not os.path.exists(os.path.isfile(filename)):
@@ -115,7 +135,20 @@ class RecordScene(Scene):
 
             doc = MyDocTemplate(filename, self.id_user,
                                 self.id_exer, self.game.connection)
-            doc.create_doc(doc)
+            doc.create_doc(doc)'''
+        if self.button_arrow_left.get_pressed() or self.button_arrow_left.on_click(
+            events
+        ):
+            self.current_activity_object.table.update_page(-1)
+            self.time_hand, self.width = reset_time()
+            self.button_arrow_left.set_pressed(False)
+        if self.button_arrow_right.get_pressed() or self.button_arrow_right.on_click(
+            events
+        ):
+            self.current_activity_object.table.update_page(1)
+            self.time_hand, self.width = reset_time()
+            self.button_arrow_right.set_pressed(False)
+
         return None
 
     def update(self, dt):
@@ -127,14 +160,16 @@ class RecordScene(Scene):
 
             if int(self.id_exer) == settings.ID_DIAGONALES:
                 self.current_activity_object = DiagonalesStats(
-                    self.current_user, self.id_exer, self.id_user, self.game.connection)
+                    self.current_user, self.id_exer, self.id_user, self.game.connection, self.game.display)
             elif int(self.id_exer) == settings.ID_BALLS:
                 self.current_activity_object = BallStats(
-                    self.current_user, self.id_exer, self.id_user, self.game.connection)
+                    self.current_user, self.id_exer, self.id_user, self.game.connection, self.game.display)
             elif int(self.id_exer) == settings.ID_SQUAD:
                 self.current_activity_object = SquadStats(
-                    self.current_user, self.id_exer, self.id_user, self.game.connection)
+                    self.current_user, self.id_exer, self.id_user, self.game.connection, self.game.display)
             self.current_activity_object.create_measures()
+            self.current_activity_object.create_table(0)
+
         pos = pygame.mouse.get_pos()
         if any(button.top_rect.collidepoint(pos) for button in self.button_group):
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
@@ -164,89 +199,95 @@ class RecordScene(Scene):
         pygame.draw.rect(self.game.display, settings.BLACK, self.bar_rect, 2)
 
         if self.current_activity_object.data != []:
-            # Draw graphs and stats depending on the game
-            # Statistics rectangle
-            rect_stats = pygame.Surface((370, 525))  # the size of your rect
-            rect_stats.set_alpha(128)  # alpha level
-            # this fills the entire surface
-            rect_stats.fill((255, 255, 255))
-            self.game.display.blit(rect_stats, (840, 170))
+            if self.ver_datos == False:
+                # Draw graphs and stats depending on the game
+                # Statistics rectangle
+                rect_stats = pygame.Surface((370, 525))  # the size of your rect
+                rect_stats.set_alpha(128)  # alpha level
+                # this fills the entire surface
+                rect_stats.fill((255, 255, 255))
+                self.game.display.blit(rect_stats, (840, 170))
 
-            if int(self.id_exer) == settings.ID_DIAGONALES:
-                stats = self.current_activity_object.stats
-                graphs = self.current_activity_object.graphs
-                
-                # Gráficas
-                self.game.display.blit(graphs[0][1], (42, 162))
-                self.game.display.blit(graphs[1][1], (42, 430))
+                if int(self.id_exer) == settings.ID_DIAGONALES:
+                    stats = self.current_activity_object.stats
+                    graphs = self.current_activity_object.graphs
+                    
+                    # Gráficas
+                    self.game.display.blit(graphs[0][1], (42, 162))
+                    self.game.display.blit(graphs[1][1], (42, 430))
 
-                # Statistics
-                self.game.display.blit(self.estadisticas, (860, 180))
-                
-                counter = 230
-                for i in range(len(stats)):
+                    # Statistics
+                    self.game.display.blit(self.estadisticas, (860, 180))
+                    
+                    counter = 230
+                    for i in range(len(stats)):
+                        self.game.display.blit(settings.FONTS["arial_small"].render(
+                            f"{stats[i][0]} {stats[i][1]}",
+                            True,
+                            settings.BLACK,
+                        ), (870, counter))
+                        counter += 50
+
+                elif int(self.id_exer) == settings.ID_SQUAD:
+                    graphs = self.current_activity_object.graphs
+                    stats = self.current_activity_object.stats
+
+                    # Gráficas
+                    self.game.display.blit(graphs[0][1], (42, 162))
+                    self.game.display.blit(graphs[1][1], (42, 435))
+
+                    # Statistics
+                    self.game.display.blit(self.estadisticas, (860, 180))
+
+                    counter = 230
+                    for i in range(len(stats)):
+                        self.game.display.blit(settings.FONTS["arial_small"].render(
+                            f"{stats[i][0]} {stats[i][1]}",
+                            True,
+                            settings.BLACK,
+                        ), (870, counter))
+                        counter += 50
+
+                elif int(self.id_exer) == settings.ID_BALLS:
+                    stats = self.current_activity_object.stats
+                    graphs = self.current_activity_object.graphs
+                    # Gráficas
+                    self.game.display.blit(graphs[0][1], (42, 182))
+
+                    # Statistics
+                    self.game.display.blit(self.estadisticas, (860, 180))
+
+                    counter = 230
+                    for i in range(len(stats)-2):
+                        self.game.display.blit(settings.FONTS["arial_small"].render(
+                            f"{stats[i][0]} {stats[i][1]}",
+                            True,
+                            settings.BLACK,
+                        ), (870, counter))
+                        counter += 50
+
                     self.game.display.blit(settings.FONTS["arial_small"].render(
-                        f"{stats[i][0]} {stats[i][1]}",
+                        f"{stats[len(stats)-2][0]} {stats[len(stats)-2][1]}",
                         True,
                         settings.BLACK,
-                    ), (870, counter))
-                    counter += 50
-
-            elif int(self.id_exer) == settings.ID_SQUAD:
-                graphs = self.current_activity_object.graphs
-                stats = self.current_activity_object.stats
-
-                # Gráficas
-                self.game.display.blit(graphs[0][1], (42, 162))
-                self.game.display.blit(graphs[1][1], (42, 435))
-
-                # Statistics
-                self.game.display.blit(self.estadisticas, (860, 180))
-
-                counter = 230
-                for i in range(len(stats)):
+                    ), (130, 570))
                     self.game.display.blit(settings.FONTS["arial_small"].render(
-                        f"{stats[i][0]} {stats[i][1]}",
+                        f"{stats[len(stats)-1][0]} {stats[len(stats)-1][1]}",
                         True,
                         settings.BLACK,
-                    ), (870, counter))
-                    counter += 50
+                    ), (130, 620))
 
-            elif int(self.id_exer) == settings.ID_BALLS:
-                stats = self.current_activity_object.stats
-                graphs = self.current_activity_object.graphs
-                # Gráficas
-                self.game.display.blit(graphs[0][1], (42, 182))
-
-                # Statistics
-                self.game.display.blit(self.estadisticas, (860, 180))
-
-                counter = 230
-                for i in range(len(stats)-2):
                     self.game.display.blit(settings.FONTS["arial_small"].render(
-                        f"{stats[i][0]} {stats[i][1]}",
+                        f"*Los registros recogidos la misma fecha con el mismo tiempo se muestran acumulados",
                         True,
                         settings.BLACK,
-                    ), (870, counter))
-                    counter += 50
+                    ), (120, 680))
 
-                self.game.display.blit(settings.FONTS["arial_small"].render(
-                    f"{stats[len(stats)-2][0]} {stats[len(stats)-2][1]}",
-                    True,
-                    settings.BLACK,
-                ), (130, 570))
-                self.game.display.blit(settings.FONTS["arial_small"].render(
-                    f"{stats[len(stats)-1][0]} {stats[len(stats)-1][1]}",
-                    True,
-                    settings.BLACK,
-                ), (130, 620))
-
-                self.game.display.blit(settings.FONTS["arial_small"].render(
-                    f"*Los registros recogidos la misma fecha con el mismo tiempo se muestran acumulados",
-                    True,
-                    settings.BLACK,
-                ), (120, 680))
-
+            else:
+                # Dibujar la tabla
+                self.current_activity_object.table.dibujar(self.page)
+                self.button_arrow_left.draw(self.game.display)
+                self.button_arrow_right.draw(self.game.display)
         else:
             self.game.display.blit(settings.FONTS["arial_small"].render(
                 f"No hay datos disponibles",
@@ -254,9 +295,10 @@ class RecordScene(Scene):
                 settings.BLACK,
             ), (120, 180))
 
-            # Buttons
+        # Buttons
         self.button_back.draw(self.game.display)
-        self.pdfDownload.draw(self.game.display)
+        self.button_datos.draw(self.game.display)
+        #self.pdfDownload.draw(self.game.display)
         self.userDropDown.draw(self.game.display)
         self.exerDropDown.draw(self.game.display)
 
@@ -267,7 +309,24 @@ class RecordScene(Scene):
             right.rect.centerx, right.rect.centery
         ):
             return "Volver"
-
+        elif self.button_datos.top_rect.collidepoint(
+            left.rect.centerx, left.rect.centery
+        ) or self.button_datos.top_rect.collidepoint(
+            right.rect.centerx, right.rect.centery
+        ):
+            return "Datos"
+        elif self.button_arrow_left.top_rect.collidepoint(
+            left.rect.centerx, left.rect.centery
+        ) or self.button_arrow_left.top_rect.collidepoint(
+            right.rect.centerx, right.rect.centery
+        ):
+            return "<"
+        elif self.button_arrow_right.top_rect.collidepoint(
+            left.rect.centerx, left.rect.centery
+        ) or self.button_arrow_right.top_rect.collidepoint(
+            right.rect.centerx, right.rect.centery
+        ):
+            return ">"
         return ""
 
     def tracking(self, results):
@@ -287,6 +346,20 @@ class RecordScene(Scene):
         else:
             self.pressed_back = pygame.time.get_ticks()
         # ------------------------------------------
+        if action == ">":
+            self.time_hand = count(self.pressed_right)
+        else:
+            self.pressed_right = pygame.time.get_ticks()
+        # ------------------------------------------
+        if action == "<":
+            self.time_hand = count(self.pressed_left)
+        else:
+            self.pressed_left = pygame.time.get_ticks()
+        # ------------------------------------------
+        if action == "Datos":
+            self.time_hand = count(self.pressed_datos)
+        else:
+            self.pressed_datos = pygame.time.get_ticks()
 
         self.width = self.time_hand * coefficient
 
@@ -296,3 +369,12 @@ class RecordScene(Scene):
         if self.time_hand > settings.TIME_BUTTONS:
             if action == "Volver":
                 self.button_back.set_pressed(True)
+            elif action == "Datos":
+                self.ver_datos = True if self.ver_datos == False else False
+                self.button_datos.change_text("Visualizaciones")
+                self.pressed_datos = pygame.time.get_ticks()
+            elif action == "<":
+                self.button_arrow_left.set_pressed(True)
+            elif action == ">":
+                self.button_arrow_right.set_pressed(True)
+            self.time_hand, self.width = reset_time()

@@ -65,6 +65,11 @@ class Button:
             "pressed": "#333333",
         }
 
+    def change_text(self, text):
+        self.text = FONTS["medium"].render(text, True, WHITE)
+        self.text_rect = self.text.get_rect()
+        self.text_rect.center = self.top_rect.center
+
     def on_click(self, event):
         pos = pygame.mouse.get_pos()
         for ev in event:

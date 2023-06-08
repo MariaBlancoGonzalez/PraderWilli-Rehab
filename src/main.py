@@ -71,7 +71,7 @@ class Initiator:
             self.users = ['Usuario_Default']
             self.user_list = self.users
             self.current_user = self.users[0]
-            self.exer_list = ['1-Diagonales superiores', '2-Squad', '3-Balls']
+            self.exer_list = ['0-Diagonales superiores', '1-Squad', '2-Balls']
 
     def check_json_files(self, file):
         data = []

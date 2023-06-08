@@ -5,9 +5,11 @@ from stats.calc import *
 from broker import Broker
 import statistics
 import json
+from ui.table import Tabla
 from settings import EXER_1_JSON
+
 class SquadStats:
-    def __init__(self, txt_exer, id_exer, id_user, connection):
+    def __init__(self, txt_exer, id_exer, id_user, connection, ventana):
         self.name = txt_exer
         self.id_exer = id_exer
         self.id_user = id_user
@@ -17,6 +19,7 @@ class SquadStats:
         self.data = []
         self.graphs = []
         self.stats = []
+        self.window = ventana
 
     def create_measures(self):
         self.get_data()
@@ -29,6 +32,11 @@ class SquadStats:
 
             self.create_stats(fecha, errores, aciertos, media_angulo, tiempo)
             self.create_graphs(fecha, errores, aciertos, media_angulo, tiempo)
+
+    def create_table(self, pos):
+        header = ('Fecha','Tiempo','Errores','Squad correctas', 'Ángulo medio')
+        
+        self.table = Tabla(self.id_exer, self.window, self.data, header, pos)
         
     def create_graphs(self, fecha, errores, aciertos, media_angulo, tiempo):
         canvas, raw_data = plt.create_groupbar_chart_squad(
