@@ -2,7 +2,7 @@ import pygame
 import settings
 import math
 class Tabla:
-    def __init__(self, id, ventana, datos_tabla, header, pos = 0, dimensiones_celda=(150, 30), color_borde=settings.BLACK, color_fondo=settings.WHITE, color_texto=settings.BLACK):    
+    def __init__(self, id, ventana, datos_tabla, header, pos = 0, dimensiones_celda=(160, 30), color_borde=settings.BLACK, color_fondo=settings.WHITE, color_texto=settings.BLACK):    
         self.id = id
         self.ventana = ventana
         self.header = header
@@ -18,6 +18,8 @@ class Tabla:
         self.color_fondo = color_fondo
         self.color_texto = color_texto
 
+        self.font = settings.FONTS["arial_small"]
+        self.font.set_underline(False)
         self.ancho_celda, self.alto_celda = dimensiones_celda
         self.alto_tabla = len(datos_tabla) * self.alto_celda
         self.alto_ventana = ventana.get_height()
@@ -110,9 +112,12 @@ class Tabla:
                         # Dibujar el borde de la celda
                     pygame.draw.rect(self.ventana, self.color_borde, (x_celda, y_celda, self.ancho_celda, self.alto_celda), 1)
 
-                        # Dibujar el contenido de la celda
-                    texto = settings.FONTS["arial_small"].render(str(contenido), True, settings.BLACK)
-                    self.ventana.blit(texto, (x_celda + 5, y_celda + 5))
+                    # Dibujar el contenido de la celda
+
+                    texto = self.font.render(str(contenido), True, settings.BLACK)
+                    texto_rect = texto.get_rect()
+                    texto_rect.center = (x_celda + self.ancho_celda // 2, y_celda + self.alto_celda // 2)
+                    self.ventana.blit(texto, texto_rect)
             counter_celdas+=1
         
         page = settings.FONTS["medium"].render(f"{str(self.page)}/{str(self.pages_available)}", True, settings.BLACK)

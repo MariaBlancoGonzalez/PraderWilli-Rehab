@@ -9,9 +9,6 @@ class Scene:
     def events(self, events):
         raise NotImplementedError("events must be defined")
 
-    def update(self, dt):
-        raise NotImplementedError("update must be defined")
-
     def draw(self):
         raise NotImplementedError("draw must be defined")
 

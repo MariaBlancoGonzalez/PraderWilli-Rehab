@@ -195,9 +195,6 @@ class DiagonalsScene(Scene):
                 return ActivitiesScene(self.game)
         return None
 
-    def update(self, dt):
-        pass
-
     def draw(self):
         if self.mostrar_instrucciones and self.calibration:
             pass
@@ -205,7 +202,7 @@ class DiagonalsScene(Scene):
             self.texto_pies.draw(self.game.display)
         elif self.time_instr >= 3 and self.calibration and not self.visibility_checker:
             self.texto_partes.draw(self.game.display)
-        if self.calibration:
+        if self.calibration and self.time_instr >=3:
             pygame.draw.rect(self.game.display, settings.GRANATE, self.box_feet, 5, 0)
 
     def create_box_feet(self):
@@ -536,8 +533,6 @@ class DiagonalsScene(Scene):
                 "{0}".format(self.puntuacion), True, settings.COLOR_ROJO
             )
             self.game.display.blit(puntos, (1065, 15))
-
-            
             
             # Draw point on the screen
             self.hands.draw(self.game.display)

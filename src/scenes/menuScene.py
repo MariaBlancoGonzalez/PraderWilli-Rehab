@@ -17,7 +17,7 @@ class MenuScene(Scene):
 
         # Buttons
         self.button_activities = Button(
-            (100, self.screen.get_size()[1] / 3), "Activities"
+            (100, self.screen.get_size()[1] / 3), "Actividades"
         )
         self.button_options = Button((1000, self.screen.get_size()[1] / 3), "Opciones")
         self.button_historial = Button(

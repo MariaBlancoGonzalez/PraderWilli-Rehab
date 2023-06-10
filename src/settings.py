@@ -72,6 +72,7 @@ HEADER_FONT = 80
 EXTRABIG_FONT = 140
 # Fonts
 FONT = "./assets/fonts/Delight.ttf"
+TIMES_FONT = "./assets/fonts/times_new_roman.ttf"
 
 pygame.font.init()
 FONTS = {}
@@ -80,9 +81,9 @@ FONTS["medium"] = pygame.font.Font(FONT, MEDIUM_FONT)
 FONTS["big"] = pygame.font.Font(FONT, BIG_FONT)
 FONTS["header"] = pygame.font.Font(FONT, HEADER_FONT)
 FONTS["extra"] = pygame.font.Font(FONT, EXTRABIG_FONT)
-FONTS["arial_small"] = pygame.font.SysFont("arial", SMALL_FONT)
-FONTS["arial_medium"] = pygame.font.SysFont("arial", MEDIUM_ARIAL_FONT)
-FONTS["arial_big"] = pygame.font.SysFont("arial", BIG_ARIAL_FONT)
+FONTS["arial_small"] = pygame.font.Font(TIMES_FONT, SMALL_FONT)
+FONTS["arial_medium"] = pygame.font.Font(TIMES_FONT, MEDIUM_ARIAL_FONT)
+FONTS["arial_big"] = pygame.font.Font(TIMES_FONT, BIG_ARIAL_FONT)
 
 # Sounds
 CLICKS = "./assets/sound/correct.wav"
@@ -147,3 +148,4 @@ FPS_SQUAD = 20
 ID_BALLS = 2
 ACIERTO_BALLS = 10
 FALLO_BALLS = 10
+FPS_BALLS = 20

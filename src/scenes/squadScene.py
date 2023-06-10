@@ -53,7 +53,7 @@ class SquadScene(Scene):
         # Score total and partial to show
         self.puntuacion = 0
         self.angle = 0
-
+        self.best_angle = 200
         self.correct_squad = False
         self.correct_score = settings.FONTS["medium"].render(
             str(settings.ACIERTO_PTO), True, settings.BLACK
@@ -139,9 +139,6 @@ class SquadScene(Scene):
 
         return None
 
-    def update(self, dt):
-        pass
-
     def draw(self):
         if self.mostrar_instrucciones and self.calibration:
             self.texto.draw(self.game.display)
@@ -212,9 +209,8 @@ class SquadScene(Scene):
             # Para checkeo de pies
             self.mostrar_instrucciones = False
             self.visibility_checker = check_visibility(self.current_results)
-
             if self.pitido:
-                angulo = 200
+                best_angle = 200
                 self.pip_sound.play()
                 self.pitido = False
 
@@ -243,15 +239,17 @@ class SquadScene(Scene):
                 self.angle = angle_calculate_by_points(right_current_hip, right_knee, rigth_current_foot)
             
             if self.angle <= 100.0:
-                if angulo > self.angle:
-                    angulo = self.angle
+                if self.best_angle > self.angle:
+                    self.best_angle = self.angle
 
                 if (pygame.time.get_ticks() - self.time_squad) / 1000 < self.velocidad_squad and not self.correct_squad:
                     self.aciertos += 1
                     self.puntuacion += settings.ACIERTO_PTO
                     self.correct_squad = True
 
+
             if (pygame.time.get_ticks() - self.time_squad) / 1000 >= self.velocidad_squad:
+                print(self.correct_squad)
                 if not self.correct_squad:
                     self.errores += 1
                     self.puntuacion -= 50
@@ -260,7 +258,8 @@ class SquadScene(Scene):
                 self.correct_squad = False
                 self.pitido = True
                 self.time_squad = reset_pygame_timer()
-                self.media_angulo.append(angulo)
+                self.media_angulo.append(self.best_angle)
+                self.best_angle = 200
                 
             if self.current_time <= 0:
                 game_over_text = settings.FONTS["big"].render(

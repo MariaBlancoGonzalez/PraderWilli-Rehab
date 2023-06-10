@@ -9,6 +9,7 @@ from ui.sticker import Sticker
 from pygame.sprite import Group
 from ui.gui import BackgroundText
 from broker import Broker
+from broker import No_DB
 from pose_tracking.tracker_utils import *
 import datetime
 from ui.animation import Animation
@@ -116,6 +117,16 @@ class BallScene(Scene):
         self.width = 0
         self.coefficient = 500 / self.tiempo_juego
 
+        # Animation
+        self.balls_gif = Animation(
+            self.game.display,
+            620,
+            500,
+            settings.BALLGIF,
+            settings.FPS_BALLS, (500, 500)
+        )
+        self.ballgif_animation = Group(self.balls_gif)
+
     def events(self, events):
         if self.end:
             if self.game.connection == 0:
@@ -128,9 +139,6 @@ class BallScene(Scene):
                 return ActivitiesScene(self.game)
 
         return None
-
-    def update(self, dt):
-        pass
 
     def draw(self):
         if self.mostrar_instrucciones and self.calibration:
@@ -164,6 +172,8 @@ class BallScene(Scene):
             self.time_instr_balls = count(self.ticks)
             self.seconds = 0
             self.time_balls = reset_pygame_timer()
+            self.ballgif_animation.draw(self.game.display)
+            self.ballgif_animation.update()
             self.timer = reset_pygame_timer()
 
         elif (

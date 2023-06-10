@@ -29,7 +29,7 @@ class RecordScene(Scene):
             "Historial", True, settings.BLACK
         )
         self.fontUnderline = settings.FONTS["arial_small"]
-        self.fontUnderline.set_underline(True)
+        
         self.no_data = self.fontUnderline.render(
             f"No hay datos disponibles", True, settings.BLACK
         )
@@ -124,7 +124,10 @@ class RecordScene(Scene):
 
         if self.button_datos.get_pressed() or self.button_datos.on_click(events):
             self.ver_datos = True if self.ver_datos == False else False
-            self.button_datos.change_text("Visualizaciones")
+            if self.ver_datos:
+                self.button_datos.change_text("Visualizaciones")
+            else:
+                self.button_datos.change_text("Ver datos")
 
         '''if self.pdfDownload.on_click(events):
             user = self.current_user.split("-")[1]
@@ -199,6 +202,7 @@ class RecordScene(Scene):
         pygame.draw.rect(self.game.display, settings.BLACK, self.bar_rect, 2)
 
         if self.current_activity_object.data != []:
+            self.fontUnderline.set_underline(True)
             if self.ver_datos == False:
                 # Draw graphs and stats depending on the game
                 # Statistics rectangle
@@ -285,6 +289,7 @@ class RecordScene(Scene):
 
             else:
                 # Dibujar la tabla
+                self.fontUnderline.set_underline(False)
                 self.current_activity_object.table.dibujar(self.page)
                 self.button_arrow_left.draw(self.game.display)
                 self.button_arrow_right.draw(self.game.display)
@@ -371,7 +376,10 @@ class RecordScene(Scene):
                 self.button_back.set_pressed(True)
             elif action == "Datos":
                 self.ver_datos = True if self.ver_datos == False else False
-                self.button_datos.change_text("Visualizaciones")
+                if self.ver_datos:
+                    self.button_datos.change_text("Visualizaciones")
+                else:
+                    self.button_datos.change_text("Ver datos")
                 self.pressed_datos = pygame.time.get_ticks()
             elif action == "<":
                 self.button_arrow_left.set_pressed(True)

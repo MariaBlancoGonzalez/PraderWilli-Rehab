@@ -6,6 +6,7 @@ from broker import Broker
 import statistics
 import json
 from ui.table import Tabla
+import datetime
 from settings import EXER_2_JSON
 
 class BallStats:
