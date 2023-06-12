@@ -2,7 +2,7 @@ import pygame
 import datetime
 import os
 import json
-from broker import Broker
+from broker import No_DB
 from scenes.scene import Scene
 import settings
 
@@ -10,7 +10,6 @@ from ui.gui import Button, DropDown, ImageButton
 from ui.source import Source
 from ui.table import Tabla
 
-from stats.pdfReport import MyDocTemplate
 from pose_tracking.tracker_utils import *
 from utils import *
 from stats.calc import *
@@ -92,11 +91,11 @@ class RecordScene(Scene):
         self.id_user = get_id(self.game.current_user)
 
         if int(self.id_exer) == settings.ID_DIAGONALES:
-            self.current_activity_object = DiagonalesStats(game.current_user, self.id_exer, self.id_user, game.connection, game.display)
+            self.current_activity_object = DiagonalesStats(game.current_user, self.id_exer, self.id_user, game.display)
         elif int(self.id_exer) == settings.ID_BALLS:
-            self.current_activity_object = BallStats(game.current_user, self.id_exer, self.id_user, game.connection, game.display)
+            self.current_activity_object = BallStats(game.current_user, self.id_exer, self.id_user, game.display)
         elif int(self.id_exer) == settings.ID_SQUAD:
-            self.current_activity_object = SquadStats(game.current_user, self.id_exer, self.id_user, game.connection, game.display)
+            self.current_activity_object = SquadStats(game.current_user, self.id_exer, self.id_user, game.display)
         self.current_activity_object.create_measures()
         self.current_activity_object.create_table(0)
 
@@ -129,16 +128,6 @@ class RecordScene(Scene):
             else:
                 self.button_datos.change_text("Ver datos")
 
-        '''if self.pdfDownload.on_click(events):
-            user = self.current_user.split("-")[1]
-            filename = f'{user}_{datetime.datetime.now().strftime("%d-%m")}.pdf'
-            if not os.path.exists(os.path.isfile(filename)):
-                with open(filename, "wb") as file:
-                    file.write("")
-
-            doc = MyDocTemplate(filename, self.id_user,
-                                self.id_exer, self.game.connection)
-            doc.create_doc(doc)'''
         if self.button_arrow_left.get_pressed() or self.button_arrow_left.on_click(
             events
         ):
@@ -163,13 +152,13 @@ class RecordScene(Scene):
 
             if int(self.id_exer) == settings.ID_DIAGONALES:
                 self.current_activity_object = DiagonalesStats(
-                    self.current_user, self.id_exer, self.id_user, self.game.connection, self.game.display)
+                    self.current_user, self.id_exer, self.id_user, self.game.display)
             elif int(self.id_exer) == settings.ID_BALLS:
                 self.current_activity_object = BallStats(
-                    self.current_user, self.id_exer, self.id_user, self.game.connection, self.game.display)
+                    self.current_user, self.id_exer, self.id_user, self.game.display)
             elif int(self.id_exer) == settings.ID_SQUAD:
                 self.current_activity_object = SquadStats(
-                    self.current_user, self.id_exer, self.id_user, self.game.connection, self.game.display)
+                    self.current_user, self.id_exer, self.id_user, self.game.display)
             self.current_activity_object.create_measures()
             self.current_activity_object.create_table(0)
 
@@ -303,7 +292,6 @@ class RecordScene(Scene):
         # Buttons
         self.button_back.draw(self.game.display)
         self.button_datos.draw(self.game.display)
-        #self.pdfDownload.draw(self.game.display)
         self.userDropDown.draw(self.game.display)
         self.exerDropDown.draw(self.game.display)
 

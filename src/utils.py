@@ -45,12 +45,12 @@ def distribute_data(data):
     )
 
     for i in data:
-        tiempo.append(i[3].strftime("%d/%m"))
-        tiempo_ejer.append(i[4])
-        izq_errores.append(i[5])
-        izq_aciertos.append(i[6])
-        drcha_errores.append(i[7])
-        drcha_aciertos.append(i[8])
+        tiempo.append(i[0].strftime("%d/%m"))
+        tiempo_ejer.append(i[1])
+        izq_errores.append(i[2])
+        izq_aciertos.append(i[3])
+        drcha_errores.append(i[4])
+        drcha_aciertos.append(i[5])
     
     return tiempo, tiempo_ejer, izq_errores, izq_aciertos, drcha_errores, drcha_aciertos
 
@@ -62,10 +62,10 @@ def distribute_data_stats(data):
         [],
     )
     for i in data:
-        fecha.append(i[3].strftime("%d/%m"))
-        errores.append(i[5])
-        aciertos.append(i[6])
-        tiempo.append(i[4])
+        fecha.append(i[0].strftime("%d/%m"))
+        errores.append(i[2])
+        aciertos.append(i[3])
+        tiempo.append(i[1])
 
     return fecha, errores, aciertos, tiempo
 
@@ -79,11 +79,11 @@ def distribute_data_squad(data):
         [],
     )
     for i in data:
-        fecha.append(i[3].strftime("%d/%m"))
-        errores.append(i[5])
-        aciertos.append(i[6])
-        media_angulo.append(i[7])
-        tiempo.append(i[4])
+        fecha.append(i[0].strftime("%d/%m"))
+        errores.append(i[2])
+        aciertos.append(i[3])
+        media_angulo.append(i[4])
+        tiempo.append(i[1])
 
     return fecha, errores, aciertos, media_angulo, tiempo
 

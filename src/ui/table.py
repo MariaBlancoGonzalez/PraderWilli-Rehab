@@ -7,7 +7,8 @@ class Tabla:
         self.ventana = ventana
         self.header = header
         self.name_actividad = None
-        self.datos_tabla = self.set_data(datos_tabla)        
+        self.datos_tabla = datos_tabla
+        self.set_name()        
         self.current_datos = self.datos_tabla[:10]
 
         self.page = 1
@@ -30,32 +31,13 @@ class Tabla:
         except IndexError:
             pass
 
-    def set_data(self, datos):
+    def set_name(self):
         if int(self.id) == 0:
-            datos = self.remove_first_three_elements(datos)
             self.name_actividad = 'Diagonales Superiores'
         elif int(self.id) == 1:
-            datos = self.remove_first_three_elements(datos)
-            datos = self.remove_last_element(datos)
             self.name = 'Squads'
         elif int(self.id) == 2:
-            datos = self.remove_first_three_elements(datos)
             self.name = 'Movilidad'
-        return datos
-
-    def remove_last_element(self, datos):
-        result = []
-        for tup in datos:
-            new_tup = tup[:-1]
-            result.append(new_tup)
-        return result
-
-    def remove_first_three_elements(self, datos):
-        result = []
-        for tup in datos:
-            new_tup = tup[3:]
-            result.append(new_tup)
-        return result
 
     def update_page(self, pos):
         if pos == 1:

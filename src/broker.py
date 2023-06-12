@@ -7,192 +7,33 @@ import datetime
 import json
 logging.getLogger().setLevel(logging.INFO)
 
-
-class Broker:
-    def __init__(self):
-        self.cursor = ""
-
-        self.cursor = None
-        self.conn = None
-
-    # Connect to MariaDB Platform
-    def connect(self):
-        # connection to the database
-        config = configparser.ConfigParser()
-        config.read(r"./docs/credenciales.ini")
-
-        username = config.get("DB", "username")
-        pwd = config.get("DB", "password")
-        datab = config.get("DB", "db")
-        db_host = config.get("DB", "host")
-        db_port = config.getint("DB", "port")
-        try:
-            self.conn = db.connect(
-                user=username, password=pwd, host=db_host, port=db_port, database=datab
-            )
-            self.cursor = self.conn.cursor()
-            # Status success
-            return 0
-        except db.Error as e:
-            # Status error
-            return 1
-        # Get Cursor
-
-    def add_user(self, name, lastname):
-        try:
-            statement = f"INSERT INTO Alumno (A_nombre, A_apellido) VALUES ('{name}', '{lastname}')"
-            self.cursor.execute(statement)
-            self.conn.commit()
-            logging.info("Successfully added entry to database")
-        except db.Error as e:
-            logging.error(f"Error adding entry to database: {e}")
-
-    def get_user_id(self, name):
-        statement = f"SELECT A_id FROM Alumno WHERE A_nombre={name}"
-        try:
-            self.cursor.execute(statement)
-            return self.cursor.fetchall()[0][0]
-        except db.Error as e:
-            logging.error(f"Error retrieving entry from database: {e}")
-
-    def get_user(self, id):
-        statement = f"SELECT A_nombre FROM Alumno WHERE A_id={id}"
-        try:
-            self.cursor.execute(statement)
-            return self.cursor.fetchall()[0][0]
-        except db.Error as e:
-            logging.error(f"Error retrieving entry from database: {e}")
-
-    def get_users(self):
-        try:
-            statement = f"SELECT * FROM Alumno"
-            self.cursor.execute(statement)
-            users = []
-            for i in self.cursor.fetchall():
-                users.append((i[0], i[1], i[2]))
-            return users
-        except db.Error as e:
-            logging.error(f"Error retrieving entry from database: {e}")
-
-    def add_exercise(self, name):
-        try:
-            statement = f"INSERT INTO Ejercicio (E_nombre) VALUES ('{name}')"
-            self.cursor.execute(statement)
-            self.conn.commit()
-            logging.info("Successfully added exercise to database")
-        except db.Error as e:
-            logging.error(f"Error adding entry to database: {e}")
-
-    def get_exercise(self, id):
-        try:
-            statement = f"SELECT E_nombre FROM Ejercicio WHERE E_id={id}"
-            self.cursor.execute(statement)
-            return self.cursor.fetchall()[0][0]
-        except db.Error as e:
-            logging.error(f"Error retrieving entry from database: {e}")
-
-    def add_score(
-        self,
-        alumno,
-        ejercicio,
-        fecha,
-        tiempo,
-        fallosizq,
-        aciertosizq,
-        fallosdrch,
-        aciertosdrch,
-    ):
-        try:
-            statement = f"INSERT INTO Puntuaciones (PT_A_id, PT_E_id, PT_fecha, PT_tiempo, PT_fallos_izquierda, PT_aciertos_izquierda, PT_fallos_derecha, PT_aciertos_derecha) VALUES ({alumno}, {ejercicio}, '{fecha}', {tiempo}, {fallosizq}, {aciertosizq}, {fallosdrch}, {aciertosdrch})"
-            self.cursor.execute(statement)
-            self.conn.commit()
-            logging.info("Successfully added exercise to database")
-        except db.Error as e:
-            logging.error(f"Error adding entry to database: {e}")
-
-    def get_last_score(self, PT_E_id, PT_A_id, number_score=20):
-        query = f"SELECT * FROM Puntuaciones p WHERE p.PT_A_id = {int(PT_A_id)} and p.PT_E_id = {int(PT_E_id)} ORDER BY p.PT_id DESC LIMIT {number_score}"
-        try:
-            self.cursor.execute(query)
-            return self.cursor.fetchall()
-        except db.Error as e:
-            logging.error(f"Error getting information from the database: {e}")
-
-    def get_score(self, PT_E_id, PT_A_id, number_score_days=10):
-        temp_table = f"CREATE TEMPORARY TABLE LastDates SELECT DISTINCT PT_fecha FROM Puntuaciones WHERE PT_A_id={int(PT_A_id)} AND PT_E_id = {int(PT_E_id)} ORDER BY PT_fecha DESC LIMIT 10;"
-        query = f"SELECT * FROM praderwilli.Puntuaciones p JOIN praderwilli.LastDates ld ON p.PT_fecha = ld.PT_fecha WHERE p.PT_A_id = {int(PT_A_id)} AND p.PT_E_id = {int(PT_E_id)}; "
-
-        try:
-            self.cursor.execute(temp_table)
-            self.cursor.execute(query)
-            return self.cursor.fetchall()
-        except db.Error as e:
-            logging.error(f"Error getting information from the database: {e}")
-
-    def delete_temporary_table(self):
-        query = f"DROP TABLE praderwilli.LastDates"
-        try:
-            self.cursor.execute(query)
-        except db.Error as e:
-            logging.error(f"Error getting information from the database: {e}")
-
-    def get_exercises(self):
-        try:
-            statement = f"SELECT * FROM Ejercicio"
-            self.cursor.execute(statement)
-            exer = []
-            for i in self.cursor.fetchall():
-                exer.append((i[0], i[1]))
-            return exer
-        except db.Error as e:
-            logging.error(f"Error retrieving entry from database: {e}")
-
-    def delete_user(self, name, surname):
-        statement = (
-            f"DELETE FROM Alumno WHERE A_nombre='{name}' and A_apellido='{surname}'"
-        )
-        try:
-            self.cursor.execute(statement)
-        except db.Error as e:
-            logging.error(f"Error getting information from the database: {e}")
-
-    # End
-    def close(self):
-        self.conn.close()
-
 class No_DB:
     def __init__(self):
-        self.a_id = 1
         today = datetime.date.today()
         self.today = today.strftime("%Y-%m-%d")
 
-    def write_new_json(self):
-        new_data = {
-            "PT_E_id": self.id_game, "PT_fecha": self.today, "PT_tiempo": self.game_time,
-            "PT_fallos_izquierda": errores_izquierda,
-            "PT_aciertos_izquierda": aciertos_izquierda,
-            "PT_fallos_derecha": errores_derecha,
-            "PT_aciertos_derecha": aciertos_derecha
-        }
-
-    def create_json_file(self, file_name):
-        dictionary = {"id": self.id_user,
-                "puntuaciones":[]
-        }
-
-        jsonString = json.dumps(dictionary, indent=4)
-
-        with open(file_name, "w") as outfile:
-            outfile.write(jsonString)
-
-    def write_data_json(self, file, id_game, time, errores_izquierda=0, aciertos_izquierda=0, errores_derecha=0, aciertos_derecha=0):
-        new_data = {
-            "PT_A_id": self.a_id, "PT_E_id": id_game, "PT_fecha": self.today, "PT_tiempo": time,
-            "PT_fallos_izquierda": errores_izquierda,
-            "PT_aciertos_izquierda": aciertos_izquierda,
-            "PT_fallos_derecha": errores_derecha,
-            "PT_aciertos_derecha": aciertos_derecha
-        }
+    def write_data_json(self, file, id_game, time, element1=0, element2=0, element3=0, element4=0):
+        if id_game == 0:
+            new_data = {
+                "PT_fecha": self.today, "PT_tiempo": time,
+                "PT_fallos_izquierda": element1,
+                "PT_aciertos_izquierda": element2,
+                "PT_fallos_derecha": element3,
+                "PT_aciertos_derecha": element4,
+            }
+        elif id_game == 1:
+            new_data = {
+                "PT_fecha": self.today, "PT_tiempo": time,
+                "PT_errores": element1,
+                "PT_aciertos": element2,
+                "PT_media_angulo": element3,
+            }
+        elif id_game == 2:
+            new_data = {
+                "PT_fecha": self.today, "PT_tiempo": time,
+                "PT_errores": element1,
+                "PT_total_bolas": element2,
+            }
 
         with open(file, 'r') as f:
             data = json.load(f)
@@ -201,3 +42,43 @@ class No_DB:
 
         with open(file, 'w') as f:
             json.dump(data, f)
+
+    def read_json(self, file, id_game):
+        data_final = []
+        with open(file, 'r') as f:
+            data = json.load(f)
+
+        if id_game == 0:
+            for score in data:
+                date = datetime.datetime.strptime(score['PT_fecha'], '%Y-%m-%d').date()
+                values = [
+                    date,
+                    score['PT_tiempo'],
+                    score['PT_fallos_izquierda'],
+                    score['PT_aciertos_izquierda'],
+                    score['PT_fallos_derecha'],
+                    score['PT_aciertos_derecha'],
+                ]
+                data_final.append(tuple(values))
+        elif id_game == 1:
+            for score in data:
+                date = datetime.datetime.strptime(score['PT_fecha'], '%Y-%m-%d').date()
+                values = [
+                    date,
+                    score['PT_tiempo'],
+                    score['PT_errores'],
+                    score['PT_aciertos'],
+                    score['PT_media_angulo']
+                ]
+                data_final.append(tuple(values))
+        elif id_game == 2:
+            for score in data:
+                date = datetime.datetime.strptime(score['PT_fecha'], '%Y-%m-%d').date()
+                values = [
+                    date,
+                    score['PT_tiempo'],
+                    score['PT_errores'],
+                    score['PT_total_bolas'],
+                ]
+                data_final.append(tuple(values))
+        return data_final

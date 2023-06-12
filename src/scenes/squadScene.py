@@ -7,7 +7,7 @@ from ui.source import Source
 from ui.sticker import Sticker
 from pygame.sprite import Group
 from ui.gui import BackgroundText
-from broker import Broker
+from broker import No_DB
 from pose_tracking.tracker_utils import *
 import datetime
 from ui.animation import Animation
@@ -125,17 +125,14 @@ class SquadScene(Scene):
             200, 25, 500, 10)
         self.width = 0
         self.coefficient = 500 / self.tiempo_juego
+        self.angle = read(settings.EXER_1_CONFIG, "ANGLE") 
 
     def events(self, events):
         if self.end:
-            if self.game.connection == 0:
-                #self.introduced_data()
-                return ActivitiesScene(self.game)
-            else:
-                json_object = No_DB()
-                json_object.write_data_json(settings.EXER_1_JSON, settings.ID_SQUAD, self.tiempo_juego,
-                                            self.errores, self.aciertos)
-                return ActivitiesScene(self.game)
+            json_object = No_DB()
+            json_object.write_data_json(settings.EXER_1_JSON, settings.ID_SQUAD, self.tiempo_juego,
+                                            self.errores, self.aciertos, round(statistics.mean(self.media_angulo), 2))
+            return ActivitiesScene(self.game)
 
         return None
 
@@ -144,6 +141,7 @@ class SquadScene(Scene):
             self.texto.draw(self.game.display)
         elif self.time_instr_squad >= 3 and self.calibration and not self.visibility_checker:
             self.texto_partes.draw(self.game.display)
+        
         angle = settings.FONTS["medium"].render(
             "{0}º".format(
                 int(self.angle)
@@ -326,21 +324,3 @@ class SquadScene(Scene):
         if self.end:
             self.music.stop()
 
-    def introduced_data(self):
-        media_ang = statistics.mean(self.media_angulo)
-        broker = Broker()
-        broker.connect()
-        today = datetime.date.today()
-        today = today.strftime("%Y-%m-%d")
-        id = get_id(self.game.current_user)
-        broker.add_score(
-            id,
-            settings.ID_DIAGONALES,
-            today,
-            self.tiempo_juego,
-            self.errores,
-            self.aciertos,
-            media_ang,
-            0,
-        )
-        broker.close()

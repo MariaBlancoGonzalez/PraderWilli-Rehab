@@ -7,7 +7,7 @@ from ui.source import Source
 from ui.sticker import Sticker
 from pygame.sprite import Group
 from ui.gui import BackgroundText
-from broker import Broker
+
 from broker import No_DB
 from pose_tracking.tracker_utils import *
 import datetime
@@ -186,13 +186,9 @@ class DiagonalsScene(Scene):
 
     def events(self, events):
         if self.end:
-            if self.game.connection == 0:
-                self.introduced_data()
-                return ActivitiesScene(self.game)
-            else:
-                json_object = No_DB()
-                json_object.write_data_json(settings.EXER_0_JSON, settings.ID_DIAGONALES, self.tiempo_juego, self.errores_izquierda, self.aciertos_derecha, self.errores_derecha, self.aciertos_derecha)
-                return ActivitiesScene(self.game)
+            json_object = No_DB()
+            json_object.write_data_json(settings.EXER_0_JSON, settings.ID_DIAGONALES, self.tiempo_juego, self.errores_izquierda, self.aciertos_derecha, self.errores_derecha, self.aciertos_derecha)
+            return ActivitiesScene(self.game)
         return None
 
     def draw(self):

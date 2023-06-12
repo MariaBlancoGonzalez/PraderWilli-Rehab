@@ -2,19 +2,18 @@ import math
 from utils import *
 import stats.plots as plt
 from stats.calc import *
-from broker import Broker
+from broker import No_DB
 import json
 import datetime
 from ui.table import Tabla
 from settings import EXER_0_JSON
+from settings import ID_DIAGONALES
 
 class DiagonalesStats:
-    def __init__(self, txt_exer, id_exer, id_user, connection, ventana):
+    def __init__(self, txt_exer, id_exer, id_user, ventana):
         self.name = txt_exer
         self.id_exer = id_exer
         self.id_user = id_user
-
-        self.connect = connection
 
         self.data = []
         self.graphs = []
@@ -23,7 +22,9 @@ class DiagonalesStats:
         self.window = ventana
 
     def create_measures(self):
-        self.get_data()
+        json_object = No_DB()
+        self.data = json_object.read_json(EXER_0_JSON, ID_DIAGONALES)
+            
         if self.data != []:
             tiempo, tiempo_ejer, izq_errores, izq_aciertos, drcha_errores, drcha_aciertos = distribute_data(self.data)  
             tiempo, izq_errores, izq_aciertos, drcha_errores, drcha_aciertos, tiempo_ejer = sumar_valores_misma_fecha_diag(tiempo, izq_errores, izq_aciertos, drcha_errores, drcha_aciertos, tiempo_ejer)
@@ -78,19 +79,6 @@ class DiagonalesStats:
         media_errores_i = calculate_media_parte(izq_errores)
         self.stats.append(('-Media de errores derecha: ', round(media_errores_d,2)))
         self.stats.append(('-Media de errores izquierda: ', round(media_errores_i,2)))
-
-    def get_data(self):
-        if self.connect == 0:
-            self.get_data_online()
-        else:
-            self.get_data_json()
-
-    def get_data_online(self):
-        broker = Broker()
-        broker.connect()
-        self.data = broker.get_score(self.id_exer, self.id_user, 10)
-        broker.delete_temporary_table()
-        broker.close()
 
     def get_data_json(self):
         with open(EXER_0_JSON, 'r') as f:

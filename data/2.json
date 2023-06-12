@@ -1,1 +1,1 @@
-[{"PT_A_id": 1, "PT_E_id": 2, "PT_fecha": "2023-06-08", "PT_tiempo": 30, "PT_fallos_izquierda": 5, "PT_aciertos_izquierda": 24, "PT_fallos_derecha": 0, "PT_aciertos_derecha": 0}]
+[{"PT_fecha": "2023-06-12", "PT_tiempo": 30, "PT_errores": 4, "PT_total_bolas": 31}, {"PT_fecha": "2023-06-12", "PT_tiempo": 30, "PT_errores": 3, "PT_total_bolas": 28}]

@@ -4,7 +4,7 @@ def calculate_media_total(data1, data2):
 
 
 def get_best_score(data):
-    new_datos = [[i[3], i[6] + i[8]] for i in data]
+    new_datos = [[i[0], i[3] + i[5]] for i in data]
     max, date = 0, None
     for i in new_datos:
         if i[1] >= max:

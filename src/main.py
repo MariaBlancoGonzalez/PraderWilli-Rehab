@@ -6,21 +6,27 @@ import os
 
 import pygame
 import sys
-import json 
-from utils import *
+import json
 from settings import CAPTION, WIDTH, HEIGHT, EXER_0_JSON, EXER_1_JSON, EXER_2_JSON
+from utils import *
+from ui.gui import BackgroundText
 from scenes.menuScene import (
     MenuScene,
 )  # , RecordScene, CalibrationScene, DiagonalsScene, OptionsScene, TutorialScene
-from broker import Broker
 from broker import No_DB
 from pose_tracking.cam_initialazer import check_availability
-
+from settings import WHITE, GRIS
 class Initiator:
     def __init__(self):
         pygame.init()
         pygame.display.set_caption(CAPTION)
         self.display = pygame.display.set_mode((WIDTH, HEIGHT))
+        
+        self.device_list = []
+        self.current_camara = 0
+        self.flag_cam = False
+        
+        self.set_up()
 
         self.clock = pygame.time.Clock()
 
@@ -30,23 +36,10 @@ class Initiator:
         self.user_list = []
         self.exercises = []
         self.exer_list = []
-        # If connection = 0 good connection = 1 no internet
-        self.connection = 1#self.check_connection()
 
-        # Si se han estado almacenando datos del niño sin conexión
-        if self.connection == 0:
-            # checkea si hay algún json que no sea {}, si lo hay almacena los datos
-            self.check_json_files(EXER_0_JSON)
-            self.check_json_files(EXER_1_JSON)
-            self.check_json_files(EXER_2_JSON)
-
-        self.get_credentials() 
-
+        self.get_credentials()
         self.current_user = self.user_list[0]
-        
-        self.device_list = []
-        self.current_camara = 0
-        self.flag_cam = False
+
         self.__scene = MenuScene(self)
 
     def check_connection(self):
@@ -57,39 +50,17 @@ class Initiator:
         return status
 
     def get_credentials(self):
-        if self.connection == 0:
-            broker = Broker()
-            _ = broker.connect()
-            
-            self.users = broker.get_users()
-            self.user_list = create_list_users(self.users)
-            self.current_user = self.user_list[0]
-            self.exercises = broker.get_exercises()
-            self.exer_list = create_list(self.exercises)
-            broker.close()
-        else:
-            self.users = ['Usuario_Default']
-            self.user_list = self.users
-            self.current_user = self.users[0]
-            self.exer_list = ['0-Diagonales superiores', '1-Squad', '2-Balls']
-
-    def check_json_files(self, file):
-        data = []
-        with open(file, 'r') as f:
-            json_object = json.load(f)
-            if json_object != []:
-                # Introduce into db
-                broker = Broker()
-                broker.connect()
-                for i in json_object:
-                    broker.add_score(i['PT_A_id'], i['PT_E_id'], i['PT_fecha'], i['PT_tiempo'],
-                                    i['PT_fallos_izquierda'], i['PT_aciertos_izquierda'], i['PT_fallos_derecha'], i['PT_aciertos_derecha'])
-        with open(file, 'w') as f:
-            json.dump(data, f)
+        self.users = ['Usuario_Default']
+        self.user_list = self.users
+        self.current_user = self.users[0]
+        self.exer_list = ['0-Diagonales superiores', '1-Squad', '2-Balls']
 
     def set_up(self):
         self.device_list = check_availability()
-        self.current_camara = self.device_list[0]
+        try:
+            self.current_camara = self.device_list[0]
+        except IndexError:
+            pass
 
     def change_scene(self, scene):
         self.__scene = scene
@@ -102,10 +73,45 @@ class Initiator:
         self.flag_cam = True
 
     def run(self):
-        current_scene = self.get_scene()
+        print(self.device_list)
         if self.device_list == []:
-            # TODO cuando no hay camara disponible
-            cap = cv2.VideoCapture(2)
+            new_scene = None
+            while True:
+                self.clock.tick(60)
+                dt = self.clock.tick(60)
+                ev = pygame.event.get()
+                self.display.fill(WHITE)
+                for event in ev:
+                    if event.type == pygame.QUIT:
+                        sys.exit()
+
+                if new_scene is not self.get_scene() and new_scene is not None and new_scene.get_name() != "ActivitiesScene":
+                    self.change_scene(new_scene)
+                    self.change_scene(new_scene)
+                    
+                if self.get_scene().get_name() == "MenuScene":
+                    new_scene = self.get_scene().events(ev)
+                    self.get_scene().draw()
+                elif self.get_scene().get_name() == "RecordScene":
+                    new_scene = self.get_scene().events(ev)
+                    self.get_scene().update(dt)
+                    self.get_scene().draw()
+                elif self.get_scene().get_name() == "TutorialScene":
+                    new_scene = self.get_scene().events(ev)
+                    self.get_scene().update(dt)
+                    self.get_scene().draw()
+                
+                if self.get_scene().get_name() == "MenuScene":
+                    texto_partes = BackgroundText(
+                        "No hay dispositivos disponibles",
+                        (200 , 400),
+                        WHITE,
+                        GRIS,
+                        20,
+                    )
+                    texto_partes.draw(self.display)
+                pygame.display.update()
+
         else:
             new_scene = None
             cap = cv2.VideoCapture(self.current_camara)
@@ -135,58 +141,51 @@ class Initiator:
                     results = pose.process(image)
                     pygame.surfarray.blit_array(self.display, image.swapaxes(0, 1))
 
-                    if new_scene is not None:
+                    if new_scene is not self.get_scene() and new_scene is not None:
                         self.change_scene(new_scene)
-                        current_scene = new_scene
+                        self.change_scene(new_scene)
 
                     # Some necessary events for some specific scenes
-                    if current_scene.get_name() == "MenuScene":
-                        current_scene.tracking(results)
-                        new_scene = current_scene.events(ev)
-                        current_scene.update(dt)
-                        current_scene.draw()
-                    elif current_scene.get_name() == "RecordScene":
-                        current_scene.tracking(results)
-                        new_scene = current_scene.events(ev)
-                        current_scene.update(dt)
-                        current_scene.draw()
-                    elif current_scene.get_name() == "TutorialScene":
-                        current_scene.tracking(results)
-                        new_scene = current_scene.events(ev)
-                        current_scene.update(dt)
-                        current_scene.draw()
-                    elif current_scene.get_name() == "CalibrationScene":
-                        current_scene.tracking(results)
-                        current_scene.update(dt)
-                        new_scene = current_scene.events(dt)
-                        current_scene.draw()
-                    elif current_scene.get_name() == "DiagonalsScene":
-                        current_scene.tracking(results)
-                        new_scene = current_scene.events(ev)
-                        current_scene.draw()
-                    elif current_scene.get_name() == "SquadScene":
-                        current_scene.tracking(results)
-                        new_scene = current_scene.events(ev)
-                        current_scene.draw()
-                    elif current_scene.get_name() == "ActivitiesScene":
-                        current_scene.tracking(results)
-                        new_scene = current_scene.events(ev)
-                        current_scene.update(dt)
-                        current_scene.draw()
-                    elif current_scene.get_name() == "OptionsScene":
-                        current_scene.tracking(results)
-                        new_scene = current_scene.events(ev)
-                        current_scene.update(dt)
-                        current_scene.draw()
-                    elif current_scene.get_name() == "BallScene":
-                        current_scene.update_camera_utilities(image)
-                        current_scene.tracking(results)
-                        new_scene = current_scene.events(ev)
-                        current_scene.draw()
+                    if self.get_scene().get_name() == "MenuScene":
+                        self.get_scene().tracking(results)
+                        new_scene = self.get_scene().events(ev)
+                        self.get_scene().draw()
+                    elif self.get_scene().get_name() == "RecordScene":
+                        self.get_scene().tracking(results)
+                        new_scene = self.get_scene().events(ev)
+                        self.get_scene().update(dt)
+                        self.get_scene().draw()
+                    elif self.get_scene().get_name() == "TutorialScene":
+                        self.get_scene().tracking(results)
+                        new_scene = self.get_scene().events(ev)
+                        self.get_scene().update(dt)
+                        self.get_scene().draw()
+                    elif self.get_scene().get_name() == "CalibrationScene":
+                        self.get_scene().tracking(results)
+                        self.get_scene().update(dt)
+                        new_scene = self.get_scene().events(dt)
+                        self.get_scene().draw()
+                    elif self.get_scene().get_name() == "DiagonalsScene":
+                        self.get_scene().tracking(results)
+                        new_scene = self.get_scene().events(ev)
+                        self.get_scene().draw()
+                    elif self.get_scene().get_name() == "SquadScene":
+                        self.get_scene().tracking(results)
+                        new_scene = self.get_scene().events(ev)
+                        self.get_scene().draw()
+                    elif self.get_scene().get_name() == "ActivitiesScene":
+                        self.get_scene().tracking(results)
+                        new_scene = self.get_scene().events(ev)
+                        self.get_scene().update(dt)
+                        self.get_scene().draw()
+                    elif self.get_scene().get_name() == "BallScene":
+                        self.get_scene().update_camera_utilities(image)
+                        self.get_scene().tracking(results)
+                        new_scene = self.get_scene().events(ev)
+                        self.get_scene().draw()
 
                     pygame.display.update()
 
 if __name__ == "__main__":
     initiate = Initiator()
-    initiate.set_up()
     initiate.run()

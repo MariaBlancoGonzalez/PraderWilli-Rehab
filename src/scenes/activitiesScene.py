@@ -36,10 +36,13 @@ class ActivitiesScene(Scene):
             "Tiempo en el que los elementos aparecen", True, settings.BLACK
         )
         self.txt_elemento_trampa= settings.FONTS["small"].render(
-            "Porcentaje de trampa [0,1]", True, settings.BLACK
+            "Porcentaje de trampa [0, 1]", True, settings.BLACK
+        )
+        self.txt_angulo= settings.FONTS["small"].render(
+            "Ángulo [1, 360]", True, settings.BLACK
         )
         self.txt_probabilidad_balls= settings.FONTS["small"].render(
-            "Probabilidad bolas [1,100]", True, settings.BLACK
+            "Probabilidad bolas [1, 100]", True, settings.BLACK
         )
         self.txt_change_mano = settings.FONTS["small"].render(
             "Elegir miniatura de manos", True, settings.BLACK
@@ -118,6 +121,7 @@ class ActivitiesScene(Scene):
         # Input text squad
         self.input_time_squad = InputNumberBox(100, 520, 200, 35, text="")
         self.input_time_do_squad = InputNumberBox(100, 610, 200, 35, text="")
+        self.input_angle = InputNumberBox(500, 520, 200, 35, text="")
 
         # Input text balls
         self.input_time_balls = InputNumberBox(100, 520, 200, 35, text="")
@@ -201,7 +205,10 @@ class ActivitiesScene(Scene):
             self.input_time_squad.draw(self.game.display)
             self.game.display.blit(self.txt_change_time_squad, (100, 580))
             self.input_time_do_squad.draw(self.game.display)
+            self.game.display.blit(self.txt_angulo, (500, 490))
+            self.input_angle.draw(self.game.display)
             self.button_apply_squad.draw(self.game.display)
+
         elif self.modify_balls:
             for i in range(4):
                 pygame.draw.rect(self.game.display, (0, 0, 0),
@@ -285,19 +292,26 @@ class ActivitiesScene(Scene):
             self.input_trap_element.handle_event(events)
         
         if self.button_apply_squad.get_pressed() or self.button_apply_squad.on_click(events):
+            time_squad = read(settings.EXER_1_CONFIG, "TIEMPO_JUEGO_SQUAD")
             if self.input_time_squad.get_text() != "":
                 new_json_value(settings.EXER_1_CONFIG, "TIEMPO_JUEGO_SQUAD", int(self.input_time_squad.get_text()))
-            if self.input_time_do_squad.get_text() != "":
+                tiempo_squad = int(self.input_time_squad.get_text())
+
+            if self.input_time_do_squad.get_text() != "" and int(self.input_time_do_squad.get_text()) <= tiempo_squad:
                 new_json_value(settings.EXER_1_CONFIG, "VELOCIDAD_SQUAD", (float(self.input_time_do_squad.get_text())))
+            if self.input_angle.get_text() != "" and int(self.input_angle.get_text()) >= 1 and int(self.input_angle.get_text()) <=360:
+                new_json_value(settings.EXER_1_CONFIG, "ANGLE", (float(self.input_angle.get_text())))
             
             self.input_time_squad.reset()
             self.input_time_do_squad.reset()
+            self.input_angle.reset()
             self.modify_squad= False
             self.button_modify_squad.update()
 
         if self.modify_squad:
             self.input_time_squad.handle_event(events)
             self.input_time_do_squad.handle_event(events)
+            self.input_angle.handle_event(events)
 
         if self.button_apply_balls.get_pressed() or self.button_apply_balls.on_click(events):
             if self.input_time_balls.get_text() != "":
@@ -400,7 +414,6 @@ class ActivitiesScene(Scene):
 
         self.width = self.time_hand * coefficient
         if self.width > settings.WIDTH_LOAD_BAR + 10:
-            print(self.width)
             if action == "Diagonales":
                 self.diagonales.set_clicked_true()
             elif action == "Squad":
@@ -429,6 +442,7 @@ class ActivitiesScene(Scene):
                 self.button_apply.set_pressed(True)
             elif action == "Volver":
                 self.button_back.set_pressed(True)
+            self.time_hand, self.width = reset_time()
 
     def update(self, dt):
         self.diagonales.update()

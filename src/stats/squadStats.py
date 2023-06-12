@@ -2,19 +2,18 @@ import math
 from utils import *
 import stats.plots as plt
 from stats.calc import *
-from broker import Broker
+from broker import No_DB
 import statistics
 import json
 from ui.table import Tabla
 from settings import EXER_1_JSON
+from settings import ID_SQUAD
 
 class SquadStats:
-    def __init__(self, txt_exer, id_exer, id_user, connection, ventana):
+    def __init__(self, txt_exer, id_exer, id_user, ventana):
         self.name = txt_exer
         self.id_exer = id_exer
         self.id_user = id_user
-
-        self.connect = connection
 
         self.data = []
         self.graphs = []
@@ -22,7 +21,9 @@ class SquadStats:
         self.window = ventana
 
     def create_measures(self):
-        self.get_data()
+        json_object = No_DB()
+        self.data = json_object.read_json(EXER_1_JSON, ID_SQUAD)
+
         if self.data != []:
             fecha, errores, aciertos, media_angulo, tiempo = distribute_data_squad(
                 self.data)
@@ -67,35 +68,4 @@ class SquadStats:
         self.stats.append(('-Errores/segundos: ', errores_tiempo))
         self.stats.append(('-Fecha de esta marca: ', worst_score_day))
         self.stats.append(('-Tiempo empleado en esta marca: ', time_of_worst_day))
-
         self.stats.append(('-Media de ángulo actual: ', round(statistics.mean(media_angulo), 2)))
-    def get_data(self):
-        if self.connect == 0:
-            self.get_data_online()
-        else:
-            self.get_data_json()
-
-    def get_data_online(self):
-        broker = Broker()
-        broker.connect()
-        self.data = broker.get_score(self.id_exer, self.id_user, 10)
-        broker.delete_temporary_table()
-        broker.close()
-
-    def get_data_json(self):
-        with open(EXER_1_JSON, 'r') as f:
-            data = json.load(f)
-        for score in data:
-            date = datetime.datetime.strptime(score['PT_fecha'], '%Y-%m-%d').date()
-            values = [
-                0,
-                score['PT_A_id'],
-                score['PT_E_id'],
-                date,
-                score['PT_tiempo'],
-                score['PT_fallos_izquierda'],
-                score['PT_aciertos_izquierda'],
-                score['PT_fallos_derecha'],
-                score['PT_aciertos_derecha']
-            ]
-            self.data.append(tuple(values))

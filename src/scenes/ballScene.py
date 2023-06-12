@@ -8,7 +8,6 @@ from ui.source import Source
 from ui.sticker import Sticker
 from pygame.sprite import Group
 from ui.gui import BackgroundText
-from broker import Broker
 from broker import No_DB
 from pose_tracking.tracker_utils import *
 import datetime
@@ -129,14 +128,10 @@ class BallScene(Scene):
 
     def events(self, events):
         if self.end:
-            if self.game.connection == 0:
-                self.introduced_data()
-                return ActivitiesScene(self.game)
-            else:
-                json_object = No_DB()
-                json_object.write_data_json(settings.EXER_2_JSON, settings.ID_BALLS, self.tiempo_juego,
-                                            self.errores, self.total_bolas)
-                return ActivitiesScene(self.game)
+            json_object = No_DB()
+            json_object.write_data_json(settings.EXER_2_JSON, settings.ID_BALLS, self.tiempo_juego,
+                                        self.errores, self.total_bolas)
+            return ActivitiesScene(self.game)
 
         return None
 
@@ -293,20 +288,3 @@ class BallScene(Scene):
         if self.end:
             self.music.stop()
 
-    def introduced_data(self):
-        broker = Broker()
-        broker.connect()
-        today = datetime.date.today()
-        today = today.strftime("%Y-%m-%d")
-        id = get_id(self.game.current_user)
-        broker.add_score(
-            id,
-            settings.ID_BALLS,
-            today,
-            self.tiempo_juego,
-            self.errores,
-            0,
-            0,
-            0,
-        )
-        broker.close()

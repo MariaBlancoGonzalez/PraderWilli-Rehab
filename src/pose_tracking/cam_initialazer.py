@@ -11,7 +11,7 @@ def check_availability():
     else:
         return ''
 
-def check_windows(system):
+def check_windows():
     import wmi
     w = wmi.WMI()
     available = []
