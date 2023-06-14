@@ -1,10 +1,9 @@
-import math
 from utils import *
 import stats.plots as plt
 from stats.calc import *
 from broker import No_DB
 import statistics
-import json
+ 
 from ui.table import Tabla
 from settings import EXER_1_JSON
 from settings import ID_SQUAD
@@ -60,7 +59,7 @@ class SquadStats:
             errores, fecha, tiempo)
         
         self.stats.append(('-Mejor marca sentadilla/tiempo: ', best_score_acierto))
-        self.stats.append(('-Sentadiila/segundos: ', acierto_tiempo))
+        self.stats.append(('-Sentadilla/segundos: ', acierto_tiempo))
         self.stats.append(('-Fecha de esta marca: ', best_score_day))
         self.stats.append(('-Tiempo empleado en esta marca: ', time_of_best_day))
         

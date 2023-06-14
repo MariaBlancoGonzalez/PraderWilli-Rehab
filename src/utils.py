@@ -1,8 +1,9 @@
-from settings import WIDTH, HEIGHT, TIME_BUTTONS
+from settings import WIDTH, HEIGHT, TIME_BUTTONS, BLACK
 import pygame
 from math import acos, sqrt, degrees
 import numpy as np
 import json
+import os
 from collections import defaultdict
 
 def get_mid(coord_a, coord_b, coord_c):
@@ -99,6 +100,16 @@ def count(start_ticks):
         return seconds
     return seconds
 
+def cargar_archivos_folder(carpeta, scale):
+    r_files = []
+    files = sorted([file for file in os.listdir(carpeta)])
+    for i in files:
+        image = pygame.image.load(f"{carpeta}/{i}")
+        image.set_colorkey(BLACK)
+        scaled_image = pygame.transform.scale(image, scale)
+        r_files.append(scaled_image)
+
+    return r_files
 
 def reset_pygame_timer():
     return pygame.time.get_ticks()

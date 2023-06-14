@@ -16,9 +16,10 @@ EXER_2_CONFIG = './config/Exer_2_config.json'
 # Cursor
 CURSOR_CLICK = "./assets/icons/cursor_click.png"
 
-# Tutorial
-HISTORIAL = "./assets/images/historial.png"
-OPCIONES = "./assets/images/opciones.png"
+# Tutorial folders
+HISTORIAL = "./assets/tutorial/historial"
+ACTIVIDADES = "./assets/tutorial/actividades"
+MENU = "./assets/tutorial/menu"
 
 # Images and icons
 ROCKET = "./assets/icons/cohete.png"
@@ -108,7 +109,7 @@ AZUL_CLARO = "#3194cf"
 AZUL_MARINO = "#317bcf"
 COLOR_ROJO = "#ff0000"
 GRISCLARO = "#9b9b9b"
-AMARILLO_OSCURO = "#cfcfcf"#"#b48567"
+AMARILLO_OSCURO = "#fcf3cf"#"#b48567"
 RED = "#ff0000"
 
 # GAMA DE COLORES

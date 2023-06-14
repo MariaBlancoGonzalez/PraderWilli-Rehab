@@ -1,16 +1,15 @@
 from scenes.scene import Scene
 import pygame
-import json
+
 import cv2
 import settings
-import numpy as np
+
 from ui.source import Source
 from ui.sticker import Sticker
 from pygame.sprite import Group
 from ui.gui import BackgroundText
 from broker import No_DB
 from pose_tracking.tracker_utils import *
-import datetime
 from ui.animation import Animation
 import random
 from utils import *
@@ -35,6 +34,9 @@ class BallScene(Scene):
         self.error_sound = pygame.mixer.Sound(settings.ERROR_SOUND)
         self.error_sound.set_volume(1)
         self.explosion_sound = pygame.mixer.Sound(settings.EXPLOSION_SOUND)
+        self.explosion_sound.set_volume(1)
+        self.claps = pygame.mixer.Sound(settings.CLAPS)
+        self.claps.set_volume(1)
         # Game settings
         self.tiempo_juego = read(settings.EXER_2_CONFIG, "TIEMPO_JUEGO_MOVILIDAD")
     
@@ -56,7 +58,7 @@ class BallScene(Scene):
         )
         self.texto_partes = BackgroundText(
             "Muestra todas las partes del cuerpo",
-            (120, 300),
+            (120, 250),
             settings.WHITE,
             settings.GRIS,
             30,
@@ -132,7 +134,6 @@ class BallScene(Scene):
             json_object.write_data_json(settings.EXER_2_JSON, settings.ID_BALLS, self.tiempo_juego,
                                         self.errores, self.total_bolas)
             return ActivitiesScene(self.game)
-
         return None
 
     def draw(self):
@@ -161,7 +162,6 @@ class BallScene(Scene):
             self.ticks = pygame.time.get_ticks()
             if self.calibration:
                 self.music.play()
-        # Pantalla de 3,2,1...
         
         if self.time_instr_balls < 3 and self.calibration and not self.end:
             self.time_instr_balls = count(self.ticks)
@@ -170,15 +170,6 @@ class BallScene(Scene):
             self.ballgif_animation.draw(self.game.display)
             self.ballgif_animation.update()
             self.timer = reset_pygame_timer()
-
-        elif (
-            self.time_instr_balls >= 3
-            and self.calibration
-            and not self.visibility_checker
-            and not self.end
-        ):
-            # Para checkeo de pies
-            pass
         elif (
             self.time_instr_balls >= 3
             and self.calibration
@@ -287,4 +278,5 @@ class BallScene(Scene):
 
         if self.end:
             self.music.stop()
+            self.claps.play()
 

@@ -4,6 +4,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 matplotlib.use("Agg")
+plt.rcParams.update({'figure.max_open_warning': 0})
 
 def create_right_hand_two_lines(errores, aciertos, fecha, tiempo, mano):
 
@@ -18,13 +19,13 @@ def create_right_hand_two_lines(errores, aciertos, fecha, tiempo, mano):
     fig.tight_layout()
     plt.margins(x=0.1, y=0.1)
 
-    ax.plot(fecha, aciertos, c="b", label="Aciertos")
-    ax.plot(fecha, errores, c="r", label="Errores")
-    #ax.plot(fecha, tiempo, c="black", label="Tiempo")
+    ax.plot(fecha, aciertos,marker='o', c="b", label="Aciertos")
+    ax.plot(fecha, errores,marker='o', c="r", label="Errores")
+    ax.plot(fecha, tiempo,marker='o', c="green", label="Tiempo")
+    
     ax.legend(
-        loc="upper center",
-        bbox_to_anchor=(0.5, 1.05),
-        ncol=3,
+        loc="upper left",
+        ncol=2,
         fancybox=True,
         shadow=True,
     )
@@ -45,15 +46,15 @@ def create_line_chart(angulo, fecha, tiempo):
     )
     ax = fig.add_subplot(111)
     ax.set_title(f"Media de ángulo alcanzado por día")
+
     fig.tight_layout()
     plt.margins(x=0.1, y=0.1)
 
-    ax.plot(fecha, angulo, c="b", label="Ángulo")
+    ax.plot(fecha, angulo,'o', c="b", label="Ángulo")
     #ax.plot(fecha, tiempo, c="black", label="Tiempo")
     ax.legend(
-        loc="upper center",
-        bbox_to_anchor=(0.5, 1.05),
-        ncol=3,
+        loc="upper left",
+        ncol=1,
         fancybox=True,
         shadow=True,
     )
@@ -64,29 +65,7 @@ def create_line_chart(angulo, fecha, tiempo):
     raw_data = renderer.tostring_rgb()
     return canvas, raw_data
 
-def create_pdf_graphics(errores, aciertos, fecha, mano):
-    # Configurar el tamaño de la figura
-    plt.style.use('ggplot')
-    fig = plt.figure(figsize=(5.5, 2.5), dpi=100)
-
-    ax = fig.add_subplot(111)
-    ax.set_title(f"Mano {mano}")
-
-    ax.set_xlabel("Tiempo")
-    ax.set_ylabel("Resultados")
-
-    ax.plot(fecha, errores, color="red", label="Errores")
-    ax.plot(fecha, aciertos, color="blue", label="Aciertos")
-
-    for i, v in enumerate(errores):
-        ax.text(i, v + 0.5, str(v), ha="center", fontsize=8)
-    for i, v in enumerate(aciertos):
-        ax.text(i, v + 0.5, str(v), ha="center", fontsize=8)
-
-    ax.legend()
-    return fig
-
-def create_groupbar_chart_squad(fechas, errores, aciertos, tiempo):
+def create_groupbar_chart_squad(fechas, errores, aciertos, tiempo, mano = 'None', tipo='Sentadillas'):
     grouped = {
         'Errores': errores,
         'Correcto': aciertos,
@@ -104,7 +83,11 @@ def create_groupbar_chart_squad(fechas, errores, aciertos, tiempo):
     )
     # plt.title('Evolución mano izquierda', fontsize=16)
     ax = fig.add_subplot(111)
-
+    
+    if mano != 'None':
+        ax.set_title(f"Evolución mano {mano}")
+    else:
+        ax.set_title('Resultados diarios')
     for attribute, measurement in grouped.items():
         offset = width * multiplier
         rects = ax.bar(x + offset, measurement, width, label=attribute)
@@ -112,8 +95,11 @@ def create_groupbar_chart_squad(fechas, errores, aciertos, tiempo):
         multiplier += 1
 
     # Add some text for labels, title and custom x-axis tick labels, etc.
-    ax.set_ylabel('Ejecuciones del ejercicio')
-    ax.set_title('Resultados diarios')
+    if tipo != 'Sentadillas':
+        ax.set_ylabel(tipo)
+    else:
+        ax.set_ylabel('Sentadillas')
+    
     ax.set_xticks(x + width, fechas)
     ax.legend(loc='upper left', ncol=3)
     ax.set_ylim(0, max((errores+aciertos))+5)

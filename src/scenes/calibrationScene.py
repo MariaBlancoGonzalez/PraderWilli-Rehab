@@ -51,7 +51,7 @@ class CalibrationScene(Scene):
         self.mostrar_instrucciones = True
         self.texto = BackgroundText(
             "Haz visibles los puntos en la pantalla",
-            (100, 300),
+            (100, 250),
             settings.WHITE,
             settings.GRIS,
             30,
@@ -97,7 +97,7 @@ class CalibrationScene(Scene):
         seconds_txt = settings.FONTS["extra"].render(
             "{0}".format(int(self.seconds)), True, settings.BLACK
         )
-        self.screen.blit(seconds_txt, (settings.WIDTH / 2, settings.HEIGHT / 2))
+        self.screen.blit(seconds_txt, (settings.WIDTH / 2, 250))
 
         pygame.display.flip()
         if self.seconds >= 3.2:

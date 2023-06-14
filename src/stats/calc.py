@@ -18,7 +18,7 @@ def calculate_media_parte(data):
 
 def get_best_day(aciertos, fecha, tiempo):
     concatList = [(aciertos[i], tiempo[i]) for i in range(len(tiempo))]
-    aciertos_segundo = [round(acierto/time, 3) for acierto, time in concatList]
+    aciertos_segundo = [round((acierto/time), 3) for acierto, time in concatList]
 
     acierto_tiempo = max(aciertos_segundo)
     best_score_day = fecha[aciertos_segundo.index(max(aciertos_segundo))]
@@ -31,7 +31,7 @@ def get_best_day(aciertos, fecha, tiempo):
 def restar_arrays(a, b):
     resultado = []
     for i in range(len(a)):
-        resultado.append(b[i] - a[i])
+        resultado.append(a[i] - b[i])
     return resultado
     
 def sumar_valores_misma_fecha(fechas, errores, aciertos, tiempo):

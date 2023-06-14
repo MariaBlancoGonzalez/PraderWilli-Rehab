@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
-
 import cv2
 import mediapipe as mp
-import os
 
 import pygame
 import sys
-import json
 from settings import CAPTION, WIDTH, HEIGHT, EXER_0_JSON, EXER_1_JSON, EXER_2_JSON
 from utils import *
 from ui.gui import BackgroundText
 from scenes.menuScene import (
     MenuScene,
-)  # , RecordScene, CalibrationScene, DiagonalsScene, OptionsScene, TutorialScene
+)
+
 from broker import No_DB
 from pose_tracking.cam_initialazer import check_availability
 from settings import WHITE, GRIS
@@ -42,13 +40,6 @@ class Initiator:
 
         self.__scene = MenuScene(self)
 
-    def check_connection(self):
-        br = Broker()
-        status = br.connect()
-        if status == 0:
-            br.close()
-        return status
-
     def get_credentials(self):
         self.users = ['Usuario_Default']
         self.user_list = self.users
@@ -73,7 +64,6 @@ class Initiator:
         self.flag_cam = True
 
     def run(self):
-        print(self.device_list)
         if self.device_list == []:
             new_scene = None
             while True:

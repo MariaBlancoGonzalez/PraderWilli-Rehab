@@ -5,8 +5,8 @@ from ui.gui import Button
 from ui.source import Source
 from pose_tracking.tracker_utils import *
 from utils import *
-from scenes.menuScene import MenuScene
 
+from scenes.menuScene import MenuScene
 
 class TutorialScene(Scene):
     def __init__(self, game):
@@ -18,13 +18,12 @@ class TutorialScene(Scene):
             "Tutorial", True, settings.BLACK
         )
 
-        # Images
-        historial = pygame.image.load(settings.HISTORIAL)
-        historial = pygame.transform.scale(historial, (1000, 500))
-        opciones = pygame.image.load(settings.OPCIONES)
-        opciones = pygame.transform.scale(opciones, (1000, 500))
+        # Imágenes
+        self.historial = cargar_archivos_folder(settings.HISTORIAL, (1000,500))
+        self.actividades = cargar_archivos_folder(settings.ACTIVIDADES, (1000,500))
+        self.menu = cargar_archivos_folder(settings.MENU, (1000,500))
         # Tutorial images
-        self.images_group = [historial, opciones]
+        self.images_group = self.menu
 
         # Needed variables
         self.current_image = 0
@@ -37,10 +36,18 @@ class TutorialScene(Scene):
         self.button_arrow_right = Button(
             (1178, settings.HEIGHT // 2), ">", settings.GRANATE, 50
         )
+
+        self.button_act = Button((530, 100), "Actividades", settings.AMARILLO)
+        self.button_hist = Button((880, 100), "Historial", settings.AMARILLO)
+        self.button_menu = Button((170, 100), "Menú", settings.AMARILLO)
+
         self.button_group = [
             self.button_back,
             self.button_arrow_left,
             self.button_arrow_right,
+            self.button_hist,
+            self.button_act,
+            self.button_menu,
         ]
         # Sources
         self.right_source = Source(self.game.display, settings.PUNTERO_ROJO)
@@ -51,6 +58,9 @@ class TutorialScene(Scene):
         self.pressed_back = pygame.time.get_ticks()
         self.pressed_right = pygame.time.get_ticks()
         self.pressed_left = pygame.time.get_ticks()
+        self.pressed_act = pygame.time.get_ticks()
+        self.pressed_hist = pygame.time.get_ticks()
+        self.pressed_menu = pygame.time.get_ticks()
 
         # Progress bar
         self.bar_rect = pygame.Rect(40, (game.display.get_size()[1]) - 50, 700, 30)
@@ -76,6 +86,24 @@ class TutorialScene(Scene):
         ):
             return ">"
 
+        elif self.button_hist.top_rect.collidepoint(
+            left.rect.centerx, left.rect.centery
+        ) or self.button_hist.top_rect.collidepoint(
+            right.rect.centerx, right.rect.centery
+        ):
+            return "Act"
+        elif self.button_act.top_rect.collidepoint(
+            left.rect.centerx, left.rect.centery
+        ) or self.button_act.top_rect.collidepoint(
+            right.rect.centerx, right.rect.centery
+        ):
+            return "Hist"
+        elif self.button_menu.top_rect.collidepoint(
+            left.rect.centerx, left.rect.centery
+        ) or self.button_menu.top_rect.collidepoint(
+            right.rect.centerx, right.rect.centery
+        ):
+            return "Menu"
         return ""
 
     def draw(self):
@@ -84,6 +112,9 @@ class TutorialScene(Scene):
         pygame.draw.rect(
             self.game.display, settings.AMARILLO, pygame.Rect(40, 160, 1200, 560)
         )
+        for i in range(4):
+            pygame.draw.rect(self.game.display, (0, 0, 0),
+                             (40, 160, 1200, 560), 2)
 
         # Text
         self.game.display.blit(self.tutorial, (settings.WIDTH // 3 + 30, 10))
@@ -92,9 +123,12 @@ class TutorialScene(Scene):
         self.button_back.draw(self.game.display)
         self.button_arrow_left.draw(self.game.display)
         self.button_arrow_right.draw(self.game.display)
+        self.button_act.draw(self.game.display)
+        self.button_hist.draw(self.game.display)
+        self.button_menu.draw(self.game.display)
 
-        # For show current image
-        self.game.display.blit(self.images_group[self.current_image], (150, 200))
+        # For show current video
+        self.game.display.blit(self.images_group[self.current_image], (135, 200))
 
         # Sources
         self.right_source.draw(self.game.display)
@@ -109,7 +143,17 @@ class TutorialScene(Scene):
         pygame.draw.rect(self.game.display, settings.BLACK, self.bar_rect, 2)
 
     def events(self, events):
+        if self.button_act.get_pressed() or self.button_act.on_click(events):
+            self.images_group = self.actividades
+            self.current_image = 0
+        if self.button_hist.get_pressed() or self.button_hist.on_click(events):
+            self.images_group = self.historial
+            self.current_image = 0
+        if self.button_menu.get_pressed() or self.button_menu.on_click(events):
+            self.images_group = self.menu
+            self.current_image = 0
         if self.button_back.get_pressed() or self.button_back.on_click(events):
+            
             return MenuScene(self.game)
         if self.button_arrow_left.get_pressed() or self.button_arrow_left.on_click(
             events
@@ -154,6 +198,21 @@ class TutorialScene(Scene):
             self.time_hand = count(self.pressed_left)
         else:
             self.pressed_left = pygame.time.get_ticks()
+        # ------------------------------------------
+        if action == "Act":
+            self.time_hand = count(self.pressed_act)
+        else:
+            self.pressed_act = pygame.time.get_ticks()
+        # ------------------------------------------
+        if action == "Hist":
+            self.time_hand = count(self.pressed_hist)
+        else:
+            self.pressed_hist = pygame.time.get_ticks()
+        # ------------------------------------------
+        if action == "Menu":
+            self.time_hand = count(self.pressed_menu)
+        else:
+            self.pressed_menu = pygame.time.get_ticks()
 
         self.width = self.time_hand * coefficient
 
@@ -166,6 +225,12 @@ class TutorialScene(Scene):
                 self.button_arrow_left.set_pressed(True)
             elif action == ">":
                 self.button_arrow_right.set_pressed(True)
+            elif action == "Act":
+                self.button_act.set_pressed(True)
+            elif action == "Hist":
+                self.button_hist.set_pressed(True)
+            elif action == "Menu":
+                self.button_menu.set_pressed(True)
 
     def update(self, dt):
         pos = pygame.mouse.get_pos()

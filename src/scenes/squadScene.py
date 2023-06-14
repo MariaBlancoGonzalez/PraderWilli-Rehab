@@ -1,6 +1,5 @@
 from scenes.scene import Scene
 import pygame
-import json
 
 import settings
 from ui.source import Source
@@ -9,7 +8,7 @@ from pygame.sprite import Group
 from ui.gui import BackgroundText
 from broker import No_DB
 from pose_tracking.tracker_utils import *
-import datetime
+
 from ui.animation import Animation
 import random
 from utils import *
@@ -22,6 +21,7 @@ class SquadScene(Scene):
         super().__init__(game)
         self._name_scene = "SquadScene"
         
+        pygame.mixer.init()
         # Music
         song = random.randint(0, 5)
         self.music = pygame.mixer.Sound(settings.MUSIC[song])
@@ -33,6 +33,8 @@ class SquadScene(Scene):
         self.pip_sound.set_volume(1)
         self.error_sound = pygame.mixer.Sound(settings.ERROR_SOUND)
         self.error_sound.set_volume(1)
+        self.claps = pygame.mixer.Sound(settings.CLAPS)
+        self.claps.set_volume(1)
 
         # Sources
         self.right_feet = Source(game.display, settings.PUNTERO_ROJO, (50,50))
@@ -71,7 +73,7 @@ class SquadScene(Scene):
         )
         self.texto_partes = BackgroundText(
             "Muestra todas las partes del cuerpo",
-            (120, 300),
+            (120, 250),
             settings.WHITE,
             settings.GRIS,
             30,
@@ -85,6 +87,7 @@ class SquadScene(Scene):
 
         if game.static_points != None:
             self.music.play()
+            self.music.set_volume(0.6)
             self.music_playing = True
 
         # Tracking time during game
@@ -179,23 +182,12 @@ class SquadScene(Scene):
         #if self.calibration and self.time_instr_squad <= 0 and not self.end:
         #    self.ticks = pygame.time.get_ticks()
         
-        # Pantalla de 3,2,1...
         if self.time_instr_squad < 3 and self.calibration and not self.end:
             self.time_instr_squad = count(self.ticks)
-            self.seconds = 0
             self.time_squad = reset_pygame_timer()
             self.timer = reset_pygame_timer()
             self.squadgif_animation.draw(self.game.display)
             self.squadgif_animation.update()
-
-        elif (
-            self.time_instr_squad >= 3
-            and self.calibration
-            and not self.visibility_checker
-            and not self.end
-        ):
-            # Para checkeo de pies
-            pass
         elif (
             self.time_instr_squad >= 3
             and self.calibration
@@ -247,7 +239,6 @@ class SquadScene(Scene):
 
 
             if (pygame.time.get_ticks() - self.time_squad) / 1000 >= self.velocidad_squad:
-                print(self.correct_squad)
                 if not self.correct_squad:
                     self.errores += 1
                     self.puntuacion -= 50
@@ -320,7 +311,6 @@ class SquadScene(Scene):
             )
             self.game.display.blit(puntos, (1065, 15))
 
-
         if self.end:
             self.music.stop()
-
+            self.claps.play()

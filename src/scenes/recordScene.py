@@ -1,7 +1,5 @@
 import pygame
-import datetime
-import os
-import json
+
 from broker import No_DB
 from scenes.scene import Scene
 import settings
@@ -169,7 +167,7 @@ class RecordScene(Scene):
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
     def draw(self):
-        # Backgroun colors
+        # Background colors
         self.game.display.fill(settings.GRANATE)
         pygame.draw.rect(self.game.display, settings.AMARILLO, pygame.Rect(40, 160, 1200, 560))
         for i in range(4):
@@ -207,7 +205,7 @@ class RecordScene(Scene):
                     
                     # Gráficas
                     self.game.display.blit(graphs[0][1], (42, 162))
-                    self.game.display.blit(graphs[1][1], (42, 430))
+                    self.game.display.blit(graphs[1][1], (42, 435))
 
                     # Statistics
                     self.game.display.blit(self.estadisticas, (860, 180))

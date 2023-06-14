@@ -1,10 +1,9 @@
-import math
 from utils import *
 import stats.plots as plt
 from stats.calc import *
 from broker import No_DB
 import statistics
-import json
+
 from ui.table import Tabla
 import datetime
 from settings import EXER_2_JSON
@@ -57,7 +56,8 @@ class BallStats:
             errores, fecha, tiempo)
         self.stats.append(('-Media de bolas impactadas total: ',
                            round(media_impactos, 2)))
-        self.stats.append(('-Mejor marca esquivadas/tiempo: ', round(esquiva_tiempo, 2)))
+        
+        self.stats.append(('-Promedio esquivadas/tiempo: ', round(esquiva_tiempo, 2)))
         self.stats.append(
             ('-Mejor marca esquivadas/tiempo: ', best_score_acierto))
         self.stats.append(('-Fecha de esta marca: ', best_score_day))

@@ -8,7 +8,6 @@ from ui.gui import Button, DropDown
 from ui.source import Source
 from utils import *
 
-
 class MenuScene(Scene):
     def __init__(self, game):
         super().__init__(game)
@@ -237,3 +236,10 @@ class MenuScene(Scene):
             elif action == "Record":
                 self.button_historial.set_pressed(True)
             self.time_hand, self.width = reset_time()
+            self.reset_timer_after()
+            
+    def reset_timer_after(self):
+        self.pressed_exit = pygame.time.get_ticks()
+        self.pressed_tutorial = pygame.time.get_ticks()
+        self.pressed_history = pygame.time.get_ticks()
+        self.pressed_activities = pygame.time.get_ticks()

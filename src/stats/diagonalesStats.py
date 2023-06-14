@@ -1,10 +1,7 @@
-import math
 from utils import *
 import stats.plots as plt
 from stats.calc import *
 from broker import No_DB
-import json
-import datetime
 from ui.table import Tabla
 from settings import EXER_0_JSON
 from settings import ID_DIAGONALES
@@ -38,14 +35,14 @@ class DiagonalesStats:
         self.table = Tabla(self.id_exer, self.window, self.data, header, pos)
 
     def create_graphs(self, tiempo, izq_errores, izq_aciertos, drcha_errores, drcha_aciertos, tiempo_ejer):
-        canvas_izq, raw_data_izq = plt.create_right_hand_two_lines(
-            izq_errores, izq_aciertos, tiempo, tiempo_ejer, "izquierda")
+        canvas_izq, raw_data_izq = plt.create_groupbar_chart_squad(
+            tiempo, izq_errores, izq_aciertos, tiempo_ejer, "izquierda", 'Alcanzadas')
         size_izq = canvas_izq.get_width_height()
 
         surf_izq = pygame.image.fromstring(raw_data_izq, size_izq, "RGB")
         self.graphs.append(('Izquierda', surf_izq))
 
-        canvas_drcha, raw_data_drcha = plt.create_right_hand_two_lines(drcha_errores, drcha_aciertos, tiempo, tiempo_ejer, "derecha")
+        canvas_drcha, raw_data_drcha = plt.create_groupbar_chart_squad(tiempo, drcha_errores, drcha_aciertos, tiempo_ejer, "derecha", 'Alcanzadas')
         size_drcha = canvas_drcha.get_width_height()
 
         surf_drcha = pygame.image.fromstring(raw_data_drcha, size_drcha, "RGB")
@@ -79,21 +76,3 @@ class DiagonalesStats:
         media_errores_i = calculate_media_parte(izq_errores)
         self.stats.append(('-Media de errores derecha: ', round(media_errores_d,2)))
         self.stats.append(('-Media de errores izquierda: ', round(media_errores_i,2)))
-
-    def get_data_json(self):
-        with open(EXER_0_JSON, 'r') as f:
-            data = json.load(f)
-        for score in data:
-            date = datetime.datetime.strptime(score['PT_fecha'], '%Y-%m-%d').date()
-            values = [
-                0,
-                score['PT_A_id'],
-                score['PT_E_id'],
-                date,
-                score['PT_tiempo'],
-                score['PT_fallos_izquierda'],
-                score['PT_aciertos_izquierda'],
-                score['PT_fallos_derecha'],
-                score['PT_aciertos_derecha']
-            ]
-            self.data.append(tuple(values))

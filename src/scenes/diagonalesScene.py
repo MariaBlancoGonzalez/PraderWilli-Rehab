@@ -1,6 +1,5 @@
 from scenes.scene import Scene
 import pygame
-import json
 
 import settings
 from ui.source import Source
@@ -79,12 +78,7 @@ class DiagonalsScene(Scene):
 
         # Score total and partial to show
         self.puntuacion = 0
-        self.correct_score = settings.FONTS["medium"].render(
-                str(settings.ACIERTO_PTO), True, settings.BLACK
-                 )
-        self.error_score = settings.FONTS["medium"].render(
-                str(settings.FALLO_PTO), True, settings.BLACK
-                 )
+
         # Text
         self.texto = BackgroundText(
             "Atrapa las estrellas con las manos",
@@ -95,14 +89,14 @@ class DiagonalsScene(Scene):
         )
         self.texto_partes = BackgroundText(
             "Muestra todas las partes del cuerpo",
-            (120, 300),
+            (120, 250),
             settings.WHITE,
             settings.GRIS,
             30,
         )
         self.texto_pies = BackgroundText(
             "Coloca los pies en la casilla",
-            (150, 300),
+            (250, 250),
             settings.WHITE,
             settings.GRIS,
             30,
@@ -189,12 +183,11 @@ class DiagonalsScene(Scene):
             json_object = No_DB()
             json_object.write_data_json(settings.EXER_0_JSON, settings.ID_DIAGONALES, self.tiempo_juego, self.errores_izquierda, self.aciertos_derecha, self.errores_derecha, self.aciertos_derecha)
             return ActivitiesScene(self.game)
+
         return None
 
     def draw(self):
-        if self.mostrar_instrucciones and self.calibration:
-            pass
-        elif self.time_instr >= 3 and self.calibration and not self.feet_checker:
+        if self.time_instr >= 3 and self.calibration and not self.feet_checker:
             self.texto_pies.draw(self.game.display)
         elif self.time_instr >= 3 and self.calibration and not self.visibility_checker:
             self.texto_partes.draw(self.game.display)
@@ -269,13 +262,10 @@ class DiagonalsScene(Scene):
                 self.bound_right_hand = (right_hand_bound[0], right_hand_bound[1])
                 self.music.play()
                 # self.music_playing = True
-        elif self.calibration and self.time_instr<=0 and not self.end:
-            self.ticks = pygame.time.get_ticks()
-        # Pantalla de 3,2,1...
-        if self.time_instr < 3 and self.calibration and not self.end:
-            print(self.time_instr)
+                self.ticks = pygame.time.get_ticks()
+
+        elif self.time_instr < 3 and self.calibration and not self.end:
             self.time_instr = count(self.ticks)
-            self.seconds = 0
             self.time_right = reset_pygame_timer()
             self.time_left = reset_pygame_timer()
             self.timer = reset_pygame_timer()
@@ -297,7 +287,7 @@ class DiagonalsScene(Scene):
             and not self.visibility_checker
             and not self.end
         ):
-            # Para checkeo de pies
+            # para checkeo visibilidad
             self.visibility = check_visibility(self.current_results)
         elif (
             self.time_instr >= 3
@@ -333,7 +323,7 @@ class DiagonalsScene(Scene):
                 else False
             )
             # Crear acierto y fallo
-            if len(self.points_left) == 0 and not left_tramp and bola_permitida_izq:
+            if len(self.points_left) == 0 and bola_permitida_izq:
                 left_x = random.uniform(self.bound_left_hand[0], self.shoulder_right[0])
                 left_y = random.uniform(self.shoulder_right[1], settings.MARGIN if self.margin[1] <= 0 else self.margin[1]) # En vez de margin
 
@@ -381,6 +371,7 @@ class DiagonalsScene(Scene):
                         75,
                         True,
                     )
+                
 
                 self.right_point.time = pygame.time.get_ticks()
                 self.points_right.add(self.right_point)
@@ -415,7 +406,6 @@ class DiagonalsScene(Scene):
                     )
                     self.explosiones.add(explosion)
                     self.explosion.play()
-                    self.game.display.blit(self.error_score, (self.right_source.rect.centerx, self.right_source.rect.centery))
                 else:
                     self.aciertos_derecha += 1
                     self.puntuacion += settings.ACIERTO_PTO
@@ -428,7 +418,6 @@ class DiagonalsScene(Scene):
                     )
                     self.fireworks.add(firework)
                     self.press_star.play()
-                    self.game.display.blit(self.correct_score, (self.right_source.rect.centerx, self.right_source.rect.centery))
                 self.time_right = pygame.time.get_ticks()
 
             for _ in hit_list_left:
@@ -445,7 +434,6 @@ class DiagonalsScene(Scene):
                     self.explosiones.add(explosion)
                     self.explosion.play()
                     
-                    self.game.display.blit(self.error_score, (self.left_source.rect.centerx, self.left_source.rect.centery))
                 else:
                     self.aciertos_izquierda += 1
                     self.puntuacion += settings.ACIERTO_PTO
@@ -458,7 +446,6 @@ class DiagonalsScene(Scene):
                     )
                     self.fireworks.add(firework)
                     self.press_star.play()
-                    self.game.display.blit(self.correct_score, (self.left_source.rect.centerx, self.left_source.rect.centery))
                 self.time_left = pygame.time.get_ticks()
 
             if len(self.points_left) > 0:
@@ -540,24 +527,6 @@ class DiagonalsScene(Scene):
             self.fireworks.update()
 
         if self.end:
-        
+            self.time_instr = 0
             self.music.stop()
             self.claps.play()
-
-    def introduced_data(self):
-        broker = Broker()
-        broker.connect()
-        today = datetime.date.today()
-        today = today.strftime("%Y-%m-%d")
-        id = get_id(self.game.current_user)
-        broker.add_score(
-            id,
-            settings.ID_DIAGONALES,
-            today,
-            self.tiempo_juego,
-            self.errores_izquierda,
-            self.aciertos_izquierda,
-            self.errores_derecha,
-            self.aciertos_derecha,
-        )
-        broker.close()

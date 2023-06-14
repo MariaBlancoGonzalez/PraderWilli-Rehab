@@ -277,7 +277,7 @@ class ActivitiesScene(Scene):
             if self.input_time_appear.get_text() != "":
                 new_json_value(settings.EXER_0_CONFIG, "VELOCIDAD_ENTRE_BOLAS", float(self.input_time_appear.get_text()))
 
-            if self.input_trap_element.get_text() != "" and float(self.input_trap_element.get_text()) > 0 and float(self.input_trap_element.get_text()) < 1:
+            if self.input_trap_element.get_text() != "" and float(self.input_trap_element.get_text()) > 0 and float(self.input_trap_element.get_text()) <= 1:
                 new_json_value(settings.EXER_0_CONFIG, "PORCENTAJE_TRAMPAS", float(self.input_trap_element.get_text()))
 
             self.input_trap_element.reset()
@@ -443,6 +443,15 @@ class ActivitiesScene(Scene):
             elif action == "Volver":
                 self.button_back.set_pressed(True)
             self.time_hand, self.width = reset_time()
+            self.reset_timer_after()
+
+    def reset_timer_after(self):
+        self.pressed_diagonales = pygame.time.get_ticks()
+        self.pressed_back = pygame.time.get_ticks()
+        self.pressed_apply = pygame.time.get_ticks()
+        self.pressed_calibrate = pygame.time.get_ticks()
+        self.pressed_balls = pygame.time.get_ticks()
+        self.pressed_squad = pygame.time.get_ticks()
 
     def update(self, dt):
         self.diagonales.update()

@@ -1,3 +1,4 @@
 pygame==2.1.2
 mediapipe==0.8.11
 opencv-python==4.6.0.66
+WIM==1.5.1
