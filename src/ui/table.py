@@ -35,9 +35,9 @@ class Tabla:
         if int(self.id) == 0:
             self.name_actividad = 'Diagonales Superiores'
         elif int(self.id) == 1:
-            self.name = 'Squads'
+            self.name_actividad = 'Squads'
         elif int(self.id) == 2:
-            self.name = 'Movilidad'
+            self.name_actividad = 'Movilidad'
 
     def update_page(self, pos):
         if pos == 1:
@@ -66,7 +66,6 @@ class Tabla:
     def dibujar(self, pos):
         rect_stats = pygame.Surface((1000, 425))  # the size of your rect
         rect_stats.set_alpha(128)  # alpha level
-        # this fills the entire surface
         rect_stats.fill((255, 255, 255))
         self.ventana.blit(rect_stats, (140, 200))
 
