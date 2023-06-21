@@ -3,15 +3,13 @@ import stats.plots as plt
 from stats.calc import *
 from broker import No_DB
 from ui.table import Tabla
-from settings import EXER_0_JSON
-from settings import ID_DIAGONALES
+from settings.settings_0 import EXER_0_JSON
+from settings.settings_0 import ID_DIAGONALES
 
 class DiagonalesStats:
-    def __init__(self, txt_exer, id_exer, id_user, ventana):
+    def __init__(self, txt_exer, id_exer, ventana):
         self.name = txt_exer
         self.id_exer = id_exer
-        self.id_user = id_user
-
         self.data = []
         self.graphs = []
         self.stats = []

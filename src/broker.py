@@ -7,12 +7,12 @@ import datetime
 import json
 logging.getLogger().setLevel(logging.INFO)
 
-class No_DB:
+class DataBroker:
     def __init__(self):
         today = datetime.date.today()
         self.today = today.strftime("%Y-%m-%d")
 
-    def write_data_json(self, file, id_game, time, element1=0, element2=0, element3=0, element4=0):
+    def write_data_json(self, file, id_game, time, element1=0, element2=0, element3=0, element4=0, element5 = 0, element6=0,element7=0,element8=0):
         if id_game == 0:
             new_data = {
                 "PT_fecha": self.today, "PT_tiempo": time,
@@ -20,6 +20,10 @@ class No_DB:
                 "PT_aciertos_izquierda": element2,
                 "PT_fallos_derecha": element3,
                 "PT_aciertos_derecha": element4,
+                "PT_tiempo_reaccion_errores_izquierda":element5,
+                "PT_tiempo_reaccion_aciertos_izquierda":element6,
+                "PT_tiempo_reaccion_errores_derecha":element7,
+                "PT_tiempo_reaccion_errores_derecha":element8,
             }
         elif id_game == 1:
             new_data = {
@@ -58,6 +62,10 @@ class No_DB:
                     score['PT_aciertos_izquierda'],
                     score['PT_fallos_derecha'],
                     score['PT_aciertos_derecha'],
+                    score["PT_tiempo_reaccion_errores_izquierda"],
+                    score["PT_tiempo_reaccion_aciertos_izquierda"],
+                    score["PT_tiempo_reaccion_errores_derecha"],
+                    score["PT_tiempo_reaccion_errores_derecha"],
                 ]
                 data_final.append(tuple(values))
         elif id_game == 1:

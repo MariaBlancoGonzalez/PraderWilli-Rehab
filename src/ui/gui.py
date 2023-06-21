@@ -1,7 +1,7 @@
 import pygame
 
-from settings import FONTS
-from settings import WHITE, GRANATE, GRIS, BLACK
+from settings.settings import FONTS
+from settings.settings import WHITE, GRANATE, GRIS, BLACK
 
 class ImageButton:
     def __init__(self, image, position, callback, scale=(25, 25)):
@@ -14,6 +14,10 @@ class ImageButton:
 
         self.__clicked = False
 
+    def resized(self, x,y):
+        self.top_rect.x = x
+        self.top_rect.y = y
+
     def on_click(self, event):
         action = False
         pos = pygame.mouse.get_pos()
@@ -25,6 +29,10 @@ class ImageButton:
                 self.__clicked = False
 
         return action
+    def get_lowest_center_point(self):
+        center_x = self.top_rect.x + self.top_rect.width // 2
+        lowest_y = self.top_rect.y + self.top_rect.height
+        return (center_x, lowest_y+3)
 
     def get_clicked_state(self):
         return self.__clicked
@@ -48,13 +56,14 @@ class ImageButton:
 
 
 class Button:
-    def __init__(self, position, text, color=GRANATE, width=200):
+    def __init__(self, position, text, color=GRANATE, width=200, color_text=WHITE):
         self.bottom_rect = pygame.Rect((position[0] + 6, position[1] + 6), (width, 50))
         self.top_rect = pygame.Rect((position[0], position[1]), (width, 50))
         self.color = color
-        self.text = FONTS["medium"].render(text, True, WHITE)
+        self.text = FONTS["medium"].render(text, True, color_text)
         self.text_rect = self.text.get_rect()
         self.text_rect.center = self.top_rect.center
+        self.color_text = color_text
 
         self.__pressed = False
         self.__clicked = False
@@ -64,9 +73,14 @@ class Button:
             "hover": "#666666",
             "pressed": "#333333",
         }
+    def change_pos(self, position, width=200):
+        self.bottom_rect = pygame.Rect((position[0] + 6, position[1] + 6), (width, 50))
+        self.top_rect = pygame.Rect((position[0], position[1]), (width, 50))
+        self.text_rect = self.text.get_rect()
+        self.text_rect.center = self.top_rect.center
 
     def change_text(self, text):
-        self.text = FONTS["medium"].render(text, True, WHITE)
+        self.text = FONTS["medium"].render(text, True, self.color_text)
         self.text_rect = self.text.get_rect()
         self.text_rect.center = self.top_rect.center
 
@@ -108,9 +122,6 @@ class Button:
 
     def set_clicked(self, bool):
         self.__clicked = bool
-
-    def update(self):
-        pass
 
     def draw(self, display):
         pygame.draw.rect(display, GRIS, self.bottom_rect)
@@ -167,6 +178,9 @@ class DropDown:
         self.option = option
         self.draw_menu = False
         self.menu_active = False
+    
+    def change_pos(self, x,y,w,h):
+        self.top_rect = pygame.Rect(x, y, w, h)
 
     def draw(self, surf):
         pygame.draw.rect(surf, self.color_menu[self.menu_active], self.top_rect, 0)
@@ -202,6 +216,9 @@ class DropDown:
                     self.draw_menu = not self.draw_menu
                 elif self.draw_menu and self.main != "":
                     self.draw_menu = False
+    
+    def resized(self, x, y, w, h):
+        self.top_rect = pygame.Rect(x, y, w, h)
 
     def getMain(self):
         return self.main
@@ -289,7 +306,7 @@ class InputNumberBox:
                         self.comma = False
                     # Re-render the text.
                     self.txt_surface = FONTS["medium"].render(
-                        self.text, True, self.color
+                        self.text, True, BLACK
                     )
 
     def get_text(self):

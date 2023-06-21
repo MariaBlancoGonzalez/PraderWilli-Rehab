@@ -2,7 +2,7 @@ from pygame.sprite import Group
 import math
 
 from utils import *
-from settings import BODY_PARTS
+from settings.settings import BODY_PARTS
 
 from mediapipe.python.solutions import pose as mp_pose
 
@@ -20,18 +20,18 @@ def euclidean_distance(p1, p2):
     return math.sqrt((p1) ** 2 + (p2) ** 2)
 
 
-def create_diagonal_points_right(results):
+def create_diagonal_points_right(results, escale):
     # FOR LEFT PART
     shoulder = escale_coor_pix(
         results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_SHOULDER].x,
-        results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_SHOULDER].y,
+        results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_SHOULDER].y, escale,
     )
     elbow = escale_coor_pix(
         results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_ELBOW].x,
-        results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_ELBOW].y,
+        results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_ELBOW].y, escale,
     )
     hand = get_points_left(results)
-    hand = escale_coor_pix(hand[0], hand[1])
+    hand = escale_coor_pix(hand[0], hand[1], escale)
 
     # PIXEL VECTOR
     shoulder_to_elbow = (elbow[0] - shoulder[0], elbow[1] - shoulder[1])
@@ -51,18 +51,18 @@ def create_diagonal_points_right(results):
     return hand_pos
 
 
-def create_diagonal_points_left(results):
+def create_diagonal_points_left(results, escale):
     # FOR RIGHT PART
     shoulder = escale_coor_pix(
         results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER].x,
-        results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER].y,
+        results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER].y,escale,
     )
     elbow = escale_coor_pix(
         results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_ELBOW].x,
-        results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_ELBOW].y,
+        results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_ELBOW].y,escale,
     )
     hand = get_points_right(results)
-    hand = escale_coor_pix(hand[0], hand[1])
+    hand = escale_coor_pix(hand[0], hand[1],escale)
 
     # PIXEL VECTOR
     shoulder_to_elbow = (elbow[0] - shoulder[0], elbow[1] - shoulder[1])
@@ -81,18 +81,18 @@ def create_diagonal_points_left(results):
 
     return hand_pos
 
-def create_top_margin(results):
+def create_top_margin(results, escale):
     # FOR RIGHT PART
     shoulder = escale_coor_pix(
         results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER].x,
-        results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER].y,
+        results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER].y, escale
     )
     elbow = escale_coor_pix(
         results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_ELBOW].x,
-        results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_ELBOW].y,
+        results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_ELBOW].y, escale
     )
     hand = get_points_right(results)
-    hand = escale_coor_pix(hand[0], hand[1])
+    hand = escale_coor_pix(hand[0], hand[1], escale)
 
     # PIXEL VECTOR
     shoulder_to_elbow = (elbow[0] - shoulder[0], elbow[1] - shoulder[1])
@@ -190,16 +190,16 @@ def get_points(results):
         return (0, 0), (0, 0)
 
 
-def get_shoulder_pos(results):
+def get_shoulder_pos(results, escale):
     try:
         shoulder_left = escale_coor_pix(
             results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER].x,
-            results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER].y,
+            results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER].y,escale,
         )
 
         shoulder_right = escale_coor_pix(
             results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_SHOULDER].x,
-            results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_SHOULDER].y,
+            results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_SHOULDER].y,escale
         )
 
         return shoulder_left, shoulder_right
@@ -232,6 +232,21 @@ def get_feet_points(results):
     except:
         return (0, 0), (0, 0)
 
+def get_head_points(results):
+    # For each hand
+    try:
+        nose_x = float(
+            results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE].x
+        )
+        nose_y = float(
+            results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE].y
+        )
+
+        # Coordinates
+        return (nose_x, nose_y)
+
+    except:
+        return (0, 0)
 
 def check_collide(part, left, right, part_str=""):
     if part.top_rect.collidepoint(
@@ -326,16 +341,14 @@ def get_hips_points(results):
 def get_part_forward(results):
     return 'left' if float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_INDEX].z) < float(results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_INDEX].z) else 'right'
 
-from settings import WIDTH
-from settings import HEIGHT
-def update_pose_points(results):
+def update_pose_points(results, escale):
     pose_group = Group()
     try:
         if results.pose_landmarks:
             for landmark in results.pose_landmarks.landmark:
                 # Convertir las coordenadas normalizadas a las coordenadas de la imagen
-                x = int(landmark.x * WIDTH)
-                y = int(landmark.y * HEIGHT)
+                x = int(landmark.x * escale[0])
+                y = int(landmark.y * escale[1])
 
                 # Crear un sprite para cada punto de la pose y agregarlo al grupo
                 pose_point = pygame.sprite.Sprite()

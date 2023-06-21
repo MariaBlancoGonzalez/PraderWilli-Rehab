@@ -1,12 +1,13 @@
 from scenes.scene import Scene
 import pygame
 
-import settings
+import settings.settings as settings
+import settings.settings_1 as settings_1
 from ui.source import Source
 from ui.sticker import Sticker
 from pygame.sprite import Group
 from ui.gui import BackgroundText
-from broker import No_DB
+from broker import DataBroker
 from pose_tracking.tracker_utils import *
 
 from ui.animation import Animation
@@ -36,17 +37,28 @@ class SquadScene(Scene):
         self.claps = pygame.mixer.Sound(settings.CLAPS)
         self.claps.set_volume(1)
 
+
+        # Manos con sprites vacios
+        self.izq_mano = pygame.sprite.Sprite()
+        self.drch_mano = pygame.sprite.Sprite()
+        
+        self.izq_mano.rect = pygame.Rect(0, 0, 5, 5)  # Tamaño del punto
+        self.izq_mano.image = pygame.Surface(self.izq_mano.rect.size)
+
+        self.drch_mano.rect = pygame.Rect(0, 0, 5, 5)  # Tamaño del punto
+        self.drch_mano.image = pygame.Surface(self.drch_mano.rect.size)
+
         # Sources
-        self.right_feet = Source(game.display, settings.PUNTERO_ROJO, (50,50))
-        self.left_feet = Source(game.display, settings.PUNTERO_ROJO, (50, 50))
-        self.right_knee = Source(game.display, settings.PUNTERO_ROJO, (50, 50))
-        self.left_knee = Source(game.display, settings.PUNTERO_ROJO, (50, 50))
-        self.left_hip = Source(game.display, settings.PUNTERO_ROJO, (50, 50))
-        self.right_hip = Source(game.display, settings.PUNTERO_ROJO, (50, 50))
+        self.right_feet = Source(game.display, settings.BOLA_VERDE, (50,50))
+        self.left_feet = Source(game.display, settings.BOLA_VERDE, (50, 50))
+        self.right_knee = Source(game.display, settings.BOLA_VERDE, (50, 50))
+        self.left_knee = Source(game.display, settings.BOLA_VERDE, (50, 50))
+        self.left_hip = Source(game.display, settings.BOLA_VERDE, (50, 50))
+        self.right_hip = Source(game.display, settings.BOLA_VERDE, (50, 50))
 
         # Game settings
-        self.velocidad_squad = read(settings.EXER_1_CONFIG, "VELOCIDAD_SQUAD") 
-        self.tiempo_juego = read(settings.EXER_1_CONFIG, "TIEMPO_JUEGO_SQUAD")
+        self.velocidad_squad = read(settings_1.EXER_1_CONFIG, "VELOCIDAD_SQUAD") 
+        self.tiempo_juego = read(settings_1.EXER_1_CONFIG, "TIEMPO_JUEGO_SQUAD")
 
         self.aciertos = 0
         self.errores = 0
@@ -57,26 +69,29 @@ class SquadScene(Scene):
         self.angle = 0
         self.best_angle = 200
         self.correct_squad = False
-        self.correct_score = settings.FONTS["medium"].render(
-            str(settings.ACIERTO_PTO), True, settings.BLACK
-        )
-        self.error_score = settings.FONTS["medium"].render(
-            str(settings.FALLO_PTO), True, settings.BLACK
-        )
+
         # Text
         self.texto = BackgroundText(
             "Realiza sentadillas",
-            (350, 150),
+            (self.game.display.get_size()[0]*0.11, 70),
             settings.WHITE,
             settings.GRIS,
             30,
         )
         self.texto_partes = BackgroundText(
             "Muestra todas las partes del cuerpo",
-            (120, 250),
+            (self.game.display.get_size()[0]*0.11, self.game.display.get_size()[1]*0.45),
             settings.WHITE,
             settings.GRIS,
             30,
+        )
+        self.boy = Sticker(
+            self.game.display,
+            settings.NIÑO,
+            settings.WIDTH*0.11,
+            250,
+            200,
+            160,
         )
 
         # Tracking time to show instruc.
@@ -115,10 +130,10 @@ class SquadScene(Scene):
         # Animation
         self.squad_gif = Animation(
             self.game.display,
-            600,
-            500,
+            self.game.display.get_size()[0]*0.5,
+            self.game.display.get_size()[1]-350,
             settings.SQUADGIF,
-            settings.FPS_SQUAD, (400,500)
+            settings_1.FPS_SQUAD, (400,500)
         )
         self.squadgif_animation = Group(self.squad_gif)
         self.min_angulo = 200
@@ -128,21 +143,51 @@ class SquadScene(Scene):
             200, 25, 500, 10)
         self.width = 0
         self.coefficient = 500 / self.tiempo_juego
-        self.angle = read(settings.EXER_1_CONFIG, "ANGLE") 
+        self.angle = read(settings_1.EXER_1_CONFIG, "ANGLE") 
+    
+    def resized(self):
+        # Text
+        self.texto = BackgroundText(
+            "Realiza sentadillas",
+            (self.game.display.get_size()[0]*0.11, 70),
+            settings.WHITE,
+            settings.GRIS,
+            30,
+        )
+        self.texto_partes = BackgroundText(
+            "Muestra todas las partes del cuerpo",
+            (self.game.display.get_size()[0]*0.11, self.game.display.get_size()[1]*0.45),
+            settings.WHITE,
+            settings.GRIS,
+            30,
+        )
+        self.boy = Sticker(
+            self.game.display,
+            settings.NIÑO,
+            settings.WIDTH*0.11,
+            250,
+            200,
+            160,
+        )
 
     def events(self, events):
         if self.end:
-            json_object = No_DB()
-            json_object.write_data_json(settings.EXER_1_JSON, settings.ID_SQUAD, self.tiempo_juego,
+            json_object = DataBroker()
+            json_object.write_data_json(settings_1.EXER_1_JSON, settings_1.ID_SQUAD, self.tiempo_juego,
                                             self.errores, self.aciertos, round(statistics.mean(self.media_angulo), 2))
+            return ActivitiesScene(self.game)
+        if self.atras.get_clicked_state() or self.atras.on_click(events):
+            self.music.stop()
             return ActivitiesScene(self.game)
 
         return None
 
     def draw(self):
         if self.mostrar_instrucciones and self.calibration:
+            self.boy.draw(self.game.display)
             self.texto.draw(self.game.display)
         elif self.time_instr_squad >= 3 and self.calibration and not self.visibility_checker:
+            self.boy.draw(self.game.display)
             self.texto_partes.draw(self.game.display)
         
         angle = settings.FONTS["medium"].render(
@@ -158,9 +203,19 @@ class SquadScene(Scene):
             self.right_hip.draw(self.game.display)
 
             pygame.draw.lines(
-                self.game.display, settings.COLOR_ROJO, True, [(self.right_hip.rect.centerx, self.right_hip.rect.centery), (self.right_knee.rect.centerx, self.right_knee.rect.centery), (self.right_feet.rect.centerx, self.right_feet.rect.centery)], 5)
+                self.game.display, settings.COLOR_VERDE, True, [(self.right_hip.rect.centerx, self.right_hip.rect.centery), (self.right_knee.rect.centerx, self.right_knee.rect.centery), (self.right_feet.rect.centerx, self.right_feet.rect.centery)], 5)
 
             self.game.display.blit(angle, (self.right_knee.rect.centerx-50, self.right_knee.rect.centery))
+
+        self.atras.draw(self.game.display)
+
+    def check_collide(self, left, right):
+        if self.atras.top_rect.collidepoint(
+            left.rect.centerx, left.rect.centery
+        ) or self.atras.top_rect.collidepoint(
+            right.rect.centerx, right.rect.centery
+        ):
+            return "Atras"
 
     def tracking(self, results):
         self.current_results = results
@@ -168,6 +223,22 @@ class SquadScene(Scene):
 
         if self.current_results == None:
             return None
+
+        left_hand, right_hand = get_points(results)
+        self.izq_mano.rect.centerx = left_hand[0] * settings.WIDTH
+        self.izq_mano.rect.centery = left_hand[1] * settings.HEIGHT
+        self.drch_mano.rect.centerx = right_hand[0] * settings.WIDTH
+        self.drch_mano.rect.centery = right_hand[1] * settings.HEIGHT
+        action = self.check_collide(self.izq_mano, self.drch_mano)
+            
+        if action == "Atras":
+            self.timedown_object.tracking(results)
+            self.timedown_object.draw()
+            self.countdowns = self.timedown_object.events()
+            if not self.countdowns:
+                self.atras.set_clicked_true()
+        else:
+            self.timedown_object.restart()  
 
         # Get initial points
         if not self.calibration:
@@ -234,14 +305,13 @@ class SquadScene(Scene):
 
                 if (pygame.time.get_ticks() - self.time_squad) / 1000 < self.velocidad_squad and not self.correct_squad:
                     self.aciertos += 1
-                    self.puntuacion += settings.ACIERTO_PTO
+                    self.puntuacion += settings_2.ACIERTO_PTO
                     self.correct_squad = True
 
 
             if (pygame.time.get_ticks() - self.time_squad) / 1000 >= self.velocidad_squad:
                 if not self.correct_squad:
                     self.errores += 1
-                    self.puntuacion -= 50
                     self.error_sound.play()
                 
                 self.correct_squad = False
@@ -304,12 +374,12 @@ class SquadScene(Scene):
             puntuacion = settings.FONTS["medium"].render(
                 "Puntuacion: ", True, settings.BLACK
             )
-            self.game.display.blit(puntuacion, (900, 15))
+            self.game.display.blit(puntuacion, (self.game.display.get_size()[0]-300, 15))
 
             puntos = settings.FONTS["medium"].render(
                 "{0}".format(self.puntuacion), True, settings.COLOR_ROJO
             )
-            self.game.display.blit(puntos, (1065, 15))
+            self.game.display.blit(puntos, (self.game.display.get_size()[0]-100, 15))
 
         if self.end:
             self.music.stop()

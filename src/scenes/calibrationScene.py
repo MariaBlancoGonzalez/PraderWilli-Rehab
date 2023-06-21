@@ -1,57 +1,62 @@
 import pygame
 from scenes.scene import Scene
 from ui.sticker import Sticker
-import settings
+import settings.settings as settings
+from ui.gui import ImageButton
+from ui.source import Source
 from ui.gui import BackgroundText
 from mediapipe.python.solutions import pose as mp_pose
 from pose_tracking.tracker_utils import *
 from math import sqrt
+from scenes.timeDownScene import TimeDown
 
 from scenes.activitiesScene import ActivitiesScene
 
-
 class CalibrationScene(Scene):
-    def __init__(self, options):
-        super().__init__(options)
+    def __init__(self, game):
+        super().__init__(game)
         self._name_scene = "CalibrationScene"
-        self.screen = options.display
 
         # Images
         self.body = Sticker(
-            self.screen,
+            self.game.display,
             settings.BODY,
-            settings.WIDTH / 2,
-            settings.HEIGHT / 2,
-            1000,
-            760,
+            settings.WIDTH*0.2,
+            self.game.display.get_size()[1]-250,
+            400,
+            350,
         )
+        self.boy = Sticker(
+            self.game.display,
+            settings.NIÑO,
+            settings.WIDTH*0.11,
+            250,
+            200,
+            160,
+        )
+
+        # Timer
+        self.timedown_object = TimeDown(self.game)
+        
+        # Atras
+        self.img_atras = pygame.image.load(settings.ATRAS)
+        self.atras = ImageButton(self.img_atras, (50,70), "modificar", (70, 70))
 
         # Puntos de la cabeza
-        self.verde_cabeza = Sticker(self.screen, settings.VERDE, 640, 80, 60, 60)
-        self.rojo_cabeza = Sticker(self.screen, settings.ROJO, 640, 80, 60, 60)
+        self.cabeza = Source(self.game.display, settings.VERDE, (70,70))
 
         # Puntos de las manos
-        self.verde_izq_mano = Sticker(self.screen, settings.VERDE, 870, 400, 60, 60)
-        self.rojo_izq_mano = Sticker(self.screen, settings.ROJO, 870, 400, 60, 60)
-
-        self.verde_drch_mano = Sticker(self.screen, settings.VERDE, 410, 400, 60, 60)
-        self.rojo_drch_mano = Sticker(self.screen, settings.ROJO, 410, 400, 60, 60)
+        self.izq_mano = Source(self.game.display, settings.VERDE, (70,70))
+        self.drch_mano = Source(self.game.display, settings.VERDE, (70,70))
 
         # Puntos de los pies
-        self.verde_drch_pie = Sticker(self.screen, settings.VERDE, 600, 700, 60, 60)
-        self.rojo_drch_pie = Sticker(self.screen, settings.ROJO, 600, 700, 60, 60)
+        self.drch_pie = Source(self.game.display, settings.VERDE, (70,70))
+        self.izq_pie = Source(self.game.display, settings.VERDE, (70,70))
 
-        self.verde_izq_pie = Sticker(self.screen, settings.VERDE, 680, 700, 60, 60)
-        self.rojo_izq_pie = Sticker(self.screen, settings.ROJO, 680, 700, 60, 60)
-
-        # Text
-        self.instructions = settings.FONTS["medium"].render(
-            "Haz visibles los siguientes puntos en la pantalla", True, settings.BLACK
-        )
         self.mostrar_instrucciones = True
         self.texto = BackgroundText(
-            "Haz visibles los puntos en la pantalla",
-            (100, 250),
+            "Muestra todas las partes del cuerpo",
+            (self.game.display.get_size()[0]*0.11, 70),
             settings.WHITE,
             settings.GRIS,
             30,
@@ -69,11 +74,41 @@ class CalibrationScene(Scene):
         self.current_results = None
         self.calibrated = False
         self.end = False
+        self.countdowns = True
+
+    def resized(self):
+        self.body = Sticker(
+            self.game.display,
+            settings.BODY,
+            settings.WIDTH*0.17,
+            self.game.display.get_size()[1]-200,
+            400,
+            350,
+        )
+        self.boy = Sticker(
+            self.game.display,
+            settings.NIÑO,
+            settings.WIDTH*0.11,
+            250,
+            200,
+            160,
+        )
+        self.texto = BackgroundText("Muestra todas las partes del cuerpo",
+            (self.game.display.get_size()[0]*0.11, 70),
+            settings.WHITE,
+            settings.GRIS,
+            30,
+        )
 
     def events(self, ev):
         if self.end:
             self.end = False
             return ActivitiesScene(self.game)
+        
+        if self.atras.get_clicked_state() or self.atras.on_click(ev):
+            self.game.static_points = None
+            return ActivitiesScene(self.game)
+        
         return None
 
     def update(self, dt):
@@ -87,8 +122,17 @@ class CalibrationScene(Scene):
             self.mostrar_instrucciones = False
 
     def draw(self):
+        self.atras.draw(self.game.display)
+        
         if self.mostrar_instrucciones:
-            self.texto.draw(self.screen)
+            self.texto.draw(self.game.display)
+            self.boy.draw(self.game.display)
+        else:
+            self.body.draw(self.game.display)
+
+        if not all(item is True for item in self.checker):
+            self.texto.draw(self.game.display)
+            self.boy.draw(self.game.display)
 
     def count_seconds(self):
         self.seconds = (
@@ -97,61 +141,48 @@ class CalibrationScene(Scene):
         seconds_txt = settings.FONTS["extra"].render(
             "{0}".format(int(self.seconds)), True, settings.BLACK
         )
-        self.screen.blit(seconds_txt, (settings.WIDTH / 2, 250))
+        self.game.display.blit(seconds_txt, (self.game.display.get_size()[0]/2-30, self.game.display.get_size()[1]*0.35))
 
-        pygame.display.flip()
         if self.seconds >= 3.2:
             self.calibrated = True
 
-    def calculate_distances(self, results):
-        def distance_calculator(a, b):
-            return sqrt(
-                (
-                    (
-                        results.pose_landmarks.landmark[b].x
-                        - results.pose_landmarks.landmark[a].x
-                    )
-                    ** 2
-                )
-                + (
-                    (
-                        results.pose_landmarks.landmark[b].y
-                        - results.pose_landmarks.landmark[a].y
-                    )
-                    ** 2
-                )
-                + (
-                    (
-                        results.pose_landmarks.landmark[b].z
-                        - results.pose_landmarks.landmark[a].z
-                    )
-                    ** 2
-                )
-            )
-
-        distance_ab_right = distance_calculator(12, 14)
-        distance_bc_right = distance_calculator(14, 16)
-        distance_right_total = distance_ab_right + distance_bc_right
-
-        distance_ab_left = distance_calculator(11, 13)
-        distance_bc_left = distance_calculator(13, 15)
-        distance_left_total = distance_ab_left + distance_bc_left
-
-        return distance_right_total, distance_left_total
-
-    def calculate_final_point(self, results, right, left):
-        final_right = (
-            results.pose_landmarks.landmark[12].x + right,
-            results.pose_landmarks.landmark[12].y,
-        )
-        final_left = (
-            results.pose_landmarks.landmark[11].x + right,
-            results.pose_landmarks.landmark[11].y,
-        )
-        return final_right, final_left
+    def check_collide(self, left, right):
+        if self.atras.top_rect.collidepoint(
+            left.rect.centerx, left.rect.centery
+        ) or self.atras.top_rect.collidepoint(
+            right.rect.centerx, right.rect.centery
+        ):
+            return "Atras"
 
     def tracking(self, results):
         self.current_results = results
+        
+        left_hand, right_hand = get_points(results)
+        self.izq_mano.rect.centerx = left_hand[0] * settings.WIDTH
+        self.izq_mano.rect.centery = left_hand[1] * settings.HEIGHT
+        self.drch_mano.rect.centerx = right_hand[0] * settings.WIDTH
+        self.drch_mano.rect.centery = right_hand[1] * settings.HEIGHT
+
+        head = get_head_points(results)
+        self.cabeza.rect.centerx = head[0] * settings.WIDTH
+        self.cabeza.rect.centery = head[1] * settings.HEIGHT
+        
+        left_feet, right_feet = get_feet_points(results)
+        self.drch_pie.rect.centerx = left_feet[0] * settings.WIDTH
+        self.drch_pie.rect.centery = left_feet[1] * settings.HEIGHT
+        self.izq_pie.rect.centerx = right_feet[0] * settings.WIDTH
+        self.izq_pie.rect.centery = right_feet[1] * settings.HEIGHT
+        
+        action = self.check_collide(self.izq_mano, self.drch_mano)
+        if action == "Atras":
+            self.timedown_object.tracking(results)
+            self.timedown_object.draw()
+            self.countdowns = self.timedown_object.events()
+            if not self.countdowns:
+                self.atras.set_clicked_true()
+        else:
+            self.timedown_object.restart()      
+
         if self.time_instr < 3:
             self.time_instr = count(self.ticks)
             self.timer = reset_pygame_timer()
@@ -159,44 +190,34 @@ class CalibrationScene(Scene):
         elif self.time_instr >= 3:
             try:
                 if results.pose_landmarks.landmark[mp_pose.PoseLandmark.NOSE].visibility > 0.6:
-                    if not all(item is True for item in self.checker):
-                        self.verde_cabeza.draw(self.screen)
+                    self.cabeza.draw(self.game.display)
                     self.checker[0] = True
                 else:
-                    self.rojo_cabeza.draw(self.screen)
                     self.checker[0] = False
                 # Manos
                 if results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_WRIST].visibility > 0.6:
-                    if not all(item is True for item in self.checker):
-                        self.verde_drch_mano.draw(self.screen)
+                    self.drch_mano.draw(self.game.display)
                     self.checker[1] = True
                 else:
-                    self.rojo_drch_mano.draw(self.screen)
                     self.checker[1] = False
 
                 if results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_WRIST].visibility > 0.6:
-                    if not all(item is True for item in self.checker):
-                        self.verde_izq_mano.draw(self.screen)
+                    self.izq_mano.draw(self.game.display)
                     self.checker[2] = True
                 else:
-                    self.rojo_izq_mano.draw(self.screen)
                     self.checker[2] = False
 
                 # Pies
                 if results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_ANKLE].visibility > 0.6:
-                    if not all(item is True for item in self.checker):
-                        self.verde_drch_pie.draw(self.screen)
+                    self.drch_pie.draw(self.game.display)
                     self.checker[3] = True
                 else:
-                    self.rojo_drch_pie.draw(self.screen)
                     self.checker[3] = False
 
                 if results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_ANKLE].visibility > 0.6:
-                    if not all(item is True for item in self.checker):
-                        self.verde_izq_pie.draw(self.screen)
+                    self.izq_pie.draw(self.game.display)
                     self.checker[4] = True
                 else:
-                    self.rojo_izq_pie.draw(self.screen)
                     self.checker[4] = False
             except:
                 self.checker = [False, False, False, False, False]
@@ -209,11 +230,6 @@ class CalibrationScene(Scene):
             # Not all points available
             elif not all(item is True for item in self.checker):
                 self.show_seconds = False
-                self.body.draw(self.screen)
+                
                 self.timer = reset_pygame_timer()
                 self.seconds = 0
-                self.screen.blit(
-                    self.instructions,
-                    self.instructions.get_rect(center=(settings.WIDTH / 2, 750)),
-                )
-                pygame.display.flip()

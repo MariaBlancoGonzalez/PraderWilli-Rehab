@@ -6,15 +6,14 @@ import statistics
 
 from ui.table import Tabla
 import datetime
-from settings import EXER_2_JSON
-from settings import ID_BALLS
+from settings.settings_2 import EXER_2_JSON
+from settings.settings_2 import ID_BALLS
 
 class BallStats:
     def __init__(self, txt_exer, id_exer, id_user, ventana):
         self.name = txt_exer
         self.id_exer = id_exer
         self.id_user = id_user
-
         self.data = []
         self.graphs = []
         self.stats = []

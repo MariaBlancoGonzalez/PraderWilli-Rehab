@@ -4,21 +4,21 @@ import mediapipe as mp
 
 import pygame
 import sys
-from settings import CAPTION, WIDTH, HEIGHT, EXER_0_JSON, EXER_1_JSON, EXER_2_JSON
+import settings.settings as settings
 from utils import *
 from ui.gui import BackgroundText
 from scenes.menuScene import (
     MenuScene,
 )
 
-from broker import No_DB
+from broker import DataBroker
 from pose_tracking.cam_initialazer import check_availability
-from settings import WHITE, GRIS
+
 class Initiator:
     def __init__(self):
         pygame.init()
-        pygame.display.set_caption(CAPTION)
-        self.display = pygame.display.set_mode((WIDTH, HEIGHT))
+        pygame.display.set_caption(settings.CAPTION)
+        self.display = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT), pygame.RESIZABLE)
         
         self.device_list = []
         self.current_camara = 0
@@ -70,7 +70,7 @@ class Initiator:
                 self.clock.tick(60)
                 dt = self.clock.tick(60)
                 ev = pygame.event.get()
-                self.display.fill(WHITE)
+                self.display.fill(settings.WHITE)
                 for event in ev:
                     if event.type == pygame.QUIT:
                         sys.exit()
@@ -94,9 +94,9 @@ class Initiator:
                 if self.get_scene().get_name() == "MenuScene":
                     texto_partes = BackgroundText(
                         "No hay dispositivos disponibles",
-                        (200 , 400),
-                        WHITE,
-                        GRIS,
+                        (self.display.get_size()[0]*0.3 , 400),
+                        settings.WHITE,
+                        settings.GRIS,
                         20,
                     )
                     texto_partes.draw(self.display)
@@ -118,21 +118,33 @@ class Initiator:
                     for event in ev:
                         if event.type == pygame.QUIT:
                             sys.exit()
+                        elif event.type == pygame.VIDEORESIZE:
+                            # Redimensionar la ventana
+                            settings.WIDTH = event.w
+                            settings.HEIGHT = event.h
+                            self.display = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT), pygame.RESIZABLE)
+                            self.get_scene().resized()
+
                     if self.flag_cam:
                         cap = cv2.VideoCapture(self.current_camara)
                         self.flag_cam = False
                     success, image = cap.read()
-                    resized = cv2.resize(image, (WIDTH, HEIGHT))
+                    try:
+                        resized = cv2.resize(image, (settings.WIDTH, settings.HEIGHT))
+                    except:
+                        pass
+
                     if not success:
                         # If loading a video, use 'break' instead of 'continue'.
                         continue
-
-                    image = cv2.cvtColor(cv2.flip(resized, 2), cv2.COLOR_BGR2RGB)
-                    results = pose.process(image)
-                    pygame.surfarray.blit_array(self.display, image.swapaxes(0, 1))
+                    try:
+                        image = cv2.cvtColor(cv2.flip(resized, 2), cv2.COLOR_BGR2RGB)
+                        results = pose.process(image)
+                        pygame.surfarray.blit_array(self.display, image.swapaxes(0, 1))
+                    except:
+                        pass
 
                     if new_scene is not self.get_scene() and new_scene is not None:
-                        self.change_scene(new_scene)
                         self.change_scene(new_scene)
 
                     # Some necessary events for some specific scenes
@@ -175,7 +187,7 @@ class Initiator:
                         self.get_scene().draw()
 
                     pygame.display.update()
-
+                    pygame.display.flip()
 if __name__ == "__main__":
     initiate = Initiator()
     initiate.run()

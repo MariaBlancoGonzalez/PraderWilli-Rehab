@@ -1,5 +1,5 @@
 import pygame
-import settings
+import settings.settings
 import math
 class Tabla:
     def __init__(self, id, ventana, datos_tabla, header, pos = 0, dimensiones_celda=(160, 30), color_borde=settings.BLACK, color_fondo=settings.WHITE, color_texto=settings.BLACK):    
@@ -27,7 +27,7 @@ class Tabla:
         
         try:
             self.x = (ventana.get_width() - self.ancho_celda * len(self.datos_tabla[0])) // 2
-            self.y = 250
+            self.y = ventana.get_size()[1]*0.4
         except IndexError:
             pass
 
@@ -62,15 +62,23 @@ class Tabla:
                 datos = self.datos_tabla[(self.page-1)*10-10:num] if num-10 >= 0 else self.datos_tabla[0:10]
                 self.page -= 1
             self.current_datos = datos
+        
+    def change_window(self, window):
+        self.ventana = window
+        try:
+            self.x = (window.get_width() - self.ancho_celda * len(self.datos_tabla[0])) // 2
+            self.y = window.get_size()[1]*0.4
+        except IndexError:
+            pass
 
     def dibujar(self, pos):
-        rect_stats = pygame.Surface((1000, 425))  # the size of your rect
+        '''rect_stats = pygame.Surface((1000, 425))  # the size of your rect
         rect_stats.set_alpha(128)  # alpha level
         rect_stats.fill((255, 255, 255))
-        self.ventana.blit(rect_stats, (140, 200))
+        self.ventana.blit(rect_stats, (self.ventana.get_size()[0]*0.15, 200))'''
 
         nombre = settings.FONTS["medium"].render(f"Datos recogidos en la actividad: {self.name_actividad}", True, settings.BLACK)
-        self.ventana.blit(nombre, (145, 210))
+        self.ventana.blit(nombre, (self.ventana.get_size()[0]*0.25, 210))
 
         counter_celdas = 0
         if not all(isinstance(tupla, str) for tupla in self.current_datos[0]):
@@ -102,4 +110,4 @@ class Tabla:
             counter_celdas+=1
         
         page = settings.FONTS["medium"].render(f"{str(self.page)}/{str(self.pages_available)}", True, settings.BLACK)
-        self.ventana.blit(page, ((self.ventana.get_width()/2)-20, 650))
+        self.ventana.blit(page, (self.ventana.get_size()[0]*0.5,self.ventana.get_size()[1]-100 ))

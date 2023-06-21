@@ -7,6 +7,10 @@ import statistics
 from ui.table import Tabla
 from settings.settings_1 import EXER_1_JSON
 from settings.settings_1 import ID_SQUAD
+from settings.settings_0 import EXER_0_JSON
+from settings.settings_0 import ID_DIAGONALES
+from settings.settings_2 import ID_BALLS
+from settings.settings_2 import EXER_2_JSON
 
 class SquadStats:
     def __init__(self, txt_exer, id_exer, ventana):

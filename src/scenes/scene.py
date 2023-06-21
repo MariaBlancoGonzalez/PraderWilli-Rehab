@@ -6,7 +6,7 @@ class Scene:
     def get_name(self):
         return self._name_scene
 
-    def events(self, events):
+    def events(self, events=None):
         raise NotImplementedError("events must be defined")
 
     def draw(self):

@@ -3,16 +3,6 @@ import pygame
 # Texts
 CAPTION = "Prader Willi"
 
-# Data
-EXER_0_JSON = './data/0.json'
-EXER_1_JSON = './data/1.json'
-EXER_2_JSON = './data/2.json'
-
-# Config
-EXER_0_CONFIG = './config/Exer_0_config.json'
-EXER_1_CONFIG = './config/Exer_1_config.json'
-EXER_2_CONFIG = './config/Exer_2_config.json'
-
 # Cursor
 CURSOR_CLICK = "./assets/icons/cursor_click.png"
 
@@ -22,24 +12,24 @@ ACTIVIDADES = "./assets/tutorial/actividades"
 MENU = "./assets/tutorial/menu"
 
 # Images and icons
-ROCKET = "./assets/icons/cohete.png"
-HAND_POINTER = "./assets/icons/hand-pointer.png"
-ESTRELLA = "./assets/icons/estrella.png"
-ROJO = "./assets/icons/rojo.png"
-VERDE = "./assets/icons/verde.png"
-BODY = "./assets/images/body.png"
-LINEA_HORIZONTAL = "./assets/icons/linea_horizontal.png"
 PUNTERO_ROJO = "./assets/icons/red_circle.png"
+ROCKET = "./assets/icons/cohete.png"
+LINEA_HORIZONTAL = "./assets/icons/linea_horizontal.png"
+ESTRELLA = "./assets/icons/estrella.png"
+VERDE = "./assets/icons/verde.png"
+ROJO = "./assets/icons/rojo.png"
+BODY = "./assets/images/body.png"
 BOMBA = "./assets/icons/bomb.png"
-FLECHA_DERECHA = "./assets/icons/drch.png"
-FLECHA_IZQUIERDA = "./assets/icons/izq.png"
-PDF = "./assets/icons/pdf.png"
 MODIFY = "./assets/icons/modificar.png"
 FOOTBALL = "./assets/icons/pelota.png"
 BASKETBALL = "./assets/icons/pelota-de-baloncesto.png"
 TENISBALL = "./assets/icons/tenis.png"
 RUGBYBALL = "./assets/icons/futbol-americano.png"
-
+MANO_IZQUIERDA = "./assets/icons/manoderecha.png"
+MANO_DERECHA ="./assets/icons/manoizquierda.png"
+BOLA_VERDE = "./assets/icons/bolaVerde.png"
+ATRAS = "./assets/icons/atras.png"
+NIÑO = "./assets/images/tl.png"
 # Música
 MUSIC_1 = "./assets/sound/music_1.wav"
 MUSIC_2 = "./assets/sound/music_2.wav"
@@ -118,36 +108,14 @@ AMARILLO = "#eecd86"
 NARANJA = "#e18942"
 MARRON = "#b95835"
 AZULGRISACEO = "#3d3242"
-
+COLOR_VERDE = "#55fe01"
 # FOR APP
 TIME_BUTTONS = 2.5
 WIDTH_LOAD_BAR = 700
 
-# FOR GAME DIAGONALES
-ID_DIAGONALES = 0
-FPS_EXPLOSION = 0.2
-FPS_FIREWORKS = 0.2
-VISIBILIDAD = 0.8
-FEET_MARGIN = 30
-FEET_BOX = 50
-MANOS_IMG = ROCKET
-ERROR = BOMBA
-ACIERTO = ESTRELLA
-FPS_DIAG = 20
 
-# PUNTUACION
-ACIERTO_PTO = 100
-FALLO_PTO = 50
 
 # MEDIAPIPE
 BODY_PARTS = [11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28, 30, 31, 32]
 
-# For squads
-ID_SQUAD = 1
-FPS_SQUAD = 20
 
-# For balls
-ID_BALLS = 2
-ACIERTO_BALLS = 10
-FALLO_BALLS = 10
-FPS_BALLS = 20

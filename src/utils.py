@@ -1,4 +1,4 @@
-from settings import WIDTH, HEIGHT, TIME_BUTTONS, BLACK
+from settings.settings import WIDTH, HEIGHT, TIME_BUTTONS, BLACK
 import pygame
 from math import acos, sqrt, degrees
 import numpy as np
@@ -10,12 +10,11 @@ def get_mid(coord_a, coord_b, coord_c):
     return (coord_a + coord_b + coord_c) / 3
 
 
-def escale_coor_pix(coor_x, coor_y, offset_x=0, offset_y=0):
-    x_pix = (coor_x * WIDTH) + offset_x
-    y_pix = (coor_y * HEIGHT) + offset_y
+def escale_coor_pix(coor_x, coor_y, escale, offset_x=0, offset_y=0):
 
+    x_pix = (coor_x * escale[0]) + offset_x
+    y_pix = (coor_y * escale[1]) + offset_y
     return (x_pix, y_pix)
-
 
 def distance_between_pixels(p1, p2):
     return abs(p2[0] - p1[0])

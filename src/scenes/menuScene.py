@@ -3,7 +3,7 @@ import sys
 
 from scenes.scene import Scene
 from pose_tracking.tracker_utils import *
-import settings
+import settings.settings as settings
 from ui.gui import Button, DropDown
 from ui.source import Source
 from utils import *
@@ -19,19 +19,20 @@ class MenuScene(Scene):
         )
 
         # Buttons
+        pos = self.screen.get_size()[0]
         self.button_activities = Button(
-            (100, self.screen.get_size()[1] / 3), "Actividades"
+            (pos*0.05, self.screen.get_size()[1] / 3), "Actividades"
         )
         self.button_historial = Button(
-            (400, self.screen.get_size()[1] / 3), "Historial"
+            (pos*0.3, self.screen.get_size()[1] / 3), "Historial"
         )
-        self.button_tutorial = Button((700, self.screen.get_size()[1] / 3), "Tutorial")
-        self.button_exit = Button((1000, self.screen.get_size()[1] / 3), "Salir")
+        self.button_tutorial = Button((pos*0.55, self.screen.get_size()[1] / 3), "Tutorial")
+        self.button_exit = Button((pos*0.8, self.screen.get_size()[1] / 3), "Salir")
 
         self.userDropDown = DropDown(
             [settings.GRISCLARO, settings.WHITE],
             [settings.WHITE, settings.GRISCLARO],
-            100,
+            pos*0.05,
             80,
             200,
             35,
@@ -39,10 +40,11 @@ class MenuScene(Scene):
             f"{game.current_user}",
             game.user_list,
         )
+
         self.camDropDown = DropDown(
             [settings.GRISCLARO, settings.WHITE],
             [settings.WHITE, settings.GRISCLARO],
-            1000,
+            pos*0.8,
             80,
             200,
             35,
@@ -86,6 +88,23 @@ class MenuScene(Scene):
         self.bar_rect = pygame.Rect(100, (self.screen.get_size()[1]) - 90, 700, 30)
         self.width = 0
 
+    def resized(self):
+        self.bar_rect = pygame.Rect(100, (self.screen.get_size()[1]) - 90, 700, 30)
+        
+        # Buttons
+        pos = self.screen.get_size()[0]
+        self.button_activities = Button(
+            (pos*0.05, self.screen.get_size()[1] / 3), "Actividades"
+        )
+        self.button_historial = Button(
+            (pos*0.3, self.screen.get_size()[1] / 3), "Historial"
+        )
+        self.button_tutorial = Button((pos*0.55, self.screen.get_size()[1] / 3), "Tutorial")
+        self.button_exit = Button((pos*0.8, self.screen.get_size()[1] / 3), "Salir")
+
+        self.userDropDown.resized(pos*0.05, 80, 200,35)
+        self.camDropDown.resized(pos*0.8, 80, 200,35)
+
     def draw(self):
         # Buttons
         self.button_activities.draw(self.screen)
@@ -105,8 +124,8 @@ class MenuScene(Scene):
             self.message,
             self.message.get_rect(center=(settings.WIDTH // 2, settings.HEIGHT // 5)),
         )
-        self.screen.blit(self.text_user, self.text_user.get_rect(center=(150, 60)))
-        self.screen.blit(self.txt_camara, self.txt_camara.get_rect(center=(1100, 60)))
+        self.screen.blit(self.text_user, self.text_user.get_rect(center=(self.screen.get_size()[0]*0.05+50, 60)))
+        self.screen.blit(self.txt_camara, self.txt_camara.get_rect(center=(self.screen.get_size()[0]*0.8+100, 60)))
 
         self.userDropDown.draw(self.screen)
         self.camDropDown.draw(self.screen)

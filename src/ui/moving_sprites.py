@@ -1,7 +1,7 @@
 import pygame
 from pygame.sprite import Sprite
 import random
-import settings
+from settings.settings import WIDTH, HEIGHT
 
 class Moving_Sprite(Sprite):
     def __init__(self, screen, image, scale=(70, 70)):
@@ -14,9 +14,9 @@ class Moving_Sprite(Sprite):
         self.rect = self.image.get_rect()
 
         # Start each new sphere.
-        bound_x = (settings.WIDTH - 20)
+        bound_x = (WIDTH - 20)
         self.rect.centerx = random.randint(20, bound_x)
-        bound_ya, bound_yb = (-(settings.HEIGHT // 2), 0)
+        bound_ya, bound_yb = (-(HEIGHT // 2), 0)
         self.rect.centery = random.randint(bound_ya, bound_yb)
 
     def update(self, speed):

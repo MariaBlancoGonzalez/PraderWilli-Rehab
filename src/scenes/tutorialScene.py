@@ -1,6 +1,6 @@
 import pygame
 from scenes.scene import Scene
-import settings
+import settings.settings as settings
 from ui.gui import Button
 from ui.source import Source
 from pose_tracking.tracker_utils import *
@@ -19,27 +19,27 @@ class TutorialScene(Scene):
         )
 
         # Imágenes
-        self.historial = cargar_archivos_folder(settings.HISTORIAL, (1000,500))
-        self.actividades = cargar_archivos_folder(settings.ACTIVIDADES, (1000,500))
-        self.menu = cargar_archivos_folder(settings.MENU, (1000,500))
+        self.historial = cargar_archivos_folder(settings.HISTORIAL, (self.game.display.get_size()[0]*0.7,self.game.display.get_size()[0]*0.4))
+        self.actividades = cargar_archivos_folder(settings.ACTIVIDADES, (self.game.display.get_size()[0]*0.7,self.game.display.get_size()[0]*0.4))
+        self.menu = cargar_archivos_folder(settings.MENU, (self.game.display.get_size()[0]*0.7,self.game.display.get_size()[0]*0.4))
         # Tutorial images
         self.images_group = self.menu
-
+        self.current_image_name = 'Menu'
         # Needed variables
         self.current_image = 0
 
         # Buttons
-        self.button_back = Button((170, 30), "Volver", settings.AMARILLO)
+        self.button_back = Button((170, 30), "Volver", settings.AMARILLO, 200, settings.BLACK)
         self.button_arrow_left = Button(
-            (45, settings.HEIGHT // 2), "<", settings.GRANATE, 50
+            (45, self.game.display.get_size()[1]*0.55), "<", settings.GRANATE, 50
         )
         self.button_arrow_right = Button(
-            (1178, settings.HEIGHT // 2), ">", settings.GRANATE, 50
+            (self.game.display.get_size()[0]-100, self.game.display.get_size()[1]*0.55), ">", settings.GRANATE, 50
         )
 
-        self.button_act = Button((530, 100), "Actividades", settings.AMARILLO)
-        self.button_hist = Button((880, 100), "Historial", settings.AMARILLO)
-        self.button_menu = Button((170, 100), "Menú", settings.AMARILLO)
+        self.button_act = Button((self.game.display.get_size()[0]*0.45, 100), "Actividades", settings.AMARILLO,200,settings.BLACK)
+        self.button_hist = Button((self.game.display.get_size()[0]*0.75, 100), "Historial", settings.AMARILLO,200,settings.BLACK)
+        self.button_menu = Button((self.game.display.get_size()[0]*0.15, 100), "Menú", settings.AMARILLO,200,settings.BLACK)
 
         self.button_group = [
             self.button_back,
@@ -66,6 +66,27 @@ class TutorialScene(Scene):
         self.bar_rect = pygame.Rect(40, (game.display.get_size()[1]) - 50, 700, 30)
         self.width = 0
 
+    def resized(self):
+        self.bar_rect = pygame.Rect(40, (self.game.display.get_size()[1]) - 50, 700, 30)
+
+        self.button_arrow_left.change_pos((45, self.game.display.get_size()[1]*0.55),50)
+        self.button_arrow_right.change_pos((self.game.display.get_size()[0]-100, self.game.display.get_size()[1]*0.55),50)
+
+        self.button_act.change_pos((self.game.display.get_size()[0]*0.45,100))
+        self.button_hist.change_pos((self.game.display.get_size()[0]*0.75,100))
+        self.button_menu.change_pos((self.game.display.get_size()[0]*0.15,100))
+
+        self.historial = cargar_archivos_folder(settings.HISTORIAL, (self.game.display.get_size()[0]*0.7,self.game.display.get_size()[0]*0.4))
+        self.actividades = cargar_archivos_folder(settings.ACTIVIDADES, (self.game.display.get_size()[0]*0.7,self.game.display.get_size()[0]*0.4))
+        self.menu = cargar_archivos_folder(settings.MENU, (self.game.display.get_size()[0]*0.7,self.game.display.get_size()[0]*0.4))
+       
+        if self.current_image_name == 'Menu':
+            self.images_group = self.menu
+        elif self.current_image_name == 'Actividades':
+            self.images_group = self.actividades
+        elif self.current_image_name == 'Historial':
+            self.images_group = self.historial
+         
     def check_collide(self, left, right):
         if self.button_back.top_rect.collidepoint(
             left.rect.centerx, left.rect.centery
@@ -109,15 +130,15 @@ class TutorialScene(Scene):
     def draw(self):
         # Backgrounds
         self.game.display.fill(settings.GRANATE)
-        pygame.draw.rect(
-            self.game.display, settings.AMARILLO, pygame.Rect(40, 160, 1200, 560)
-        )
+        pygame.draw.rect(self.game.display, settings.AMARILLO, pygame.Rect(40, 160, self.game.display.get_size()[0]-80, self.game.display.get_size()[1]-220))
         for i in range(4):
+            # Rectangulo grande
             pygame.draw.rect(self.game.display, (0, 0, 0),
-                             (40, 160, 1200, 560), 2)
+                             (40, 160, self.game.display.get_size()[0]-80, self.game.display.get_size()[1]-220), 2)
+
 
         # Text
-        self.game.display.blit(self.tutorial, (settings.WIDTH // 3 + 30, 10))
+        self.game.display.blit(self.tutorial, (self.game.display.get_size()[0]*0.4, 10))
 
         # Buttons
         self.button_back.draw(self.game.display)
@@ -128,7 +149,7 @@ class TutorialScene(Scene):
         self.button_menu.draw(self.game.display)
 
         # For show current video
-        self.game.display.blit(self.images_group[self.current_image], (135, 200))
+        self.game.display.blit(self.images_group[self.current_image], (self.game.display.get_size()[0]*0.15, 180))
 
         # Sources
         self.right_source.draw(self.game.display)
@@ -146,14 +167,16 @@ class TutorialScene(Scene):
         if self.button_act.get_pressed() or self.button_act.on_click(events):
             self.images_group = self.actividades
             self.current_image = 0
+            self.current_image_name = 'Actividades'
         if self.button_hist.get_pressed() or self.button_hist.on_click(events):
             self.images_group = self.historial
             self.current_image = 0
+            self.current_image_name = 'Historial'
         if self.button_menu.get_pressed() or self.button_menu.on_click(events):
             self.images_group = self.menu
             self.current_image = 0
-        if self.button_back.get_pressed() or self.button_back.on_click(events):
-            
+            self.current_image_name = 'Menu'
+        if self.button_back.get_pressed() or self.button_back.on_click(events): 
             return MenuScene(self.game)
         if self.button_arrow_left.get_pressed() or self.button_arrow_left.on_click(
             events

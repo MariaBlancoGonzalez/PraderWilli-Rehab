@@ -1,8 +1,11 @@
 import pygame
 
-from broker import No_DB
+from broker import DataBroker
 from scenes.scene import Scene
-import settings
+import settings.settings as settings
+from settings.settings_0 import ID_DIAGONALES
+from settings.settings_1 import ID_SQUAD
+from settings.settings_2 import ID_BALLS
 
 from ui.gui import Button, DropDown, ImageButton
 from ui.source import Source
@@ -33,16 +36,14 @@ class RecordScene(Scene):
         self.estadisticas = self.fontUnderline.render(
             f"Estadisticas", True, settings.BLACK
         )
-        # Images
-        self.imagePDF = pygame.image.load(settings.PDF)
 
         # Buttons
-        self.button_back = Button((100, 20), "Volver", settings.AMARILLO)
-        self.button_datos = Button((950, 20), "Ver datos", settings.AMARILLO)
+        self.button_back = Button((100, 20), "Volver", settings.AMARILLO, 200, settings.BLACK)
+        self.button_datos = Button((self.game.display.get_size()[0]*0.75, 20), "Ver datos", settings.AMARILLO, 200, settings.BLACK)
         self.userDropDown = DropDown(
             [settings.GRISCLARO, settings.WHITE],
             [settings.WHITE, settings.GRISCLARO],
-            100,
+            self.game.display.get_size()[0]*0.1,
             110,
             200,
             35,
@@ -54,7 +55,7 @@ class RecordScene(Scene):
         self.exerDropDown = DropDown(
             [settings.GRISCLARO, settings.WHITE],
             [settings.WHITE, settings.GRISCLARO],
-            530,
+            self.game.display.get_size()[0]*0.45,
             110,
             200,
             35,
@@ -63,10 +64,10 @@ class RecordScene(Scene):
             game.exer_list,
         )
         self.button_arrow_left = Button(
-            (45, settings.HEIGHT // 2), "<", settings.GRANATE, 50
+            (45, self.game.display.get_size()[1]*0.55), "<", settings.GRANATE, 50
         )
         self.button_arrow_right = Button(
-            (1178, settings.HEIGHT // 2), ">", settings.GRANATE, 50
+            (self.game.display.get_size()[0]-100, self.game.display.get_size()[1]*0.55), ">", settings.GRANATE, 50
         )
 
         self.button_group = [
@@ -88,11 +89,11 @@ class RecordScene(Scene):
         self.id_exer = get_id(self.exerDropDown.main)
         self.id_user = get_id(self.game.current_user)
 
-        if int(self.id_exer) == settings.ID_DIAGONALES:
+        if int(self.id_exer) == ID_DIAGONALES:
             self.current_activity_object = DiagonalesStats(game.current_user, self.id_exer, self.id_user, game.display)
-        elif int(self.id_exer) == settings.ID_BALLS:
+        elif int(self.id_exer) == ID_BALLS:
             self.current_activity_object = BallStats(game.current_user, self.id_exer, self.id_user, game.display)
-        elif int(self.id_exer) == settings.ID_SQUAD:
+        elif int(self.id_exer) == ID_SQUAD:
             self.current_activity_object = SquadStats(game.current_user, self.id_exer, self.id_user, game.display)
         self.current_activity_object.create_measures()
         self.current_activity_object.create_table(0)
@@ -109,7 +110,20 @@ class RecordScene(Scene):
         self.bar_rect = pygame.Rect(40, (game.display.get_size()[1]) - 50, 700, 30)
         self.width = 0
 
+        self.redim = False
+
         self.page = 0
+    def resized(self):
+        self.bar_rect = pygame.Rect(40, (self.game.display.get_size()[1]) - 50, 700, 30)
+        self.button_datos.change_pos((self.game.display.get_size()[0]*0.75,20))
+
+        self.button_arrow_left.change_pos((45, self.game.display.get_size()[1]*0.55),50)
+        self.button_arrow_right.change_pos((self.game.display.get_size()[0]-100, self.game.display.get_size()[1]*0.55),50)
+
+        self.userDropDown.change_pos(self.game.display.get_size()[0]*0.1,110,200,35)
+        self.exerDropDown.change_pos(self.game.display.get_size()[0]*0.45,110,200,35)
+
+        self.redim = True
 
     def events(self, events):
         self.userDropDown.update(events)
@@ -148,13 +162,13 @@ class RecordScene(Scene):
             self.current_exer = self.exerDropDown.main
             self.id_exer = get_id(self.current_exer)
 
-            if int(self.id_exer) == settings.ID_DIAGONALES:
+            if int(self.id_exer) == ID_DIAGONALES:
                 self.current_activity_object = DiagonalesStats(
                     self.current_user, self.id_exer, self.id_user, self.game.display)
-            elif int(self.id_exer) == settings.ID_BALLS:
+            elif int(self.id_exer) == ID_BALLS:
                 self.current_activity_object = BallStats(
                     self.current_user, self.id_exer, self.id_user, self.game.display)
-            elif int(self.id_exer) == settings.ID_SQUAD:
+            elif int(self.id_exer) == ID_SQUAD:
                 self.current_activity_object = SquadStats(
                     self.current_user, self.id_exer, self.id_user, self.game.display)
             self.current_activity_object.create_measures()
@@ -169,12 +183,14 @@ class RecordScene(Scene):
     def draw(self):
         # Background colors
         self.game.display.fill(settings.GRANATE)
-        pygame.draw.rect(self.game.display, settings.AMARILLO, pygame.Rect(40, 160, 1200, 560))
+        pygame.draw.rect(self.game.display, settings.AMARILLO, pygame.Rect(40, 160, self.game.display.get_size()[0]-80, self.game.display.get_size()[1]-220))
         for i in range(4):
+            # Rectangulo grande
             pygame.draw.rect(self.game.display, (0, 0, 0),
-                             (40, 160, 1200, 560), 2)
+                             (40, 160, self.game.display.get_size()[0]-80, self.game.display.get_size()[1]-220), 2)
+
         # Text
-        self.game.display.blit(self.historial, (settings.WIDTH // 3 + 30, 10))
+        self.game.display.blit(self.historial, (self.game.display.get_size()[0]*0.4, 10))
 
         # Sources
         self.right_source.draw(self.game.display)
@@ -197,7 +213,7 @@ class RecordScene(Scene):
                 rect_stats.set_alpha(128)  # alpha level
                 # this fills the entire surface
                 rect_stats.fill((255, 255, 255))
-                self.game.display.blit(rect_stats, (840, 170))
+                self.game.display.blit(rect_stats, (self.game.display.get_size()[0]-450, 170))
 
                 if int(self.id_exer) == settings.ID_DIAGONALES:
                     stats = self.current_activity_object.stats
@@ -208,7 +224,7 @@ class RecordScene(Scene):
                     self.game.display.blit(graphs[1][1], (42, 435))
 
                     # Statistics
-                    self.game.display.blit(self.estadisticas, (860, 180))
+                    self.game.display.blit(self.estadisticas, (self.game.display.get_size()[0]-420, 180))
                     
                     counter = 230
                     for i in range(len(stats)):
@@ -216,7 +232,7 @@ class RecordScene(Scene):
                             f"{stats[i][0]} {stats[i][1]}",
                             True,
                             settings.BLACK,
-                        ), (870, counter))
+                        ), (self.game.display.get_size()[0]-410, counter))
                         counter += 50
 
                 elif int(self.id_exer) == settings.ID_SQUAD:
@@ -228,7 +244,7 @@ class RecordScene(Scene):
                     self.game.display.blit(graphs[1][1], (42, 435))
 
                     # Statistics
-                    self.game.display.blit(self.estadisticas, (860, 180))
+                    self.game.display.blit(self.estadisticas, (self.game.display.get_size()[0]-420, 180))
 
                     counter = 230
                     for i in range(len(stats)):
@@ -236,7 +252,7 @@ class RecordScene(Scene):
                             f"{stats[i][0]} {stats[i][1]}",
                             True,
                             settings.BLACK,
-                        ), (870, counter))
+                        ), (self.game.display.get_size()[0]-410, counter))
                         counter += 50
 
                 elif int(self.id_exer) == settings.ID_BALLS:
@@ -246,7 +262,7 @@ class RecordScene(Scene):
                     self.game.display.blit(graphs[0][1], (42, 182))
 
                     # Statistics
-                    self.game.display.blit(self.estadisticas, (860, 180))
+                    self.game.display.blit(self.estadisticas, (self.game.display.get_size()[0]-420, 180))
 
                     counter = 230
                     for i in range(len(stats)-2):
@@ -254,7 +270,7 @@ class RecordScene(Scene):
                             f"{stats[i][0]} {stats[i][1]}",
                             True,
                             settings.BLACK,
-                        ), (870, counter))
+                        ), (self.game.display.get_size()[0]-410, counter))
                         counter += 50
 
                     self.game.display.blit(settings.FONTS["arial_small"].render(
@@ -276,6 +292,8 @@ class RecordScene(Scene):
 
             else:
                 # Dibujar la tabla
+                if self.redim == True:
+                    self.current_activity_object.table.change_window(self.game.display)
                 self.fontUnderline.set_underline(False)
                 self.current_activity_object.table.dibujar(self.page)
                 self.button_arrow_left.draw(self.game.display)

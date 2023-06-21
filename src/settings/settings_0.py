@@ -1,0 +1,24 @@
+# Settings for 'Diagonales Superiores'. ID: 0
+from settings.settings import ROCKET, BOMBA, ESTRELLA
+
+# Data
+EXER_0_JSON = './data/0.json'
+
+# Config
+EXER_0_CONFIG = './config/Exer_0_config.json'
+
+# FOR GAME DIAGONALES
+ID_DIAGONALES = 0
+FPS_EXPLOSION = 0.2
+FPS_FIREWORKS = 0.2
+VISIBILIDAD = 0.8
+FEET_MARGIN = 30
+FEET_BOX = 50
+MANOS_IMG = ROCKET
+ERROR = BOMBA
+ACIERTO = ESTRELLA
+FPS_DIAG = 20
+
+# PUNTUACION
+ACIERTO_PTO = 100
+FALLO_PTO = 50

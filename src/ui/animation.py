@@ -2,7 +2,7 @@ import pygame
 from pygame.sprite import Sprite
 
 import os
-from settings import BLACK
+from settings.settings import BLACK
 
 
 class Animation(pygame.sprite.Sprite):

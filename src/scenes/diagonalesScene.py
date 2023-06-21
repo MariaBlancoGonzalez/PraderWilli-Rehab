@@ -1,13 +1,14 @@
 from scenes.scene import Scene
 import pygame
 
-import settings
+import settings.settings as settings
+import settings.settings_0 as settings_0
 from ui.source import Source
 from ui.sticker import Sticker
 from pygame.sprite import Group
 from ui.gui import BackgroundText
 
-from broker import No_DB
+from broker import DataBroker
 from pose_tracking.tracker_utils import *
 import datetime
 from ui.animation import Animation
@@ -15,12 +16,23 @@ import random
 from utils import *
 from scenes.activitiesScene import ActivitiesScene
 from scenes.calibrationScene import CalibrationScene
-
+from scenes.timeDownScene import TimeDown
+from ui.gui import ImageButton
 
 class DiagonalsScene(Scene):
     def __init__(self, game):
         super().__init__(game)
         self._name_scene = "DiagonalsScene"
+
+        self.boy = Sticker(
+            self.game.display,
+            settings.NIÑO,
+            settings.WIDTH*0.11,
+            250,
+            200,
+            160,
+        )
+
         self.right_feet = 0
         self.left_feet = 0
 
@@ -60,16 +72,16 @@ class DiagonalsScene(Scene):
         # Animation
         self.diag_gif = Animation(
             self.game.display,
-            620,
-            500,
+            self.game.display.get_size()[0]*0.45,
+            self.game.display.get_size()[1]*0.7,
             settings.DIAGGIF,
-            settings.FPS_DIAG, (500, 500)
+            settings_0.FPS_DIAG, (500, 500)
         )
         self.diaggif_animation = Group(self.diag_gif)
         # Game settings
-        self.trampas = read(settings.EXER_0_CONFIG, "PORCENTAJE_TRAMPAS")
-        self.velocidad_bolas = read(settings.EXER_0_CONFIG, "VELOCIDAD_ENTRE_BOLAS")
-        self.tiempo_juego = read(settings.EXER_0_CONFIG, "TIEMPO_JUEGO")
+        self.trampas = read(settings_0.EXER_0_CONFIG, "PORCENTAJE_TRAMPAS")
+        self.velocidad_bolas = read(settings_0.EXER_0_CONFIG, "VELOCIDAD_ENTRE_BOLAS")
+        self.tiempo_juego = read(settings_0.EXER_0_CONFIG, "TIEMPO_JUEGO")
 
         self.aciertos_izquierda = 0
         self.aciertos_derecha = 0
@@ -82,21 +94,21 @@ class DiagonalsScene(Scene):
         # Text
         self.texto = BackgroundText(
             "Atrapa las estrellas con las manos",
-            (180, 150),
+            (self.game.display.get_size()[0]*0.11, 70),
             settings.WHITE,
             settings.GRIS,
             30,
         )
         self.texto_partes = BackgroundText(
             "Muestra todas las partes del cuerpo",
-            (120, 250),
+            (self.game.display.get_size()[0]*0.11, self.game.display.get_size()[1]*0.45),
             settings.WHITE,
             settings.GRIS,
             30,
         )
         self.texto_pies = BackgroundText(
             "Coloca los pies en la casilla",
-            (250, 250),
+            (self.game.display.get_size()[0]*0.11, 70),
             settings.WHITE,
             settings.GRIS,
             30,
@@ -105,7 +117,7 @@ class DiagonalsScene(Scene):
         # Tracking time to show instruc.
         self.mostrar_instrucciones = True
         self.time_instr = 0
-        self.ticks = 0
+        self.ticks = pygame.time.get_ticks()
 
         # If calibration is done before start
         self.feet_right = (
@@ -132,17 +144,18 @@ class DiagonalsScene(Scene):
                 ].y,
             )
         )
+        self.timedown_object = TimeDown(self.game)
         self.calibration = False if game.static_points == None else True
         self.box_feet = [] if game.static_points == None else self.create_box_feet()
 
         if game.static_points != None:
             self.music.play()
             self.music_playing = True
-            left_hand_bound = create_diagonal_points_left(game.static_points)
-            right_hand_bound = create_diagonal_points_right(game.static_points)
-            top_margin = create_top_margin(game.static_points)
+            left_hand_bound = create_diagonal_points_left(game.static_points, self.game.display.get_size())
+            right_hand_bound = create_diagonal_points_right(game.static_points, self.game.display.get_size())
+            top_margin = create_top_margin(game.static_points, self.game.display.get_size())
             self.shoulder_left, self.shoulder_right = get_shoulder_pos(
-                game.static_points
+                game.static_points, self.game.display.get_size()
             )
             self.margin = (top_margin[0], top_margin[1])
             self.bound_left_hand = (left_hand_bound[0], left_hand_bound[1])
@@ -154,56 +167,122 @@ class DiagonalsScene(Scene):
         # Tracking time during game
         self.time_left = pygame.time.get_ticks()
         self.time_right = pygame.time.get_ticks()
+        self.reaction_timeLeft = pygame.time.get_ticks()
+        self.reaction_timeRight = pygame.time.get_ticks()
 
+
+        self.reaction_timeLeft_list_good = []
+        self.reaction_timeLeft_list_bad = []
+        self.reaction_timeRight_list_good = []
+        self.reaction_timeRight_list_bad = []
         # In case calibration is not done
         self.calibration_object = CalibrationScene(self.game)
 
         # Some checkers and timer
-        self.timer = 0
+        self.timer = pygame.time.get_ticks()
         self.current_results = None
         self.visibility_checker = True
         self.feet_checker = True
         self.current_time = self.tiempo_juego
 
-
+        self.countdowns = True
         self.pitido = True
         # Game complete
         self.end = False
         self.data_introduced = False
 
         # Time bar
-        # Progress bar
         self.bar_rect = pygame.Rect(
             200, 25, 500, 10)
         self.width = 0
         self.coefficient = 500 / self.tiempo_juego
 
+        # Go back
+        self.img_atras = pygame.image.load(settings.ATRAS)
+        self.atras = ImageButton(self.img_atras, (50,70), "modificar", (70, 70))
+        self.countback = True
+        self.timedown_back = TimeDown(self.game)
+
+    def resized(self):
+        # Text
+        self.texto = BackgroundText(
+            "Atrapa las estrellas con las manos",
+            (self.game.display.get_size()[0]*0.11,
+            70),
+            settings.WHITE,
+            settings.GRIS,
+            30,
+        )
+        self.texto_partes = BackgroundText(
+            "Muestra todas las partes del cuerpo",
+            (self.game.display.get_size()[0]*0.11, self.game.display.get_size()[1]*0.45),
+            settings.WHITE,
+            settings.GRIS,
+            30,
+        )
+        self.texto_pies = BackgroundText(
+            "Coloca los pies en la casilla",
+            (self.game.display.get_size()[0]*0.11, 70),
+            settings.WHITE,
+            settings.GRIS,
+            30,
+        )
+        self.boy = Sticker(
+            self.game.display,
+            settings.NIÑO,
+            settings.WIDTH*0.11,
+            250,
+            200,
+            160,
+        )
+
     def events(self, events):
         if self.end:
-            json_object = No_DB()
-            json_object.write_data_json(settings.EXER_0_JSON, settings.ID_DIAGONALES, self.tiempo_juego, self.errores_izquierda, self.aciertos_derecha, self.errores_derecha, self.aciertos_derecha)
+            json_object = DataBroker()
+            json_object.write_data_json(settings_0.EXER_0_JSON, settings_0.ID_DIAGONALES, self.tiempo_juego, 
+                                self.errores_izquierda, self.aciertos_derecha, self.errores_derecha, self.aciertos_derecha, 
+                                round(statistics.mean(self.reaction_timeLeft_list_bad), 2) if len(self.reaction_timeLeft_list_bad) >1 else self.velocidad_bolas, 
+                                round(statistics.mean(self.reaction_timeLeft_list_good),2) if len(self.reaction_timeLeft_list_good) >1 else self.velocidad_bolas,
+                                round(statistics.mean(self.reaction_timeRight_list_bad), 2) if len(self.reaction_timeRight_list_bad) >1 else self.velocidad_bolas, 
+                                round(statistics.mean(self.reaction_timeRight_list_good),2) if len(self.reaction_timeRight_list_good) >1 else self.velocidad_bolas)
+            return ActivitiesScene(self.game)
+
+        if self.atras.get_clicked_state() or self.atras.on_click(events):
+            self.music.stop()
             return ActivitiesScene(self.game)
 
         return None
 
     def draw(self):
         if self.time_instr >= 3 and self.calibration and not self.feet_checker:
+            self.boy.draw(self.game.display)
             self.texto_pies.draw(self.game.display)
         elif self.time_instr >= 3 and self.calibration and not self.visibility_checker:
+            self.boy.draw(self.game.display)
             self.texto_partes.draw(self.game.display)
-        if self.calibration and self.time_instr >=3:
-            pygame.draw.rect(self.game.display, settings.GRANATE, self.box_feet, 5, 0)
+        if self.calibration and self.time_instr >=3 and not self.countdowns:
+            pygame.draw.rect(self.game.display, settings.AZUL_CLARO, self.box_feet, 7, 0)
+        
+        self.atras.draw(self.game.display)
+    
+    def check_collide(self, left, right):
+        if self.atras.top_rect.collidepoint(
+            left.rect.centerx, left.rect.centery
+        ) or self.atras.top_rect.collidepoint(
+            right.rect.centerx, right.rect.centery
+        ):
+            return "Atras"
 
     def create_box_feet(self):
-        point_left = escale_coor_pix(self.feet_left[0], self.feet_left[1])
-        point_right = escale_coor_pix(self.feet_right[0], self.feet_right[1])
+        point_left = escale_coor_pix(self.feet_left[0], self.feet_left[1], self.game.display.get_size())
+        point_right = escale_coor_pix(self.feet_right[0], self.feet_right[1], self.game.display.get_size())
         width = distance_between_pixels(point_left, point_right)
 
         rect = pygame.Rect(
-            point_left[0] - settings.FEET_MARGIN,
-            point_left[1] - settings.FEET_MARGIN,
-            width + settings.FEET_BOX,
-            settings.FEET_BOX,
+            point_left[0] - settings_0.FEET_MARGIN,
+            point_left[1] - settings_0.FEET_MARGIN,
+            width + settings_0.FEET_BOX,
+            settings_0.FEET_BOX,
         )
         return rect
 
@@ -227,6 +306,22 @@ class DiagonalsScene(Scene):
         if self.current_results == None:
             return None
 
+        left_hand, right_hand = get_points(results)
+        self.left_source.rect.centerx = left_hand[0] * settings.WIDTH
+        self.left_source.rect.centery = left_hand[1] * settings.HEIGHT
+        self.right_source.rect.centerx = right_hand[0] * settings.WIDTH
+        self.right_source.rect.centery = right_hand[1] * settings.HEIGHT
+        
+        action = self.check_collide(self.left_source, self.right_source)
+        if action == "Atras":
+            self.timedown_back.tracking(results)
+            self.countback = self.timedown_back.events()
+            self.timedown_back.draw()
+            if not self.countback:
+                self.atras.set_clicked_true()
+        else:
+            self.timedown_back.restart()  
+        
         # Get initial points
         if not self.calibration:
             self.calibration_object.tracking(results)
@@ -251,23 +346,27 @@ class DiagonalsScene(Scene):
                         mp_pose.PoseLandmark.RIGHT_ANKLE
                     ].y,
                 )
+                
                 self.box_feet = self.create_box_feet()
 
-                left_hand_bound = create_diagonal_points_left(results)
-                right_hand_bound = create_diagonal_points_right(results)
-                top_margin = create_top_margin(results)
-                self.shoulder_left, self.shoulder_right = get_shoulder_pos(results)
+                left_hand_bound = create_diagonal_points_left(results, self.game.display.get_size())
+                right_hand_bound = create_diagonal_points_right(results, self.game.display.get_size())
+                top_margin = create_top_margin(results, self.game.display.get_size())
+                self.shoulder_left, self.shoulder_right = get_shoulder_pos(results, self.game.display.get_size())
                 self.margin = (top_margin[0], top_margin[1])
                 self.bound_left_hand = (left_hand_bound[0], left_hand_bound[1])
                 self.bound_right_hand = (right_hand_bound[0], right_hand_bound[1])
                 self.music.play()
                 # self.music_playing = True
                 self.ticks = pygame.time.get_ticks()
+                self.time_instr = 0
 
         elif self.time_instr < 3 and self.calibration and not self.end:
             self.time_instr = count(self.ticks)
             self.time_right = reset_pygame_timer()
             self.time_left = reset_pygame_timer()
+            self.reaction_timeLeft = reset_pygame_timer()
+            self.reaction_timeRight = reset_pygame_timer()
             self.timer = reset_pygame_timer()
             self.diaggif_animation.draw(self.game.display)
             self.diaggif_animation.update()
@@ -277,6 +376,7 @@ class DiagonalsScene(Scene):
             and self.calibration
             and not self.feet_checker
             and not self.end
+            and not self.countdowns
         ):
             # Cuando los pies no estan la posicion calibrada o falta algún punto en la pantalla
             # Para checkeo de pies
@@ -286,15 +386,28 @@ class DiagonalsScene(Scene):
             and self.calibration
             and not self.visibility_checker
             and not self.end
+            and not self.countdowns
         ):
             # para checkeo visibilidad
             self.visibility = check_visibility(self.current_results)
         elif (
             self.time_instr >= 3
             and self.calibration
+            and self.visibility_checker
+            and not self.end
+            and self.countdowns
+        ):
+            self.timedown_object.tracking(results)
+            self.timedown_object.draw()
+            self.countdowns = self.timedown_object.events()
+            self.timer = reset_pygame_timer()
+        elif (
+            self.time_instr >= 3
+            and self.calibration
             and self.feet_checker
             and self.visibility_checker
             and not self.end
+            and not self.countdowns
         ):
             # Cuando esta todo ok
             # Se usa la izquierda en la derecha y viceversa pq se invierte la imagen
@@ -376,15 +489,6 @@ class DiagonalsScene(Scene):
                 self.right_point.time = pygame.time.get_ticks()
                 self.points_right.add(self.right_point)
 
-            # Get the point in the hand
-            left_hand, right_hand = get_points(results)
-
-            # For each hand
-            self.left_source.rect.centerx = left_hand[0] * settings.WIDTH
-            self.left_source.rect.centery = left_hand[1] * settings.HEIGHT
-            self.right_source.rect.centerx = right_hand[0] * settings.WIDTH
-            self.right_source.rect.centery = right_hand[1] * settings.HEIGHT
-
             hit_list_left = pygame.sprite.groupcollide(
                 self.left_hand, self.points_left, False, True
             )
@@ -396,57 +500,63 @@ class DiagonalsScene(Scene):
             for _ in hit_list_right:
                 if self.right_point.get_trap():
                     self.errores_derecha += 1
-                    self.puntuacion -= settings.FALLO_PTO
+                    self.puntuacion -= settings_0.FALLO_PTO
                     explosion = Animation(
                         self.game.display,
                         self.right_point.rect.centerx,
                         self.right_point.rect.centery,
                         settings.EXPLOSION,
-                        settings.FPS_EXPLOSION,
+                        settings_0.FPS_EXPLOSION,
                     )
                     self.explosiones.add(explosion)
                     self.explosion.play()
+                    self.reaction_timeRight_list_good.append((pygame.time.get_ticks() - self.reaction_timeRight) / 1000)
                 else:
                     self.aciertos_derecha += 1
-                    self.puntuacion += settings.ACIERTO_PTO
+                    self.puntuacion += settings_0.ACIERTO_PTO
                     firework = Animation(
                         self.game.display,
                         self.right_point.rect.centerx,
                         self.right_point.rect.centery,
                         settings.FIREWORKS,
-                        settings.FPS_FIREWORKS,
+                        settings_0.FPS_FIREWORKS,
                     )
                     self.fireworks.add(firework)
                     self.press_star.play()
+                    self.reaction_timeRight_list_good.append((pygame.time.get_ticks() - self.reaction_timeRight) / 1000)
+
+                self.reaction_timeRight = reset_pygame_timer()
                 self.time_right = pygame.time.get_ticks()
 
             for _ in hit_list_left:
                 if self.left_point.get_trap():
                     self.errores_izquierda += 1
-                    self.puntuacion -= settings.FALLO_PTO
+                    self.puntuacion -= settings_0.FALLO_PTO
                     explosion = Animation(
                         self.game.display,
                         self.left_point.rect.centerx,
                         self.left_point.rect.centery,
                         settings.EXPLOSION,
-                        settings.FPS_EXPLOSION,
+                        settings_0.FPS_EXPLOSION,
                     )
                     self.explosiones.add(explosion)
                     self.explosion.play()
-                    
+                    self.reaction_timeLeft_list_good.append((pygame.time.get_ticks() - self.reaction_timeLeft) / 1000)
                 else:
                     self.aciertos_izquierda += 1
-                    self.puntuacion += settings.ACIERTO_PTO
+                    self.puntuacion += settings_0.ACIERTO_PTO
                     firework = Animation(
                         self.game.display,
                         self.left_point.rect.centerx,
                         self.left_point.rect.centery,
                         settings.FIREWORKS,
-                        settings.FPS_FIREWORKS,
+                        settings_0.FPS_FIREWORKS,
                     )
                     self.fireworks.add(firework)
                     self.press_star.play()
+                    self.reaction_timeLeft_list_good.append((pygame.time.get_ticks() - self.reaction_timeLeft) / 1000)
                 self.time_left = pygame.time.get_ticks()
+                self.reaction_timeLeft = pygame.time.get_ticks()
 
             if len(self.points_left) > 0:
                 self.points_left.update()
@@ -510,12 +620,12 @@ class DiagonalsScene(Scene):
             puntuacion = settings.FONTS["medium"].render(
                 "Puntuacion: ", True, settings.BLACK
             )
-            self.game.display.blit(puntuacion, (900, 15))
+            self.game.display.blit(puntuacion, (self.game.display.get_size()[0]-300, 15))
 
             puntos = settings.FONTS["medium"].render(
                 "{0}".format(self.puntuacion), True, settings.COLOR_ROJO
             )
-            self.game.display.blit(puntos, (1065, 15))
+            self.game.display.blit(puntos, (self.game.display.get_size()[0]-100, 15))
             
             # Draw point on the screen
             self.hands.draw(self.game.display)
