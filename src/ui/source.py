@@ -17,6 +17,10 @@ class Source(pygame.sprite.Sprite):
         # Start each new landmark.
         self.rect.centerx = 0
         self.rect.centery = 0
+    
+    def update_position(self, pos):
+        self.rect.centerx = pos[0]
+        self.rect.centery = pos[1]
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)

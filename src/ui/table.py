@@ -1,5 +1,5 @@
 import pygame
-import settings.settings
+import settings.settings as settings
 import math
 class Tabla:
     def __init__(self, id, ventana, datos_tabla, header, pos = 0, dimensiones_celda=(160, 30), color_borde=settings.BLACK, color_fondo=settings.WHITE, color_texto=settings.BLACK):    
@@ -72,10 +72,6 @@ class Tabla:
             pass
 
     def dibujar(self, pos):
-        '''rect_stats = pygame.Surface((1000, 425))  # the size of your rect
-        rect_stats.set_alpha(128)  # alpha level
-        rect_stats.fill((255, 255, 255))
-        self.ventana.blit(rect_stats, (self.ventana.get_size()[0]*0.15, 200))'''
 
         nombre = settings.FONTS["medium"].render(f"Datos recogidos en la actividad: {self.name_actividad}", True, settings.BLACK)
         self.ventana.blit(nombre, (self.ventana.get_size()[0]*0.25, 210))
@@ -95,14 +91,11 @@ class Tabla:
                     if y_celda + self.alto_celda < 0 or y_celda > self.alto_ventana:
                         continue
 
-                        # Dibujar el fondo de la celda
+                    # Dibujar el fondo de la celda
                     pygame.draw.rect(self.ventana, self.color_fondo, (x_celda, y_celda, self.ancho_celda, self.alto_celda))
-
-                        # Dibujar el borde de la celda
                     pygame.draw.rect(self.ventana, self.color_borde, (x_celda, y_celda, self.ancho_celda, self.alto_celda), 1)
 
                     # Dibujar el contenido de la celda
-
                     texto = self.font.render(str(contenido), True, settings.BLACK)
                     texto_rect = texto.get_rect()
                     texto_rect.center = (x_celda + self.ancho_celda // 2, y_celda + self.alto_celda // 2)

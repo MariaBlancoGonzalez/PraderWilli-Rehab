@@ -11,7 +11,6 @@ def get_mid(coord_a, coord_b, coord_c):
 
 
 def escale_coor_pix(coor_x, coor_y, escale, offset_x=0, offset_y=0):
-
     x_pix = (coor_x * escale[0]) + offset_x
     y_pix = (coor_y * escale[1]) + offset_y
     return (x_pix, y_pix)
@@ -35,7 +34,11 @@ def get_id(name):
 
 
 def distribute_data(data):
-    tiempo, tiempo_ejer, izq_errores, izq_aciertos, drcha_errores, drcha_aciertos = (
+    tiempo, tiempo_ejer, izq_errores, izq_aciertos, drcha_errores, drcha_aciertos, tr_errores_izquierda, tr_aciertos_izquierda, tr_errores_derecha, tr_aciertos_derecha = (
+        [],
+        [],
+        [],
+        [],
         [],
         [],
         [],
@@ -51,8 +54,13 @@ def distribute_data(data):
         izq_aciertos.append(i[3])
         drcha_errores.append(i[4])
         drcha_aciertos.append(i[5])
+        tr_errores_izquierda.append(i[6]) 
+        tr_aciertos_izquierda.append(i[7]) 
+        tr_errores_derecha.append(i[8]) 
+        tr_aciertos_derecha .append(i[9]) 
+
     
-    return tiempo, tiempo_ejer, izq_errores, izq_aciertos, drcha_errores, drcha_aciertos
+    return tiempo, tiempo_ejer, izq_errores, izq_aciertos, drcha_errores, drcha_aciertos, tr_errores_izquierda, tr_aciertos_izquierda, tr_errores_derecha, tr_aciertos_derecha
 
 def distribute_data_stats(data):
     fecha, errores, aciertos, tiempo = (
@@ -138,10 +146,11 @@ def angle_calculate_by_points(p1, p2, p3):
     p1 = np.array([p1[0], p1[1]])
     p2 = np.array([p2[0], p2[1]])
     p3 = np.array([p3[0], p3[1]])
+
     l1 = np.linalg.norm(p2 - p3)
     l2 = np.linalg.norm(p1 - p3)
     l3 = np.linalg.norm(p1 - p2)
-    # Calcular el ángulo
+
     return degrees(acos((l1**2 + l3**2 - l2**2) / (2 * l1 * l3)))
 
 def read(file, text):

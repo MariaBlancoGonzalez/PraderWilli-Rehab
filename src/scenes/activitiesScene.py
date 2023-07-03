@@ -7,10 +7,11 @@ from settings.settings_1 import EXER_1_CONFIG
 from settings.settings_2 import EXER_2_CONFIG
 
 from scenes.scene import Scene
-from pose_tracking.tracker_utils import *
+from tracking.tracker_utils import *
+
 from ui.gui import Button, ImageButton, InputNumberBox
 from ui.source import Source
-from scenes.timeDownScene import TimeDown
+from scenes.auxiliaryScenes.timeDownScene import TimeDown
 
 from utils import *
 
@@ -18,43 +19,20 @@ class ActivitiesScene(Scene):
     def __init__(self, game):
         super().__init__(game)
         self._name_scene = "ActivitiesScene"
+
         # Text
-        self.activities = settings.FONTS["header"].render(
-            "Actividades", True, settings.BLACK
-        )
-        self.txt_modificadores = settings.FONTS["medium"].render(
-            "Modificadores.", True, settings.BLACK
-        )
-        self.txt_time = settings.FONTS["small"].render(
-            "Tiempo de juego (segundos)", True, settings.BLACK
-        )
-        self.txt_time_appear = settings.FONTS["small"].render(
-            "Tiempo en el que los elementos aparecen", True, settings.BLACK
-        )
-        self.txt_elemento_trampa= settings.FONTS["small"].render(
-            "Porcentaje de trampa [0, 1]", True, settings.BLACK
-        )
-        self.txt_angulo= settings.FONTS["small"].render(
-            "Ángulo [1, 360]", True, settings.BLACK
-        )
-        self.txt_probabilidad_balls= settings.FONTS["small"].render(
-            "Probabilidad bolas [1, 100]", True, settings.BLACK
-        )
-        self.txt_change_mano = settings.FONTS["small"].render(
-            "Elegir miniatura de manos", True, settings.BLACK
-        )
-        self.txt_change_acierto = settings.FONTS["small"].render(
-            "Elegir miniatura aciertos", True, settings.BLACK
-        )
-        self.txt_change_error = settings.FONTS["small"].render(
-            "Elegir miniatura error", True, settings.BLACK
-        )
-        self.txt_change_time_squad = settings.FONTS["small"].render(
-            "Tiempo entre sentadillas", True, settings.BLACK
-        )
-        self.txt_change_time_ball = settings.FONTS["small"].render(
-            "Velocidad de las pelotas", True, settings.BLACK
-        )
+        self.activities = settings.FONTS["header"].render("Actividades", True, settings.BLACK)
+        self.txt_modificadores = settings.FONTS["medium"].render("Modificadores.", True, settings.BLACK)
+        self.txt_time = settings.FONTS["small"].render("Tiempo de juego (segundos)", True, settings.BLACK)
+        self.txt_time_appear = settings.FONTS["small"].render("Tiempo en el que los elementos aparecen", True, settings.BLACK)
+        self.txt_elemento_trampa= settings.FONTS["small"].render("Porcentaje de trampa [0, 1]", True, settings.BLACK)
+        self.txt_angulo= settings.FONTS["small"].render("Ángulo [1, 360]", True, settings.BLACK)
+        self.txt_probabilidad_balls= settings.FONTS["small"].render("Probabilidad bolas [1, 100]", True, settings.BLACK )
+        self.txt_change_mano = settings.FONTS["small"].render("Elegir miniatura de manos", True, settings.BLACK)
+        self.txt_change_acierto = settings.FONTS["small"].render("Elegir miniatura aciertos", True, settings.BLACK)
+        self.txt_change_error = settings.FONTS["small"].render("Elegir miniatura error", True, settings.BLACK)
+        self.txt_change_time_squad = settings.FONTS["small"].render("Tiempo entre sentadillas", True, settings.BLACK)
+        self.txt_change_time_ball = settings.FONTS["small"].render("Velocidad de las pelotas", True, settings.BLACK)
 
         # Images
         self.img_diagonales = pygame.image.load(settings.MINIATURA_DIAGONALES)
@@ -64,15 +42,9 @@ class ActivitiesScene(Scene):
 
         pos = self.game.display.get_size()[0]
         # Buttons
-        self.diagonales = ImageButton(
-            self.img_diagonales, (pos*0.05, 120), "diagonales", (pos*0.3, self.game.display.get_size()[1]*0.4)
-        )#(270, 330)
-        self.squad = ImageButton(
-            self.img_squad, (pos*0.35, 120), "squad", (pos*0.3, self.game.display.get_size()[1]*0.4)
-        )
-        self.balls = ImageButton(
-            self.img_balls, (pos*0.65, 120), "balls", (pos*0.3, self.game.display.get_size()[1]*0.4)
-        )
+        self.diagonales = ImageButton(self.img_diagonales, (pos*0.05, 120), "diagonales", (pos*0.3, self.game.display.get_size()[1]*0.4))#(270, 330)
+        self.squad = ImageButton(self.img_squad, (pos*0.35, 120), "squad", (pos*0.3, self.game.display.get_size()[1]*0.4))
+        self.balls = ImageButton(self.img_balls, (pos*0.65, 120), "balls", (pos*0.3, self.game.display.get_size()[1]*0.4))
         
         self.button_modify_diagonales = ImageButton(self.img_modify, self.diagonales.get_lowest_center_point(), "modificar", (30, 30))
         self.button_modify_squad = ImageButton(self.img_modify, self.squad.get_lowest_center_point(), "modificar", (30, 30))
@@ -82,28 +54,18 @@ class ActivitiesScene(Scene):
         self.button_back = Button((pos*0.1, 30), "Volver", settings.AMARILLO, 200, settings.BLACK)
 
         self.button_apply = Button((pos*0.75, self.game.display.get_size()[1] - 100), "Aplicar")
-        self.button_apply_squad = Button(
-            (pos*0.75, self.game.display.get_size()[1] - 100), "Aplicar")
-        self.button_apply_balls = Button(
-            (pos*0.75, self.game.display.get_size()[1] - 100), "Aplicar")
+        self.button_apply_squad = Button((pos*0.75, self.game.display.get_size()[1] - 100), "Aplicar")
+        self.button_apply_balls = Button((pos*0.75, self.game.display.get_size()[1] - 100), "Aplicar")
 
-        self.button_group = [
-            self.button_back,
-            self.button_calibrate,
-            self.button_modify_diagonales,
-            self.diagonales,
-            self.squad,
-            self.button_apply,
-            self.button_apply_squad,
-            self.button_modify_squad,
-            self.button_apply_balls,
-            self.button_modify_balls,
-            self.balls
-        ]
+        self.button_group = [self.button_back,self.button_calibrate,self.button_modify_diagonales,self.diagonales,
+            self.squad,self.button_apply,self.button_apply_squad,self.button_modify_squad,
+            self.button_apply_balls,self.button_modify_balls,self.balls]
 
         # Sources
         self.right_source = Source(self.game.display, settings.MANO_DERECHA, (90,90))
         self.left_source = Source(self.game.display, settings.MANO_IZQUIERDA, (90,90))
+        self.hands = pygame.sprite.Group([self.right_source, self.left_source])
+        self.action = ""
 
         # About modifiers
         self.modify_components = False
@@ -133,14 +95,13 @@ class ActivitiesScene(Scene):
         self.pressed_balls = pygame.time.get_ticks()
         self.pressed_calibrate = pygame.time.get_ticks()
         self.pressed_apply = pygame.time.get_ticks()
+        self.pressed_apply_squad = pygame.time.get_ticks()
+        self.pressed_apply_balls = pygame.time.get_ticks()
         self.pressed_back = pygame.time.get_ticks()
 
         # Progress bar
-        self.bar_rect = pygame.Rect(
-            100, (self.game.display.get_size()[1]) - 90, 700, 30
-        )
+        self.bar_rect = pygame.Rect(100, (self.game.display.get_size()[1]) - 90, 700, 30)
         self.width = 0
-        
     
     def resized(self):
         self.bar_rect = pygame.Rect(100, (self.game.display.get_size()[1]) - 90, 700, 30)
@@ -152,15 +113,9 @@ class ActivitiesScene(Scene):
         self.button_modify_balls.resized(pos*0.805, 390)
         
         # Buttons
-        self.diagonales = ImageButton(
-            self.img_diagonales, (pos*0.05, 120), "diagonales", (pos*0.3, self.game.display.get_size()[1]*0.4)
-        )#(270, 330)
-        self.squad = ImageButton(
-            self.img_squad, (pos*0.35, 120), "squad", (pos*0.3, self.game.display.get_size()[1]*0.4)
-        )
-        self.balls = ImageButton(
-            self.img_balls, (pos*0.65, 120), "balls", (pos*0.3, self.game.display.get_size()[1]*0.4)
-        )
+        self.diagonales = ImageButton(self.img_diagonales, (pos*0.05, 120), "diagonales", (pos*0.3, self.game.display.get_size()[1]*0.4))#(270, 330)
+        self.squad = ImageButton(self.img_squad, (pos*0.35, 120), "squad", (pos*0.3, self.game.display.get_size()[1]*0.4))
+        self.balls = ImageButton(self.img_balls, (pos*0.65, 120), "balls", (pos*0.3, self.game.display.get_size()[1]*0.4))
         self.button_modify_diagonales = ImageButton(self.img_modify, self.diagonales.get_lowest_center_point(), "modificar", (30, 30))
         self.button_modify_squad = ImageButton(self.img_modify, self.squad.get_lowest_center_point(), "modificar", (30, 30))
         self.button_modify_balls = ImageButton(self.img_modify, self.balls.get_lowest_center_point(), "modificar", (30, 30))
@@ -188,7 +143,7 @@ class ActivitiesScene(Scene):
         self.input_time_do_balls = InputNumberBox(450, pos_y, 200, 35, text="")
         self.input_prob_element = InputNumberBox(900, pos_y, 200, 35)
 
-    def draw(self):
+    def render(self):
         self.game.display.fill(settings.GRANATE)
 
         pygame.draw.rect(
@@ -291,17 +246,17 @@ class ActivitiesScene(Scene):
 
         if self.diagonales.on_click(events) or self.diagonales.get_clicked_state():
             self.diagonales.clicked = True
-            from scenes.diagonalesScene import DiagonalsScene
+            from scenes.exergames.diagonalesScene import DiagonalsScene
             return DiagonalsScene(self.game)
 
         if self.squad.on_click(events) or self.squad.get_clicked_state():
             self.squad.clicked = True
-            from scenes.squadScene import SquadScene
+            from scenes.exergames.squadScene import SquadScene
             return SquadScene(self.game)
 
         if self.balls.on_click(events) or self.balls.get_clicked_state():
             self.balls.clicked = True
-            from scenes.ballScene import BallScene
+            from scenes.exergames.ballScene import BallScene
             return BallScene(self.game)
 
         if self.button_back.get_pressed() or self.button_back.on_click(events):
@@ -310,7 +265,7 @@ class ActivitiesScene(Scene):
 
         if self.button_calibrate.get_pressed() or self.button_calibrate.on_click(
             events):
-            from scenes.calibrationScene import CalibrationScene
+            from scenes.auxiliaryScenes.calibrationScene import CalibrationScene
             return CalibrationScene(self.game)
 
         if self.button_apply.get_pressed() or self.button_apply.on_click(events):
@@ -350,6 +305,14 @@ class ActivitiesScene(Scene):
             self.input_angle.reset()
             self.modify_squad= False
             self.button_modify_squad.update()
+            self.diagonales.update()
+            self.squad.update()
+            self.balls.update()
+            pos = pygame.mouse.get_pos()
+            if any(button.rect.collidepoint(pos) for button in self.button_group):
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+            else:
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
         if self.modify_squad:
             self.input_time_squad.handle_event(events)
@@ -379,129 +342,103 @@ class ActivitiesScene(Scene):
 
         return None
 
-    def check_collide(self, left, right):
-        if self.diagonales.top_rect.collidepoint(
-            left.rect.centerx, left.rect.centery
-        ) or self.diagonales.top_rect.collidepoint(
-            right.rect.centerx, right.rect.centery
-        ):
-            return "Diagonales"
-        elif self.squad.top_rect.collidepoint(
-            left.rect.centerx, left.rect.centery
-        ) or self.squad.top_rect.collidepoint(
-            right.rect.centerx, right.rect.centery
-        ):
-            return "Squad"
-        elif self.balls.top_rect.collidepoint(
-            left.rect.centerx, left.rect.centery
-        ) or self.balls.top_rect.collidepoint(
-            right.rect.centerx, right.rect.centery
-        ):
-            return "Balls"
-        elif self.button_calibrate.top_rect.collidepoint(
-            left.rect.centerx, left.rect.centery
-        ) or self.button_calibrate.top_rect.collidepoint(
-            right.rect.centerx, right.rect.centery
-        ):
-            return "Calibrate"
-        elif self.button_back.top_rect.collidepoint(
-            left.rect.centerx, left.rect.centery
-        ) or self.button_back.top_rect.collidepoint(
-            right.rect.centerx, right.rect.centery
-        ):
-            return "Volver"
+    def update(self, frame):
+        self.pose_tracker.pose_tracking(frame)
 
-        return ""
-
-    def tracking(self, results):
-        action = ""
         coefficient = settings.WIDTH_LOAD_BAR / settings.TIME_BUTTONS
-        left_hand, right_hand = get_points(results)
-        self.left_source.rect.centerx = left_hand[0] * settings.WIDTH
-        self.left_source.rect.centery = left_hand[1] * settings.HEIGHT
-        self.right_source.rect.centerx = right_hand[0] * settings.WIDTH
-        self.right_source.rect.centery = right_hand[1] * settings.HEIGHT
 
-        # Colisiones
-        action = self.check_collide(self.left_source, self.right_source)
+        left_hand, right_hand = get_hands_points(self.pose_tracker.landmark_process)
+
+        self.left_source.update_position(left_hand)
+        self.right_source.update_position(right_hand)
+
         # ------------------------------------------
-        if action == "Diagonales":
+        if pygame.sprite.spritecollideany(self.diagonales, self.hands):
             self.time_hand = count(self.pressed_diagonales)
+            print(self.time_hand)   
+            self.action = "Diagonales"
         else:
             self.pressed_diagonales = pygame.time.get_ticks()
         # ------------------------------------------
-        if action == "Squad":
+        if pygame.sprite.spritecollideany(self.squad, self.hands):
             self.time_hand = count(self.pressed_squad)
+            print(self.time_hand)
+            self.action = "Squad"
         else:
             self.pressed_squad = pygame.time.get_ticks()
         # ------------------------------------------
-        if action == "Balls":
+        if pygame.sprite.spritecollideany(self.balls, self.hands):
             self.time_hand = count(self.pressed_balls)
+            print(self.time_hand)
+            self.action = "Balls"
         else:
             self.pressed_balls = pygame.time.get_ticks()
         # ------------------------------------------
-        if action == "Calibrate":
+        if pygame.sprite.spritecollideany(self.button_calibrate, self.hands):
             self.time_hand = count(self.pressed_calibrate)
+            self.action = "Calibrate"
         else:
             self.pressed_calibrate = pygame.time.get_ticks()
         # ------------------------------------------
-        if action == "Aplicar":
+        if pygame.sprite.spritecollideany(self.button_apply, self.hands):
             self.time_hand = count(self.pressed_apply)
+            self.action = "Aplicar"
         else:
             self.pressed_apply = pygame.time.get_ticks()
         # ------------------------------------------
-        if action == "Volver":
+        if pygame.sprite.spritecollideany(self.button_apply_balls, self.hands):
+            self.time_hand = count(self.pressed_apply_balls)
+            self.action ="AplicarBalls"
+        else:
+            self.pressed_apply = pygame.time.get_ticks()
+        # ------------------------------------------
+        if pygame.sprite.spritecollideany(self.button_apply_squad, self.hands):
+            self.time_hand = count(self.pressed_apply_squad)
+            self.action = "AplicarSquad"
+        else:
+            self.pressed_apply = pygame.time.get_ticks()
+        # ------------------------------------------
+        if pygame.sprite.spritecollideany(self.button_back, self.hands):
             self.time_hand = count(self.pressed_back)
+            self.action = "Volver"
         else:
             self.pressed_back = pygame.time.get_ticks()
 
         self.width = self.time_hand * coefficient
-        if self.width > settings.WIDTH_LOAD_BAR + 10:
-            if action == "Diagonales":
-                self.diagonales.set_clicked_true()
-            elif action == "Squad":
-                self.squad.set_clicked_true()
-            elif action == "Balls":
-                self.balls.set_clicked_true()
-            elif action == "Calibrate":
-                self.button_calibrate.set_pressed(True)
-            elif action == "Aplicar":
-                self.button_apply.set_pressed(True)
-            elif action == "Volver":
-                self.button_back.set_pressed(True)
 
-        if action == "":
-            self.time_hand, self.width = reset_time()
         if self.time_hand >= settings.TIME_BUTTONS:
-            if action == "Diagonales":
+            if self.action == "Diagonales":
                 self.diagonales.set_clicked_true()
-            elif action == "Squad":
+            elif self.action == "Squad":
                 self.squad.set_clicked_true()
-            elif action == "Balls":
+            elif self.action == "Balls":
                 self.balls.set_clicked_true()
-            elif action == "Calibrate":
+            elif self.action == "Calibrate":
                 self.button_calibrate.set_pressed(True)
-            elif action == "Aplicar":
+            elif self.action == "Aplicar":
                 self.button_apply.set_pressed(True)
-            elif action == "Volver":
+            elif self.action == "AplicarBalls":
+                self.button_apply_balls.set_pressed(True)
+            elif self.action == "AplicarSquad":
+                self.button_apply_squad.set_pressed(True)
+            elif self.action == "Volver":
                 self.button_back.set_pressed(True)
             self.time_hand, self.width = reset_time()
             self.reset_timer_after()
+
+        if self.action == "":
+            self.time_hand, self.width = reset_time()
+
+        self.action = ""
 
     def reset_timer_after(self):
         self.pressed_diagonales = pygame.time.get_ticks()
         self.pressed_back = pygame.time.get_ticks()
         self.pressed_apply = pygame.time.get_ticks()
+        self.pressed_apply_squad = pygame.time.get_ticks()
+        self.pressed_apply_balls = pygame.time.get_ticks()
         self.pressed_calibrate = pygame.time.get_ticks()
         self.pressed_balls = pygame.time.get_ticks()
         self.pressed_squad = pygame.time.get_ticks()
 
-    def update(self, dt):
-        self.diagonales.update()
-        self.squad.update()
-        self.balls.update()
-        pos = pygame.mouse.get_pos()
-        if any(button.top_rect.collidepoint(pos) for button in self.button_group):
-            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
-        else:
-            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+

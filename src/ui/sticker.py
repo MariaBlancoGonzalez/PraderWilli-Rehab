@@ -30,3 +30,5 @@ class Sticker(Sprite):
             # and 500 ms have elapsed, kill the sprite.
             if pygame.time.get_ticks() - self.time >= 3000:
                 self.kill()
+                return True
+        return False

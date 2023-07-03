@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
+import sys
 import cv2
 import mediapipe as mp
 
 import pygame
-import sys
+
 import settings.settings as settings
 from utils import *
 from ui.gui import BackgroundText
-from scenes.menuScene import (
-    MenuScene,
-)
-
-from broker import DataBroker
-from pose_tracking.cam_initialazer import check_availability
+from scenes.menuScene import MenuScene
+from tracking.cam_initialazer import check_availability
 
 class Initiator:
     def __init__(self):
@@ -128,9 +125,9 @@ class Initiator:
                     if self.flag_cam:
                         cap = cv2.VideoCapture(self.current_camara)
                         self.flag_cam = False
-                    success, image = cap.read()
+                    success, frame = cap.read()
                     try:
-                        resized = cv2.resize(image, (settings.WIDTH, settings.HEIGHT))
+                        resized = cv2.resize(frame, (settings.WIDTH, settings.HEIGHT))
                     except:
                         pass
 
@@ -138,53 +135,48 @@ class Initiator:
                         # If loading a video, use 'break' instead of 'continue'.
                         continue
                     try:
-                        image = cv2.cvtColor(cv2.flip(resized, 2), cv2.COLOR_BGR2RGB)
-                        results = pose.process(image)
-                        pygame.surfarray.blit_array(self.display, image.swapaxes(0, 1))
+                        frame = cv2.cvtColor(cv2.flip(resized, 2), cv2.COLOR_BGR2RGB)
+                        pygame.surfarray.blit_array(self.display, frame.swapaxes(0, 1))
                     except:
                         pass
 
                     if new_scene is not self.get_scene() and new_scene is not None:
                         self.change_scene(new_scene)
-
                     # Some necessary events for some specific scenes
                     if self.get_scene().get_name() == "MenuScene":
-                        self.get_scene().tracking(results)
+                        self.get_scene().update(frame)
                         new_scene = self.get_scene().events(ev)
-                        self.get_scene().draw()
-                    elif self.get_scene().get_name() == "RecordScene":
-                        self.get_scene().tracking(results)
-                        new_scene = self.get_scene().events(ev)
-                        self.get_scene().update(dt)
-                        self.get_scene().draw()
-                    elif self.get_scene().get_name() == "TutorialScene":
-                        self.get_scene().tracking(results)
-                        new_scene = self.get_scene().events(ev)
-                        self.get_scene().update(dt)
-                        self.get_scene().draw()
-                    elif self.get_scene().get_name() == "CalibrationScene":
-                        self.get_scene().tracking(results)
-                        self.get_scene().update(dt)
-                        new_scene = self.get_scene().events(dt)
-                        self.get_scene().draw()
-                    elif self.get_scene().get_name() == "DiagonalsScene":
-                        self.get_scene().tracking(results)
-                        new_scene = self.get_scene().events(ev)
-                        self.get_scene().draw()
-                    elif self.get_scene().get_name() == "SquadScene":
-                        self.get_scene().tracking(results)
-                        new_scene = self.get_scene().events(ev)
-                        self.get_scene().draw()
+                        self.get_scene().render()
                     elif self.get_scene().get_name() == "ActivitiesScene":
-                        self.get_scene().tracking(results)
+                        self.get_scene().update(frame)
                         new_scene = self.get_scene().events(ev)
-                        self.get_scene().update(dt)
-                        self.get_scene().draw()
+                        self.get_scene().render()
+                    elif self.get_scene().get_name() == "RecordScene":
+                        self.get_scene().update(frame)
+                        new_scene = self.get_scene().events(ev)
+                        self.get_scene().render()
+                    elif self.get_scene().get_name() == "TutorialScene":
+                        self.get_scene().update(frame)
+                        new_scene = self.get_scene().events(ev)
+                        self.get_scene().render()
+                    elif self.get_scene().get_name() == "CalibrationScene":
+                        self.get_scene().update(frame)
+                        self.get_scene().time_control(dt)
+                        self.get_scene().render()
+                        new_scene = self.get_scene().events(dt)
+                        self.get_scene().render()
+                    elif self.get_scene().get_name() == "DiagonalsScene":
+                        self.get_scene().update(frame)
+                        new_scene = self.get_scene().events(ev)
+                        self.get_scene().render()
+                    elif self.get_scene().get_name() == "SquadScene":
+                        self.get_scene().update(frame)
+                        new_scene = self.get_scene().events(ev)
+                        self.get_scene().render()
                     elif self.get_scene().get_name() == "BallScene":
-                        self.get_scene().update_camera_utilities(image)
-                        self.get_scene().tracking(results)
+                        self.get_scene().update(frame)
                         new_scene = self.get_scene().events(ev)
-                        self.get_scene().draw()
+                        self.get_scene().render()
 
                     pygame.display.update()
                     pygame.display.flip()

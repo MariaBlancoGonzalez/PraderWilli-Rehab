@@ -6,11 +6,11 @@ import numpy as np
 matplotlib.use("Agg")
 plt.rcParams.update({'figure.max_open_warning': 0})
 
-def create_right_hand_two_lines(errores, aciertos, fecha, tiempo, mano):
-
+def create_right_hand_two_lines(dim, errores, aciertos, fecha, tiempo, mano):
+    
     plt.style.use('ggplot')
     fig = plt.figure(
-        figsize=[8, 2.8],  # Inches
+        figsize=[dim[0], dim[1]],  # Inches
         dpi=100,  # 100 dots per inch, so the resulting buffer is 400x400 pixels
         facecolor=(0.9333, 0.8039, 0.5255, 1),
     )
@@ -36,11 +36,11 @@ def create_right_hand_two_lines(errores, aciertos, fecha, tiempo, mano):
     raw_data = renderer.tostring_rgb()
     return canvas, raw_data
 
-def create_line_chart(angulo, fecha, tiempo):
+def create_line_chart(dim, angulo, fecha, tiempo):
 
     plt.style.use('ggplot')
     fig = plt.figure(
-        figsize=[8, 2.8],  # Inches
+        figsize=[dim[0], dim[1]],  # Inches
         dpi=100,  # 100 dots per inch, so the resulting buffer is 400x400 pixels
         facecolor=(0.9333, 0.8039, 0.5255, 1),
     )
@@ -65,7 +65,8 @@ def create_line_chart(angulo, fecha, tiempo):
     raw_data = renderer.tostring_rgb()
     return canvas, raw_data
 
-def create_groupbar_chart_squad(fechas, errores, aciertos, tiempo, mano = 'None', tipo='Sentadillas'):
+def create_groupbar_chart_squad(dim, fechas, errores, aciertos, tiempo, mano = 'None', tipo='Sentadillas'):
+
     grouped = {
         'Errores': errores,
         'Correcto': aciertos,
@@ -77,7 +78,7 @@ def create_groupbar_chart_squad(fechas, errores, aciertos, tiempo, mano = 'None'
     multiplier = 0
 
     fig = plt.figure(
-        figsize=[8, 2.8],  # Inches
+        figsize=[dim[0], dim[1]],  # Inches
         dpi=100,  # 100 dots per inch, so the resulting buffer is 400x400 pixels
         facecolor=(0.9333, 0.8039, 0.5255, 1),
     )
@@ -118,7 +119,7 @@ def create_groupbar_chart_squad(fechas, errores, aciertos, tiempo, mano = 'None'
     raw_data = renderer.tostring_rgb()
     return canvas, raw_data
 
-def create_groupbar_chart(fechas, errores, aciertos, tiempo):
+def create_groupbar_chart(dim, fechas, errores, aciertos, tiempo):
     esquivadas = [aciertos[i]-errores[i] for i in range(len(aciertos))]
     grouped = {
         'Impactos': errores,
@@ -131,7 +132,7 @@ def create_groupbar_chart(fechas, errores, aciertos, tiempo):
     multiplier = 0
 
     fig = plt.figure(
-        figsize=[8, 4],  # Inches
+        figsize=[dim[0]-0.3, dim[1]],  # Inches
         dpi=100,  # 100 dots per inch, so the resulting buffer is 400x400 pixels
         facecolor=(0.9333, 0.8039, 0.5255, 1),
     )
@@ -165,12 +166,12 @@ def create_groupbar_chart(fechas, errores, aciertos, tiempo):
     raw_data = renderer.tostring_rgb()
     return canvas, raw_data
     
-def create_error_success_time_plot(fechas, errores, aciertos, tiempo):
+def create_error_success_time_plot(dim, fechas, errores, aciertos, tiempo):
     # Configurar estilo "ggplot"
     plt.style.use('ggplot')
     
     fig = plt.figure(
-        figsize=[8, 4],  # Inches
+        figsize=[dim[0]-0.3, dim[1]],  # Inches
         dpi=100,  # 100 dots per inch, so the resulting buffer is 400x400 pixels
         facecolor=(0.9333, 0.8039, 0.5255, 1),
     )

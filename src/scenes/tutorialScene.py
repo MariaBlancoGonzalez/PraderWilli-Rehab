@@ -3,7 +3,7 @@ from scenes.scene import Scene
 import settings.settings as settings
 from ui.gui import Button
 from ui.source import Source
-from pose_tracking.tracker_utils import *
+from tracking.tracker_utils import *
 from utils import *
 
 from scenes.menuScene import MenuScene
@@ -14,9 +14,7 @@ class TutorialScene(Scene):
         self._name_scene = "TutorialScene"
 
         # Text
-        self.tutorial = settings.FONTS["header"].render(
-            "Tutorial", True, settings.BLACK
-        )
+        self.tutorial = settings.FONTS["header"].render("Tutorial", True, settings.BLACK)
 
         # Imágenes
         self.historial = cargar_archivos_folder(settings.HISTORIAL, (self.game.display.get_size()[0]*0.7,self.game.display.get_size()[0]*0.4))
@@ -50,8 +48,10 @@ class TutorialScene(Scene):
             self.button_menu,
         ]
         # Sources
-        self.right_source = Source(self.game.display, settings.PUNTERO_ROJO)
-        self.left_source = Source(self.game.display, settings.PUNTERO_ROJO)
+        self.right_source = Source(self.game.display, settings.MANO_DERECHA)
+        self.left_source = Source(self.game.display, settings.MANO_IZQUIERDA)
+        self.hands = pygame.sprite.Group([self.right_source, self.left_source])
+        self.action = ""
 
         # Tracking time
         self.time_hand = 0
@@ -86,48 +86,8 @@ class TutorialScene(Scene):
             self.images_group = self.actividades
         elif self.current_image_name == 'Historial':
             self.images_group = self.historial
-         
-    def check_collide(self, left, right):
-        if self.button_back.top_rect.collidepoint(
-            left.rect.centerx, left.rect.centery
-        ) or self.button_back.top_rect.collidepoint(
-            right.rect.centerx, right.rect.centery
-        ):
-            return "Volver"
-        elif self.button_arrow_left.top_rect.collidepoint(
-            left.rect.centerx, left.rect.centery
-        ) or self.button_arrow_left.top_rect.collidepoint(
-            right.rect.centerx, right.rect.centery
-        ):
-            return "<"
-        elif self.button_arrow_right.top_rect.collidepoint(
-            left.rect.centerx, left.rect.centery
-        ) or self.button_arrow_right.top_rect.collidepoint(
-            right.rect.centerx, right.rect.centery
-        ):
-            return ">"
 
-        elif self.button_hist.top_rect.collidepoint(
-            left.rect.centerx, left.rect.centery
-        ) or self.button_hist.top_rect.collidepoint(
-            right.rect.centerx, right.rect.centery
-        ):
-            return "Act"
-        elif self.button_act.top_rect.collidepoint(
-            left.rect.centerx, left.rect.centery
-        ) or self.button_act.top_rect.collidepoint(
-            right.rect.centerx, right.rect.centery
-        ):
-            return "Hist"
-        elif self.button_menu.top_rect.collidepoint(
-            left.rect.centerx, left.rect.centery
-        ) or self.button_menu.top_rect.collidepoint(
-            right.rect.centerx, right.rect.centery
-        ):
-            return "Menu"
-        return ""
-
-    def draw(self):
+    def render(self):
         # Backgrounds
         self.game.display.fill(settings.GRANATE)
         pygame.draw.rect(self.game.display, settings.AMARILLO, pygame.Rect(40, 160, self.game.display.get_size()[0]-80, self.game.display.get_size()[1]-220))
@@ -135,7 +95,6 @@ class TutorialScene(Scene):
             # Rectangulo grande
             pygame.draw.rect(self.game.display, (0, 0, 0),
                              (40, 160, self.game.display.get_size()[0]-80, self.game.display.get_size()[1]-220), 2)
-
 
         # Text
         self.game.display.blit(self.tutorial, (self.game.display.get_size()[0]*0.4, 10))
@@ -193,71 +152,87 @@ class TutorialScene(Scene):
             self.time_hand, self.width = reset_time()
             self.button_arrow_right.set_pressed(False)
 
+        pos = pygame.mouse.get_pos()
+        if any(button.rect.collidepoint(pos) for button in self.button_group):
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+        else:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+
         return None
 
-    def tracking(self, results):
-        action = ""
-        coefficient = settings.WIDTH_LOAD_BAR / settings.TIME_BUTTONS
-        left_hand, right_hand = get_points(results)
-        self.left_source.rect.centerx = left_hand[0] * settings.WIDTH
-        self.left_source.rect.centery = left_hand[1] * settings.HEIGHT
-        self.right_source.rect.centerx = right_hand[0] * settings.WIDTH
-        self.right_source.rect.centery = right_hand[1] * settings.HEIGHT
+    def update(self, frame):
+        self.pose_tracker.pose_tracking(frame)
 
-        # Colisiones
-        action = self.check_collide(self.left_source, self.right_source)
+        coefficient = settings.WIDTH_LOAD_BAR / settings.TIME_BUTTONS
+        left_hand, right_hand = get_hands_points(self.pose_tracker.landmark_process)
+
+        self.left_source.update_position(left_hand)
+        self.right_source.update_position(right_hand)
+        
         # ------------------------------------------
-        if action == "Volver":
+        if pygame.sprite.spritecollideany(self.button_back, self.hands) != None:
             self.time_hand = count(self.pressed_back)
+            self.action = "Volver"
         else:
             self.pressed_back = pygame.time.get_ticks()
         # ------------------------------------------
-        if action == ">":
+        if pygame.sprite.spritecollideany(self.button_arrow_right, self.hands) != None:
             self.time_hand = count(self.pressed_right)
+            self.action = ">"
         else:
             self.pressed_right = pygame.time.get_ticks()
         # ------------------------------------------
-        if action == "<":
+        if pygame.sprite.spritecollideany(self.button_arrow_left, self.hands) != None:
             self.time_hand = count(self.pressed_left)
+            self.action = "<"
         else:
             self.pressed_left = pygame.time.get_ticks()
         # ------------------------------------------
-        if action == "Act":
+        if pygame.sprite.spritecollideany(self.button_act, self.hands) != None:
             self.time_hand = count(self.pressed_act)
+            self.action = "Act"
         else:
             self.pressed_act = pygame.time.get_ticks()
         # ------------------------------------------
-        if action == "Hist":
+        if pygame.sprite.spritecollideany(self.button_hist, self.hands) != None:
             self.time_hand = count(self.pressed_hist)
+            self.action = "Hist"
         else:
             self.pressed_hist = pygame.time.get_ticks()
         # ------------------------------------------
-        if action == "Menu":
+        if pygame.sprite.spritecollideany(self.button_menu, self.hands) != None:
             self.time_hand = count(self.pressed_menu)
+            self.action = "Menu"
         else:
             self.pressed_menu = pygame.time.get_ticks()
 
         self.width = self.time_hand * coefficient
 
-        if action == "":
-            self.time_hand, self.width = reset_time()
         if self.time_hand >= settings.TIME_BUTTONS:
-            if action == "Volver":
+            if self.action == "Volver":
                 self.button_back.set_pressed(True)
-            elif action == "<":
+            elif self.action == "<":
                 self.button_arrow_left.set_pressed(True)
-            elif action == ">":
+            elif self.action == ">":
                 self.button_arrow_right.set_pressed(True)
-            elif action == "Act":
+            elif self.action == "Act":
                 self.button_act.set_pressed(True)
-            elif action == "Hist":
+            elif self.action == "Hist":
                 self.button_hist.set_pressed(True)
-            elif action == "Menu":
+            elif self.action == "Menu":
                 self.button_menu.set_pressed(True)
+            self.time_hand, self.width = reset_time()
+            self.reset_timer_after()
+        
+        if self.action == "":
+            self.time_hand, self.width = reset_time()
 
-    def update(self, dt):
-        pos = pygame.mouse.get_pos()
-        if any(button.top_rect.collidepoint(pos) for button in self.button_group):
-            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
-        else:
-            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+        self.action=""
+
+    def reset_timer_after(self):
+        self.pressed_back = pygame.time.get_ticks()
+        self.pressed_right = pygame.time.get_ticks()
+        self.pressed_left = pygame.time.get_ticks()
+        self.pressed_act = pygame.time.get_ticks()
+        self.pressed_hist = pygame.time.get_ticks()
+        self.pressed_menu = pygame.time.get_ticks()
