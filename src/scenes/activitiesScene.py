@@ -187,6 +187,7 @@ class ActivitiesScene(Scene):
             self.input_trap_element.draw(self.game.display)
             
             self.button_apply.draw(self.game.display)
+
         elif self.modify_squad:
             for i in range(4):
                 pygame.draw.rect(self.game.display, (0, 0, 0),
@@ -305,9 +306,7 @@ class ActivitiesScene(Scene):
             self.input_angle.reset()
             self.modify_squad= False
             self.button_modify_squad.update()
-            self.diagonales.update()
-            self.squad.update()
-            self.balls.update()
+
             pos = pygame.mouse.get_pos()
             if any(button.rect.collidepoint(pos) for button in self.button_group):
                 pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
@@ -340,6 +339,10 @@ class ActivitiesScene(Scene):
             self.input_time_do_balls.handle_event(events)
             self.input_prob_element.handle_event(events)
 
+        self.diagonales.update()
+        self.squad.update()
+        self.balls.update()
+
         return None
 
     def update(self, frame):
@@ -355,21 +358,18 @@ class ActivitiesScene(Scene):
         # ------------------------------------------
         if pygame.sprite.spritecollideany(self.diagonales, self.hands):
             self.time_hand = count(self.pressed_diagonales)
-            print(self.time_hand)   
             self.action = "Diagonales"
         else:
             self.pressed_diagonales = pygame.time.get_ticks()
         # ------------------------------------------
         if pygame.sprite.spritecollideany(self.squad, self.hands):
             self.time_hand = count(self.pressed_squad)
-            print(self.time_hand)
             self.action = "Squad"
         else:
             self.pressed_squad = pygame.time.get_ticks()
         # ------------------------------------------
         if pygame.sprite.spritecollideany(self.balls, self.hands):
             self.time_hand = count(self.pressed_balls)
-            print(self.time_hand)
             self.action = "Balls"
         else:
             self.pressed_balls = pygame.time.get_ticks()

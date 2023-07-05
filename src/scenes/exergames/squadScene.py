@@ -193,7 +193,6 @@ class SquadScene(Exergame):
                 self.animation.add(animation_right)
                 self.animation.add(animation_left)
 
-
         if (pygame.time.get_ticks() - self.time_squad) / 1000 >= self.velocidad_squad:
             if not self.correct_squad:
                 self.errores += 1
@@ -209,5 +208,7 @@ class SquadScene(Exergame):
             self.end = True
             self.music.stop()
             self.claps.play()
-            self.animation.draw(self.game.display)
-            self.animation.update()
+        
+        self.animation.draw(self.game.display)
+        self.animation.update()
+

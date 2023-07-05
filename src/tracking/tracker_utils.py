@@ -11,7 +11,10 @@ def extract_face_landmarks(pose):
     body_landmarks = []
 
     for index in BODY_PARTS:
-        body_landmarks.append(pose.pose_landmarks.landmark[index])
+        try:
+            body_landmarks.append(pose.pose_landmarks.landmark[index])
+        except:
+            pass
 
     return body_landmarks
 
@@ -22,73 +25,86 @@ def euclidean_distance(p1, p2):
 
 def create_diagonal_points_right(pose):
     # FOR LEFT PART
-    shoulder = (pose[11]['x'],pose[11]['y'])
-    elbow = (pose[13]['x'],pose[13]['y'])
+    try:
+        shoulder = (pose[11]['x'],pose[11]['y'])
+        elbow = (pose[13]['x'],pose[13]['y'])
 
-    hand, _ = get_hands_points(pose)
+        hand, _ = get_hands_points(pose)
 
-    # PIXEL VECTOR
-    shoulder_to_elbow = (elbow[0] - shoulder[0], elbow[1] - shoulder[1])
+        # PIXEL VECTOR
+        shoulder_to_elbow = (elbow[0] - shoulder[0], elbow[1] - shoulder[1])
 
-    shoulder_elbow_segment = euclidean_distance(
-        shoulder_to_elbow[0], shoulder_to_elbow[1]
-    )
+        shoulder_elbow_segment = euclidean_distance(
+            shoulder_to_elbow[0], shoulder_to_elbow[1]
+        )
 
-    elbow_to_hand = (hand[0] - elbow[0], hand[1] - elbow[1])
-    elbow_hand_segment = euclidean_distance(elbow_to_hand[0], elbow_to_hand[1])
-    # Multiplica el vector del codo a la mano por la longitud del vector del hombro al codo
-    hand_pos = (
-        shoulder[0] + (elbow_hand_segment + shoulder_elbow_segment),
-        shoulder[1],
-    )
+        elbow_to_hand = (hand[0] - elbow[0], hand[1] - elbow[1])
+        elbow_hand_segment = euclidean_distance(elbow_to_hand[0], elbow_to_hand[1])
+        # Multiplica el vector del codo a la mano por la longitud del vector del hombro al codo
+        hand_pos = (
+            shoulder[0] + (elbow_hand_segment + shoulder_elbow_segment),
+            shoulder[1],
+        )
+    except:
+        shoulder = (0,0)
+        elbow = (0,0)
 
     return hand_pos
 
 
 def create_diagonal_points_left(pose):
     # FOR RIGHT PART
-    shoulder = (pose[12]['x'],pose[12]['y'])
-    elbow = (pose[14]['x'], pose[14]['y'])
-    _ , hand = get_hands_points(pose)
+    try:
+        shoulder = (pose[12]['x'],pose[12]['y'])
+        elbow = (pose[14]['x'], pose[14]['y'])
 
-    # PIXEL VECTOR
-    shoulder_to_elbow = (elbow[0] - shoulder[0], elbow[1] - shoulder[1])
+        _ , hand = get_hands_points(pose)
 
-    shoulder_elbow_segment = euclidean_distance(
-        shoulder_to_elbow[0], shoulder_to_elbow[1]
-    )
+        # PIXEL VECTOR
+        shoulder_to_elbow = (elbow[0] - shoulder[0], elbow[1] - shoulder[1])
 
-    elbow_to_hand = (hand[0] - elbow[0], hand[1] - elbow[1])
-    elbow_hand_segment = euclidean_distance(elbow_to_hand[0], elbow_to_hand[1])
-    # Multiplica el vector del codo a la mano por la longitud del vector del hombro al codo
-    hand_pos = (
-        shoulder[0] - (elbow_hand_segment + shoulder_elbow_segment),
-        shoulder[1],
-    )
+        shoulder_elbow_segment = euclidean_distance(
+            shoulder_to_elbow[0], shoulder_to_elbow[1]
+        )
+
+        elbow_to_hand = (hand[0] - elbow[0], hand[1] - elbow[1])
+        elbow_hand_segment = euclidean_distance(elbow_to_hand[0], elbow_to_hand[1])
+        # Multiplica el vector del codo a la mano por la longitud del vector del hombro al codo
+        hand_pos = (
+            shoulder[0] - (elbow_hand_segment + shoulder_elbow_segment),
+            shoulder[1],
+        )
+    except:
+        shoulder = (0,0)
+        elbow = (0,0)
 
     return hand_pos
 
 def create_top_margin(pose):
     # FOR RIGHT PART
-    shoulder = (pose[11]['x'],pose[11]['y'])
-    elbow = (pose[13]['x'],pose[13]['y'])
+    try:
+        shoulder = (pose[11]['x'],pose[11]['y'])
+        elbow = (pose[13]['x'],pose[13]['y'])
 
-    hand, _ = get_hands_points(pose)
+        hand, _ = get_hands_points(pose)
 
-    # PIXEL VECTOR
-    shoulder_to_elbow = (elbow[0] - shoulder[0], elbow[1] - shoulder[1])
+        # PIXEL VECTOR
+        shoulder_to_elbow = (elbow[0] - shoulder[0], elbow[1] - shoulder[1])
 
-    shoulder_elbow_segment = euclidean_distance(
-        shoulder_to_elbow[0], shoulder_to_elbow[1]
-    )
+        shoulder_elbow_segment = euclidean_distance(
+            shoulder_to_elbow[0], shoulder_to_elbow[1]
+        )
 
-    elbow_to_hand = (hand[0] - elbow[0], hand[1] - elbow[1])
-    elbow_hand_segment = euclidean_distance(elbow_to_hand[0], elbow_to_hand[1])
-    # Multiplica el vector del codo a la mano por la longitud del vector del hombro al codo
-    margin_point = (
-        shoulder[0],
-        shoulder[1] -  (elbow_hand_segment + shoulder_elbow_segment),
-    )
+        elbow_to_hand = (hand[0] - elbow[0], hand[1] - elbow[1])
+        elbow_hand_segment = euclidean_distance(elbow_to_hand[0], elbow_to_hand[1])
+        # Multiplica el vector del codo a la mano por la longitud del vector del hombro al codo
+        margin_point = (
+            shoulder[0],
+            shoulder[1] -  (elbow_hand_segment + shoulder_elbow_segment),
+        )
+    except:
+        shoulder = (0,0)
+        elbow = (0,0)
 
     return margin_point
 

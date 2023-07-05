@@ -1,6 +1,6 @@
 ## TFG: Sistema de soporte a la rehabilitación física de niños afectados por el síndrome de Prader-Willi
 
-Este repositorio contiene el código fuente y los recursos relacionados con mi Trabajo de Fin de Grado (TFG), titulado "Sistema de soporte a la rehabilitación física de niños afectados por el síndrome de Prader-Willi". El objetivo de este proyecto es desarrollar un juego interactivo utilizando Python y la biblioteca Pygame, junto con OpenCV (cv2) y MediaPipe, para brindar una experiencia de juego adaptada a niños que padecen el síndrome de Prader-Willi.
+Este repositorio contiene el código fuente y los recursos relacionados con mi Trabajo de Fin de Grado (TFG), titulado "Sistema de soporte a la rehabilitación física de niños afectados por el síndrome de Prader-Willi". El objetivo de este proyecto es desarrollar un juego basado en realidad aumentada utilizando Python y la biblioteca Pygame, junto con OpenCV (cv2) y MediaPipe, para brindar una experiencia de juego adaptada a niños que padecen el síndrome de Prader-Willi.
 
 ### Descripción del proyecto
 
@@ -13,7 +13,7 @@ El proyecto también incluye elementos de gamificación para hacer que el juego 
 ### Funcionalidades principales
 
    - Interacción basada en la detección de gestos y movimientos utilizando OpenCV y MediaPipe.
-   - Seguimiento en tiempo real de las manos y otros puntos de interés del jugador.
+   - Seguimiento en tiempo real del cuerpo del usuario.
    - Elementos gráficos atractivos y amigables para el público infantil.
    - Retroalimentación visual y auditiva para estimular y motivar al niño durante el juego.
    - Registro de puntuaciones y seguimiento del progreso del niño.

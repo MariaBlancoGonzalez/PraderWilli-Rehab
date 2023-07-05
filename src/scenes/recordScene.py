@@ -72,7 +72,7 @@ class RecordScene(Scene):
         self.id_exer = get_id(self.exerDropDown.main)
 
         self.redim = False
-        if self.game.display.get_size()[1] > 900:
+        if self.game.display.get_size()[1] > 800:
             self.space = 50
             self.rect_height = 725
             self.graph_dim = [12, 3]
